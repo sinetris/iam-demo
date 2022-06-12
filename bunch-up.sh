@@ -16,6 +16,7 @@ __usage=$(
     Manage k8s clusters.
 
     Options:
+      -s, --setup                       Install requirements
       -b, --bootstrap                   Create clusters
       -p, --provision                   Provision clusters using the
       -d, --delete                      Delete clusters
@@ -38,15 +39,13 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
+green_tick="$(tput setaf 2)$(tput bold)✓$(tput sgr0)"
+
 function check_dependency {
   if ! [ -x "$(command -v "$1")" ]; then
     echo -e "$(tput setaf 2)Error: $(tput bold)$1$(tput sgr0)$(tput setaf 2) is not installed.$(tput sgr0)" >&2
     exit 1
   fi
-}
-
-function check_if_function_exist {
-  declare -f "" >/dev/null
 }
 
 function create_cluster {
@@ -57,20 +56,21 @@ function create_cluster {
   local exit_status
   check_dependency 'kubectl'
   cmd_output=$(kubectl cluster-info --context "${cluster_context}" 2>&1) && exit_status=$? || exit_status=$?
-  echo "exit_status: '$exit_status'"
   local check="error: context \"${cluster_context}\" does not exist"
   if [[ $cmd_output =~ $check ]]; then
     check_dependency "$tool"
     echo -en "$(tput setaf 4)-- Creating clusters: $(tput bold)$cluster_name$(tput sgr0)$(tput setaf 4) using "
-    echo -e "$(tput bold)$tool$(tput sgr0)\n"
+    echo -e "$(tput bold)$tool$(tput sgr0)"
     case $tool in
       kind)
         cluster_config_file="clusters_config/${cluster_name}.yaml"
         if [ -f "$cluster_config_file" ]; then
-          echo "$(tput setaf 2)✓$(tput sgr0) Using: $cluster_config_file"
+          echo "${green_tick} Using: $cluster_config_file"
           kind create cluster --wait 5m --config="$cluster_config_file" --name "$cluster_name"
         else
           kind create cluster --wait 5m --name "$cluster_name"
+          docker container inspect "${cluster_name}-control-plane" \
+            --format '{{ .NetworkSettings.Networks.kind.IPAddress }}'
         fi
         ;;
       k3d)
@@ -87,6 +87,42 @@ function create_cluster {
     exit 2
   else
     echo -e "$(tput setaf 3)Cluster $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)$(tput setaf 3) already exist$(tput sgr0)"
+  fi
+}
+
+function project_setup_mac {
+  check_dependency 'brew'
+  if command -v docker &>/dev/null; then
+    echo "- docker ${green_tick}"
+  else
+    # Install via Homebrew
+    brew install docker
+  fi
+  if brew list $selected_tool &>/dev/null; then
+    echo "- $selected_tool ${green_tick}"
+  else
+    # Install via Homebrew
+    brew install $selected_tool
+  fi
+  if brew list docker-mac-net-connect &>/dev/null; then
+    echo "- docker-mac-net-connect ${green_tick}"
+  else
+    # Install via Homebrew
+    brew install chipmk/tap/docker-mac-net-connect
+    # Run the service and register it to launch at boot
+    brew services restart chipmk/tap/docker-mac-net-connect
+  fi
+  if command -v kubectl &>/dev/null; then
+    echo "- kubectl ${green_tick}"
+  else
+    # Install via Homebrew
+    brew install kubectl
+  fi
+  if brew list minica &>/dev/null; then
+    echo "- minica ${green_tick}"
+  else
+    # Install via Homebrew
+    brew install minica
   fi
 }
 
@@ -179,19 +215,28 @@ function clusters_delete {
   done
 }
 
+setup=false
 bootstrap=false
 provision=false
 delete=false
 all_available_clusters=true
 while [ "$1" != "" ]; do
   case $1 in
-    -d | --delete)
+    -s | --setup)
       shift
-      delete=true
+      setup=true
       ;;
     -b | --bootstrap)
       shift
       bootstrap=true
+      ;;
+    -p | --provision)
+      shift
+      provision=true
+      ;;
+    -d | --delete)
+      shift
+      delete=true
       ;;
     -t | --tool)
       shift
@@ -216,10 +261,6 @@ while [ "$1" != "" ]; do
           shift
         fi
       done
-      ;;
-    -p | --provision)
-      shift
-      provision=true
       ;;
     -h | --help)
       shift
@@ -246,6 +287,16 @@ fi
 if $delete; then
   clusters_delete selected_clusters
   exit 0
+fi
+if $setup; then
+  echo "$(tput bold)Setup$(tput sgr0)"
+  case "$OSTYPE" in
+    darwin*) project_setup_mac ;;
+    *)
+      echo "Setup step not implemented for '$OSTYPE'"
+      echo "Please install docker, $selected_tool, kubectl"
+      ;;
+  esac
 fi
 if $bootstrap; then
   clusters_bootstrap selected_clusters
