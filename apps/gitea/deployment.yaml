@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  namespace: gitea
+spec:
+  selector:
+    matchLabels:
+      app: gitea
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      dnsConfig:
+        options:
+          - name: ndots
+            value: "1"
+      containers:
+        - name: gitea
+          image: gitea/gitea:latest
+          resources:
+            limits:
+              memory: 512Mi
+              cpu: "1"
+            requests:
+              memory: 128Mi
+              cpu: "0.2"
+          ports:
+            - containerPort: 22
+              name: ssh
+            - containerPort: 3000
+              name: http
+          envFrom:
+            - configMapRef:
+                name: gitea-config
+          volumeMounts:
+            - mountPath: /data
+              name: gitea-data-volume
+      volumes:
+        - name: gitea-data-volume
+          persistentVolumeClaim:
+            claimName: gitea-data-pvc

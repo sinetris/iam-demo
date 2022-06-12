@@ -1,0 +1,4 @@
+resources:
+- tools_namespace.yaml
+- ../../platform/kind
+- ../../apps/gitea
