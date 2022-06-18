@@ -1,6 +1,5 @@
 secretGenerator:
-  - name: certs-tls
-    namespace: tools
+  - name: iam-demo-certs-tls
     type: "kubernetes.io/tls"
     files:
       - tls.crt=domains/iam-demo.test/cert.pem

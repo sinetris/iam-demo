@@ -6,7 +6,7 @@ spec:
   tls:
     - hosts:
         - git.iam-demo.test
-      secretName: certs-tls
+      secretName: iam-demo-certs-tls
   rules:
     - host: git.iam-demo.test
       http:

@@ -4,4 +4,3 @@ metadata:
   name: tcp-services
   namespace: ingress-nginx
 data: {}
-  # 22: "tools/gitea:22"
