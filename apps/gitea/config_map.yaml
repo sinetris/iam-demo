@@ -7,8 +7,8 @@ metadata:
     app: gitea
 data:
   DISABLE_REGISTRATION: "true"
-  DOMAIN: git.aim-demo.test
+  DOMAIN: git.iam-demo.test
   HTTP_PORT: "3000"
-  ROOT_URL: https://git.aim-demo.test
-  RUN_MODE: "prod"
+  ROOT_URL: https://git.iam-demo.test
+  SSH_DOMAIN: git.iam-demo.test
   SSH_PORT: "22"

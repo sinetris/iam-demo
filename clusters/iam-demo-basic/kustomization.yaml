@@ -1,4 +1,13 @@
 resources:
-- tools_namespace.yaml
+- namespaces.yaml
 - ../../platform/kind
+- ../../apps/certificates
+- ../../apps/nginx-ingress
 - ../../apps/gitea
+
+patchesJson6902:
+- target:
+    version: v1
+    kind: ConfigMap
+    name: tcp-services
+  path: patch.yaml

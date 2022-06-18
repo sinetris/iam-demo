@@ -3,8 +3,12 @@ kind: Ingress
 metadata:
   name: gitea-ingress
 spec:
+  tls:
+    - hosts:
+        - git.iam-demo.test
+      secretName: certs-tls
   rules:
-    - host: git.aim-demo.test
+    - host: git.iam-demo.test
       http:
         paths:
           - path: /

@@ -1,0 +1,4 @@
+namespace: tools
+resources:
+  - ../../data/certs
+  - volume.yaml

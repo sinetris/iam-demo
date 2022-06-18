@@ -25,15 +25,15 @@ spec:
           resources:
             limits:
               memory: 512Mi
-              cpu: "1"
+              cpu: 500m
             requests:
               memory: 128Mi
-              cpu: "0.2"
+              cpu: 200m
           ports:
             - containerPort: 22
-              name: ssh
+              name: gitea-ssh
             - containerPort: 3000
-              name: http
+              name: gitea-http
           envFrom:
             - configMapRef:
                 name: gitea-config

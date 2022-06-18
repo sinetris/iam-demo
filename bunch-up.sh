@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeo pipefail
 
+project="iam-demo"
+
 declare -a available_clusters=()
 declare -a available_tools=('kind' 'k3d')
 declare -a selected_clusters
@@ -26,7 +28,8 @@ __usage=$(
       -c, --clusters $(tput setaf 3)<CL1> <...> <CLn>  $(tput sgr0)Limit clusters to selected
         $(tput setaf 3)If clusters is not set, default to: $(tput sgr0)
           $(tput setaf 6)$(tput bold)${available_clusters[*]}$(tput sgr0)
-      -h                                This help
+      --add-ca                          Install development CA locally
+      -h, --help                        This help
 END
 )
 
@@ -48,6 +51,36 @@ function check_dependency {
   fi
 }
 
+dev_ca_certs_path="$HOME/.dev_ca_certs"
+dev_ca_certs_path_crt="${dev_ca_certs_path}/${project}.crt.pem"
+dev_ca_certs_path_key="${dev_ca_certs_path}/${project}.key.pem"
+
+function generate_certs {
+  local cluster_name=$1
+  local domains_certs_path="./data/certs/domains"
+  local domain="${project}"'.test'
+  local current_dir
+  current_dir=$(pwd)
+  echo -e "Project ${project} - Generate or use CA certs in '${dev_ca_certs_path}'"
+  echo -e "Generate certs for ${domain} in '${domains_certs_path}'"
+  mkdir -p "${dev_ca_certs_path}"
+  mkdir -p "${domains_certs_path}"
+  if ! [ -d "${domains_certs_path}/${domain}" ]; then
+    cd "${domains_certs_path}" \
+      && /usr/local/bin/minica \
+        -ca-cert "${dev_ca_certs_path_crt}" \
+        -ca-key "${dev_ca_certs_path_key}" \
+        -domains "${domain}",'*.'"${domain}" \
+      && chmod -vR go-rwx "${dev_ca_certs_path}" \
+      && cd "${current_dir}"
+  fi
+}
+
+function add_ca_locally_mac {
+  # Add project CA cert to KeyChain
+  security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain-db "${dev_ca_certs_path_crt}"
+}
+
 function create_cluster {
   local tool=$1
   local cluster_name=$2
@@ -63,14 +96,12 @@ function create_cluster {
     echo -e "$(tput bold)$tool$(tput sgr0)"
     case $tool in
       kind)
-        cluster_config_file="clusters_config/${cluster_name}.yaml"
+        cluster_config_file="clusters_config/${tool}/${cluster_name}.yaml"
         if [ -f "$cluster_config_file" ]; then
           echo "${green_tick} Using: $cluster_config_file"
           kind create cluster --wait 5m --config="$cluster_config_file" --name "$cluster_name"
         else
           kind create cluster --wait 5m --name "$cluster_name"
-          docker container inspect "${cluster_name}-control-plane" \
-            --format '{{ .NetworkSettings.Networks.kind.IPAddress }}'
         fi
         ;;
       k3d)
@@ -127,12 +158,15 @@ function project_setup_mac {
 }
 
 function cluster_provisioning {
-  local cluster_name=$1
+  local tool=$1
+  local cluster_name=$2
+  local cluster_context="${tool}-${cluster_name}"
   check_dependency 'kubectl'
   echo "$(tput setaf 3)Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
-  kubectl kustomize "clusters/$cluster_name"
-  kubectl apply -k "clusters/$cluster_name"
-  kubectl wait --namespace ingress-nginx \
+  generate_certs "$cluster_name"
+  kubectl kustomize "clusters/$cluster_name"  --context "${cluster_context}"
+  kubectl apply --context "${cluster_context}" -k "clusters/$cluster_name"
+  kubectl wait --context "${cluster_context}" --namespace ingress-nginx \
     --for=condition=ready pod \
     --selector=app.kubernetes.io/component=controller \
     --timeout=90s
@@ -141,8 +175,6 @@ function cluster_provisioning {
 function delete_cluster {
   local tool=$1
   local cluster_name=$2
-  # change in generic function
-  echo kind delete cluster --name "${cluster_name}"
   case $tool in
     kind)
       kind delete cluster --name "$cluster_name"
@@ -162,28 +194,29 @@ function array_contains_element {
   local seeking=$2
   local contained
   local element
-  contained=1
+  contained=false
   for element in "${!array}"; do
     if [[ $element == "$seeking" ]]; then
-      contained=0
+      contained=true
       break
     fi
   done
-  return $contained
+  $contained
 }
 
 function chech_clusters {
   local _selected_clusters="$1[@]"
   local _available_clusters="$2[@]"
   local element
+  valid_clusters=true
   for element in "${!_selected_clusters}"; do
     if ! array_contains_element "$_available_clusters" "$element"; then
       echo -en "$(tput setaf 1)Cluster $(tput bold)$element$(tput sgr0)" >&2
-      echo -e "$(tput setaf 1) not present in $(tput bold)${!_available_clusters}$(tput sgr0)" >&2
-      return 0
+      echo -e "$(tput setaf 1) not present in available clusters: $(tput bold)${!_available_clusters}$(tput sgr0)" >&2
+      valid_clusters=false
     fi
   done
-  return 1
+  $valid_clusters
 }
 
 function clusters_bootstrap {
@@ -201,16 +234,15 @@ function clusters_provisioning {
   local cluster
   echo -e "$(tput setaf 3)Provisioning Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
   for cluster in "${!clusters}"; do
-    cluster_provisioning "${cluster}"
+    cluster_provisioning "$selected_tool" "${cluster}"
   done
 }
 
 function clusters_delete {
   local clusters="$1[@]"
   local cluster
-  echo -e "$(tput setaf 3)Deleting Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
+  echo -e "$(tput setaf 3)Clusters to delete: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
   for cluster in "${!clusters}"; do
-    echo -e "$(tput setaf 3)Deleting Clusters: $(tput setaf 6)$(tput bold)${cluster}$(tput sgr0)"
     delete_cluster "${selected_tool}" "${cluster}"
   done
 }
@@ -219,6 +251,7 @@ setup=false
 bootstrap=false
 provision=false
 delete=false
+add_ca_locally=false
 all_available_clusters=true
 while [ "$1" != "" ]; do
   case $1 in
@@ -245,7 +278,7 @@ while [ "$1" != "" ]; do
         shift
       else
         echo -en "$(tput setaf 1)Tool $(tput bold)$1$(tput sgr0)" >&2
-        echo -e "$(tput setaf 1) not present in $(tput bold)${available_tools[*]}$(tput sgr0)" >&2
+        echo -e "$(tput setaf 1) not present in available tools: $(tput bold)${available_tools[*]}$(tput sgr0)" >&2
         usage
         exit 1
       fi
@@ -261,6 +294,10 @@ while [ "$1" != "" ]; do
           shift
         fi
       done
+      ;;
+    --add-ca)
+      shift
+      add_ca_locally=true
       ;;
     -h | --help)
       shift
@@ -278,8 +315,8 @@ done
 if $all_available_clusters; then
   selected_clusters=("${available_clusters[@]}")
 else
-  echo "checking ${selected_clusters[*]}"
-  if chech_clusters selected_clusters available_clusters; then
+  echo "Checking clusters $(tput bold)${selected_clusters[*]}$(tput sgr0)"
+  if ! chech_clusters selected_clusters available_clusters; then
     usage
     exit 1
   fi
@@ -296,6 +333,13 @@ if $setup; then
       echo "Setup step not implemented for '$OSTYPE'"
       echo "Please install docker, $selected_tool, kubectl"
       ;;
+  esac
+fi
+if $add_ca_locally; then
+  echo "Adding CA to local host"
+  case "$OSTYPE" in
+    darwin*) add_ca_locally_mac ;;
+    *) echo "Step not implemented for '$OSTYPE'" ;;
   esac
 fi
 if $bootstrap; then

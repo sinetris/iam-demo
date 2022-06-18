@@ -3,8 +3,10 @@ kind: Cluster
 nodes:
   - role: control-plane
     extraMounts:
-      - hostPath: ./tmp/data
-        containerPath: /var/local/data
+      - hostPath: ./data/certs/domains
+        containerPath: /var/local/certs
+      - hostPath: ./data/gitea
+        containerPath: /var/local/gitea
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration
