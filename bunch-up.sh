@@ -42,8 +42,6 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
-green_tick="$(tput setaf 2)$(tput bold)✓$(tput sgr0)"
-
 function check_dependency {
   if ! [ -x "$(command -v "$1")" ]; then
     echo -e "$(tput setaf 2)Error: $(tput bold)$1$(tput sgr0)$(tput setaf 2) is not installed.$(tput sgr0)" >&2
@@ -51,34 +49,40 @@ function check_dependency {
   fi
 }
 
-dev_ca_certs_path="$HOME/.dev_ca_certs"
-dev_ca_certs_path_crt="${dev_ca_certs_path}/${project}.crt.pem"
-dev_ca_certs_path_key="${dev_ca_certs_path}/${project}.key.pem"
+home_ca_certs_path="$HOME/.dev_ca_certs"
+home_ca_certs_path_crt="${home_ca_certs_path}/${project}.crt.pem"
+home_ca_certs_path_key="${home_ca_certs_path}/${project}.key.pem"
 
 function generate_certs {
   local cluster_name=$1
   local domains_certs_path="./data/certs/domains"
+  local ca_certs_path="./data/certs/ca"
   local domain="${project}"'.test'
   local current_dir
   current_dir=$(pwd)
-  echo -e "Project ${project} - Generate or use CA certs in '${dev_ca_certs_path}'"
+  echo -e "Project ${project} - Generate or use CA certs in '${home_ca_certs_path}'"
   echo -e "Generate certs for ${domain} in '${domains_certs_path}'"
-  mkdir -p "${dev_ca_certs_path}"
+  mkdir -p "${home_ca_certs_path}"
   mkdir -p "${domains_certs_path}"
+  mkdir -p "${ca_certs_path}"
   if ! [ -d "${domains_certs_path}/${domain}" ]; then
     cd "${domains_certs_path}" \
       && /usr/local/bin/minica \
-        -ca-cert "${dev_ca_certs_path_crt}" \
-        -ca-key "${dev_ca_certs_path_key}" \
+        -ca-cert "${home_ca_certs_path_crt}" \
+        -ca-key "${home_ca_certs_path_key}" \
         -domains "${domain}",'*.'"${domain}" \
-      && chmod -vR go-rwx "${dev_ca_certs_path}" \
+      && chmod -vR go-rwx "${home_ca_certs_path}" \
       && cd "${current_dir}"
+  fi
+  if ! [ -d "${ca_certs_path}/${project}.key.pem" ]; then
+    cp "${home_ca_certs_path}/${project}.crt.pem" "${ca_certs_path}/"
+    cp "${home_ca_certs_path}/${project}.key.pem" "${ca_certs_path}/"
   fi
 }
 
 function add_ca_locally_mac {
   # Add project CA cert to KeyChain
-  security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain-db "${dev_ca_certs_path_crt}"
+  security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain-db "${home_ca_certs_path_crt}"
 }
 
 function create_cluster {
@@ -98,7 +102,7 @@ function create_cluster {
       kind)
         cluster_config_file="clusters_config/${tool}/${cluster_name}.yaml"
         if [ -f "$cluster_config_file" ]; then
-          echo "${green_tick} Using: $cluster_config_file"
+          echo "✅ Using: $cluster_config_file"
           kind create cluster --wait 5m --config="$cluster_config_file" --name "$cluster_name"
         else
           kind create cluster --wait 5m --name "$cluster_name"
@@ -121,22 +125,36 @@ function create_cluster {
   fi
 }
 
+__install_krew_info=$(
+  cat <<-'END'
+    (
+      set -x; cd "$(mktemp -d)" &&
+      OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
+      ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
+      KREW="krew-${OS}_${ARCH}" &&
+      curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
+      tar zxvf "${KREW}.tar.gz" &&
+      ./"${KREW}" install krew
+    )
+END
+)
+
 function project_setup_mac {
   check_dependency 'brew'
   if command -v docker &>/dev/null; then
-    echo "- docker ${green_tick}"
+    echo "- docker ✅"
   else
     # Install via Homebrew
     brew install docker
   fi
   if brew list $selected_tool &>/dev/null; then
-    echo "- $selected_tool ${green_tick}"
+    echo "- $selected_tool ✅"
   else
     # Install via Homebrew
     brew install $selected_tool
   fi
   if brew list docker-mac-net-connect &>/dev/null; then
-    echo "- docker-mac-net-connect ${green_tick}"
+    echo "- docker-mac-net-connect ✅"
   else
     # Install via Homebrew
     brew install chipmk/tap/docker-mac-net-connect
@@ -144,17 +162,33 @@ function project_setup_mac {
     brew services restart chipmk/tap/docker-mac-net-connect
   fi
   if command -v kubectl &>/dev/null; then
-    echo "- kubectl ${green_tick}"
+    echo "- kubectl ✅"
   else
     # Install via Homebrew
     brew install kubectl
   fi
   if brew list minica &>/dev/null; then
-    echo "- minica ${green_tick}"
+    echo "- minica ✅"
   else
     # Install via Homebrew
     brew install minica
   fi
+  if kubectl krew version &>/dev/null; then
+    echo "- krew ✅"
+  else
+    echo "- krew ❌"
+    echo -e "  Please install krew using: \n"
+    echo -e "$__install_krew_info"
+  fi
+}
+
+function cluster_pre_provisioning {
+  local tool=$1
+  local cluster_name=$2
+  local cluster_context="${tool}-${cluster_name}"
+  check_dependency 'kubectl'
+  echo "$(tput setaf 3)Pre-Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
+  generate_certs "$cluster_name"
 }
 
 function cluster_provisioning {
@@ -163,13 +197,19 @@ function cluster_provisioning {
   local cluster_context="${tool}-${cluster_name}"
   check_dependency 'kubectl'
   echo "$(tput setaf 3)Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
-  generate_certs "$cluster_name"
-  kubectl kustomize "clusters/$cluster_name"  --context "${cluster_context}"
-  kubectl apply --context "${cluster_context}" -k "clusters/$cluster_name"
+  kubectl kustomize "clusters/$cluster_name" --context "${cluster_context}" | kubectl apply -f -
   kubectl wait --context "${cluster_context}" --namespace ingress-nginx \
     --for=condition=ready pod \
     --selector=app.kubernetes.io/component=controller \
     --timeout=90s
+}
+
+function cluster_post_provisioning {
+  local tool=$1
+  local cluster_name=$2
+  local cluster_context="${tool}-${cluster_name}"
+  check_dependency 'kubectl'
+  echo "$(tput setaf 3)Post-Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
 }
 
 function delete_cluster {
@@ -234,7 +274,9 @@ function clusters_provisioning {
   local cluster
   echo -e "$(tput setaf 3)Provisioning Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
   for cluster in "${!clusters}"; do
+    cluster_pre_provisioning "$selected_tool" "${cluster}"
     cluster_provisioning "$selected_tool" "${cluster}"
+    cluster_post_provisioning "$selected_tool" "${cluster}"
   done
 }
 

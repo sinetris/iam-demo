@@ -1,0 +1,7 @@
+namespace: harbor-demo
+resources:
+  - ../../data/certs
+  - secrets.yaml
+  - certs.yaml
+  - volumes.yaml
+  - harbor_cluster.yaml

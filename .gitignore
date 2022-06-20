@@ -1,2 +1,4 @@
-/data/certs/domains/**/*
-/data/gitea/**/*
+/_docs
+/tmp
+/data
+!/data/certs/kustomization.yaml

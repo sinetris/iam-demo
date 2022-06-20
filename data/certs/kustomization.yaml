@@ -4,3 +4,7 @@ secretGenerator:
     files:
       - tls.crt=domains/iam-demo.test/cert.pem
       - tls.key=domains/iam-demo.test/key.pem
+  - name: iam-demo-ca
+    files:
+      - tls.crt=ca/iam-demo.crt.pem
+      - tls.key=ca/iam-demo.key.pem
