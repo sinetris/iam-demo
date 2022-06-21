@@ -13,18 +13,3 @@ spec:
     - ReadWriteMany
   hostPath:
     path: "/var/local/gitea"
----
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: gitea-data-pvc
-  namespace: devops
-  labels:
-    app: gitea
-spec:
-  storageClassName: local-path
-  accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 200Gi

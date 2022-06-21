@@ -1,7 +1,8 @@
 namespace: tools
 resources:
-  - config_map.yaml
-  - volume.yaml
-  - deployment.yaml
-  - service.yaml
-  - ingress.yaml
+- configmaps/gitea-config.yaml
+- persistentvolume/gitea-data-pv.yaml
+- persistentvolumeclaims/gitea-data-pvc.yaml
+- deployments/gitea.yaml
+- services/gitea.yaml
+- ingresses/gitea-ingress.yaml

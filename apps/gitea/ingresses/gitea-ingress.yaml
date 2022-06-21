@@ -1,0 +1,21 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gitea-ingress
+  namespace: tools
+spec:
+  rules:
+  - host: git.iam-demo.test
+    http:
+      paths:
+      - backend:
+          service:
+            name: gitea
+            port:
+              number: 3000
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - git.iam-demo.test
+    secretName: iam-demo-certs-tls-dc49c9649d
