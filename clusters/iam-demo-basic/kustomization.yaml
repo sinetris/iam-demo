@@ -2,9 +2,6 @@ resources:
 - namespaces.yaml
 - ../../platform/kind
 - ../../crd/cert-manager
-- github.com/zalando/postgres-operator/manifests
-- ../../crd/redis-operator
-- ../../crd/harbor-operator
 - ../../apps/certificates
 - ../../apps/nginx-ingress
 - ../../apps/gitea

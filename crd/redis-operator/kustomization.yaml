@@ -1,3 +1,0 @@
-resources:
-  - databases.spotahome.com_redisfailovers.yaml
-  - all-redis-operator-resources.yaml
