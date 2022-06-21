@@ -3,7 +3,7 @@ resources:
 - ../../platform/kind
 - ../../crd/cert-manager
 - ../../apps/certificates
-- ../../apps/nginx-ingress
+- ../../apps/ingress-nginx
 - ../../apps/gitea
 - ../../apps/harbor
 
