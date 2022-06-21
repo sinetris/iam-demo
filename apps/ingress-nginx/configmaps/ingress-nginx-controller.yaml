@@ -1,0 +1,8 @@
+apiVersion: v1
+data:
+  allow-snippet-annotations: 'true'
+  force-ssl-redirect: 'true'
+kind: ConfigMap
+metadata:
+  name: ingress-nginx-controller
+  namespace: ingress-nginx

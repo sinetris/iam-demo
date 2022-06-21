@@ -1,0 +1,18 @@
+commonLabels:
+  app.kubernetes.io/component: controller
+  app.kubernetes.io/instance: ingress-nginx
+  app.kubernetes.io/name: ingress-nginx
+  app.kubernetes.io/part-of: ingress-nginx
+  app.kubernetes.io/version: 1.2.1
+resources:
+- namespace.yaml
+- serviceaccounts/ingress-nginx.yaml
+- roles/ingress-nginx.yaml
+- clusterroles/ingress-nginx.yaml
+- rolebindings/ingress-nginx.yaml
+- clusterrolebindings/ingress-nginx.yaml
+- configmaps/ingress-nginx-controller.yaml
+- configmaps/tcp-services.yaml
+- services/ingress-nginx-controller.yaml
+- deployments/ingress-nginx-controller.yaml
+- ingressclass/nginx.yaml

@@ -1,9 +1,0 @@
-resources:
-  - namespace.yaml
-  - service_account.yaml
-  - rbac.yaml
-  - config_map.yaml
-  - config_map_tcp.yaml
-  - service.yaml
-  - deployment.yaml
-  - ingress_class.yaml
