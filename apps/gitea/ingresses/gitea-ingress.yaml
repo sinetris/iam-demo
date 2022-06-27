@@ -3,6 +3,8 @@ kind: Ingress
 metadata:
   name: gitea-ingress
   namespace: tools
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
 spec:
   rules:
   - host: git.iam-demo.test
@@ -18,4 +20,4 @@ spec:
   tls:
   - hosts:
     - git.iam-demo.test
-    secretName: iam-demo-certs-tls-dc49c9649d
+    secretName: iam-demo-gitea-tls

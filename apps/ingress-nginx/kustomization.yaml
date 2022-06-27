@@ -13,6 +13,7 @@ resources:
 - clusterrolebindings/ingress-nginx.yaml
 - configmaps/ingress-nginx-controller.yaml
 - configmaps/tcp-services.yaml
+- configmaps/udp-services.yaml
 - services/ingress-nginx-controller.yaml
 - deployments/ingress-nginx-controller.yaml
 - ingressclass/nginx.yaml

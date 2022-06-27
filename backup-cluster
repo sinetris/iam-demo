@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 CLUSTER_NAME='iam-demo-basic'
-BACKUP_PATH=./tmp
+BACKUP_PATH=./_tmp
 
 while read -r resource; do
   echo "  scanning resource '${resource}'"

@@ -1,39 +1,34 @@
 #!/usr/bin/env bash
-set -Eeo pipefail
+set -Eeuo pipefail
 
-project="iam-demo"
+project_name="iam-demo"
+project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 declare -a available_clusters=()
-declare -a available_tools=('kind' 'k3d')
-declare -a selected_clusters
-selected_tool='kind'
+declare -a selected_clusters=()
 
 while IFS='' read -r line; do available_clusters+=("$line"); done < \
   <(find clusters -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
 
 __usage=$(
-  cat <<-END
-    Usage: $(tput bold)$0 [OPTIONS]$(tput sgr0)
+  cat <<-HELPMSG
+		Usage: $(tput bold)$0 [OPTIONS]$(tput sgr0)
 
-    Manage k8s clusters.
+		Manage k8s clusters.
 
-    Options:
-      -s, --setup                       Install requirements
-      -b, --bootstrap                   Create clusters
-      -p, --provision                   Provision clusters using the
-      -d, --delete                      Delete clusters
-      -t, --tool <tool>                 Tools to use to create clusters
-        $(tput setaf 3)If tool is not set, default to: $(tput sgr0)$(tput setaf 6)$(tput bold)${selected_tool}$(tput sgr0)
-        $(tput setaf 3)Available tools: $(tput sgr0)$(tput setaf 6)$(tput bold)${available_tools[*]}$(tput sgr0)
-      -c, --clusters $(tput setaf 3)<CL1> <...> <CLn>  $(tput sgr0)Limit clusters to selected
-        $(tput setaf 3)If clusters is not set, default to: $(tput sgr0)
-          $(tput setaf 6)$(tput bold)${available_clusters[*]}$(tput sgr0)
-      --add-ca                          Install development CA locally
-      -h, --help                        This help
-END
+		Options:
+		  -s, --setup                       Install requirements
+		  -b, --bootstrap                   Create clusters
+		  -p, --provision                   Provision clusters using the
+		  -d, --delete                      Delete clusters
+		  -c, --clusters $(tput setaf 3)<CL1> <...> <CLn>  $(tput sgr0)Limit clusters to selected
+		    $(tput setaf 3)If clusters is not set, default to: $(tput sgr0)
+		      $(tput setaf 6)$(tput bold)${available_clusters[*]}$(tput sgr0)
+		  -h, --help                        This help
+HELPMSG
 )
 
-function usage {
+usage() {
   echo -e "$__usage"
 }
 
@@ -42,80 +37,92 @@ if [ $# -lt 1 ]; then
   exit 1
 fi
 
-function check_dependency {
+check_dependency() {
   if ! [ -x "$(command -v "$1")" ]; then
     echo -e "$(tput setaf 2)Error: $(tput bold)$1$(tput sgr0)$(tput setaf 2) is not installed.$(tput sgr0)" >&2
     exit 1
   fi
 }
 
-home_ca_certs_path="$HOME/.dev_ca_certs"
-home_ca_certs_path_crt="${home_ca_certs_path}/${project}.crt.pem"
-home_ca_certs_path_key="${home_ca_certs_path}/${project}.key.pem"
+project_certs_path=${project_path:?}/data/certs
+ca_project_certs_path=${project_certs_path}/ca
+ca_global_certs_path=$(mkcert -CAROOT)
+domains_tls_path=${project_certs_path}/domains/${project_name}
+ca_project_key=${ca_project_certs_path}/rootCA-key.pem
+ca_project_cert=${ca_project_certs_path}/rootCA.pem
+domains_tls_key=${domains_tls_path}/key.pem
+domains_tls_crt=${domains_tls_path}/cert.pem
+project_domain="${project_name}"'.test'
 
-function generate_certs {
+generate_local_certs() {
+  echo "Project: ${project_name}"
+  echo -e "CA Certs will be installed in path:\n  ${ca_global_certs_path}"
+  echo -e "CA Certs will be copied in path:\n  ${project_certs_path}"
+  echo "Creating self-signed CA certificates for TLS and installing them in the local trust stores"
+  mkdir -p "${ca_project_certs_path}"
+  mkdir -p "${domains_tls_path}"
+  mkcert -install
+  if ! [ -f "${ca_project_key}" ]; then
+    echo "Copying CA certs from ${ca_global_certs_path} to ${ca_project_certs_path}"
+    cp "${ca_global_certs_path}/rootCA-key.pem" "${ca_project_key}"
+    cp "${ca_global_certs_path}/rootCA.pem" "${ca_project_cert}"
+  fi
+  if [ -f "${domains_tls_crt}" ]; then
+    echo "Existing certificate for ${project_domain} ✅"
+  else
+    mkcert -key-file "${domains_tls_key}" \
+      -cert-file "${domains_tls_crt}" \
+      "${project_domain}" '*.'"${project_domain}"
+    chmod -vR go-rwx "${domains_tls_path}"
+  fi
+}
+
+vault_unseal() {
+  declare -a vault_pods=()
+  vault_data_path="${project_path}/data/vault"
+  mkdir -p "${vault_data_path}"
+
+  while IFS='' read -r line; do vault_pods+=("${line}"); done < \
+    <(kubectl get pods -l app.kubernetes.io/name=vault,vault-initialized=false --no-headers -o custom-columns=":metadata.name")
+
+  if [ ${#vault_pods[@]} -gt 0 ]; then
+    echo "Initializing Vault"
+    if [ -f "${vault_data_path}/cluster-keys.json" ]; then
+      local vault_keys_bu
+      vault_keys_bu="${vault_data_path}/cluster-keys.json.$(date +"%Y-%m-%d_%H-%M-%S")"
+      echo "🔥 Backup existing Vault cluster-keys.json in: ${vault_keys_bu}"
+      mv "${vault_data_path}/cluster-keys.json" "${vault_keys_bu}"
+    fi
+    kubectl exec vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json >"${vault_data_path}/cluster-keys.json"
+    vault_unseal_key=$(jq -r ".unseal_keys_b64[]" "${vault_data_path}/cluster-keys.json")
+
+    for vault_pod in "${vault_pods[@]}"; do
+      kubectl exec "${vault_pod}" -- vault operator unseal "${vault_unseal_key}"
+    done
+  else
+    echo "Vault is already initialized ✅"
+  fi
+}
+
+create_cluster() {
   local cluster_name=$1
-  local domains_certs_path="./data/certs/domains"
-  local ca_certs_path="./data/certs/ca"
-  local domain="${project}"'.test'
-  local current_dir
-  current_dir=$(pwd)
-  echo -e "Project ${project} - Generate or use CA certs in '${home_ca_certs_path}'"
-  echo -e "Generate certs for ${domain} in '${domains_certs_path}'"
-  mkdir -p "${home_ca_certs_path}"
-  mkdir -p "${domains_certs_path}"
-  mkdir -p "${ca_certs_path}"
-  if ! [ -d "${domains_certs_path}/${domain}" ]; then
-    cd "${domains_certs_path}" \
-      && /usr/local/bin/minica \
-        -ca-cert "${home_ca_certs_path_crt}" \
-        -ca-key "${home_ca_certs_path_key}" \
-        -domains "${domain}",'*.'"${domain}" \
-      && chmod -vR go-rwx "${home_ca_certs_path}" \
-      && cd "${current_dir}"
-  fi
-  if ! [ -d "${ca_certs_path}/${project}.key.pem" ]; then
-    cp "${home_ca_certs_path}/${project}.crt.pem" "${ca_certs_path}/"
-    cp "${home_ca_certs_path}/${project}.key.pem" "${ca_certs_path}/"
-  fi
-}
-
-function add_ca_locally_mac {
-  # Add project CA cert to KeyChain
-  security add-trusted-cert -d -r trustRoot -k ~/Library/Keychains/login.keychain-db "${home_ca_certs_path_crt}"
-}
-
-function create_cluster {
-  local tool=$1
-  local cluster_name=$2
-  local cluster_context="${tool}-${cluster_name}"
+  local cluster_context="kind-${cluster_name}"
   local cmd_output
   local exit_status
   check_dependency 'kubectl'
   cmd_output=$(kubectl cluster-info --context "${cluster_context}" 2>&1) && exit_status=$? || exit_status=$?
   local check="error: context \"${cluster_context}\" does not exist"
   if [[ $cmd_output =~ $check ]]; then
-    check_dependency "$tool"
+    check_dependency kind
     echo -en "$(tput setaf 4)-- Creating clusters: $(tput bold)$cluster_name$(tput sgr0)$(tput setaf 4) using "
-    echo -e "$(tput bold)$tool$(tput sgr0)"
-    case $tool in
-      kind)
-        cluster_config_file="clusters_config/${tool}/${cluster_name}.yaml"
-        if [ -f "$cluster_config_file" ]; then
-          echo "✅ Using: $cluster_config_file"
-          kind create cluster --wait 5m --config="$cluster_config_file" --name "$cluster_name"
-        else
-          kind create cluster --wait 5m --name "$cluster_name"
-        fi
-        ;;
-      k3d)
-        k3d cluster create "$cluster_name"
-        ;;
-      *)
-        echo -e "$(tput setaf 1)Cluster creation not implemented for $(tput bold)$1$(tput sgr0)" >&2
-        exit 1
-        ;;
-    esac
+    echo -e "$(tput bold)Kind$(tput sgr0)"
+    cluster_config_file="clusters_config/${cluster_name}/kind.yaml"
+    if [ -f "$cluster_config_file" ]; then
+      echo "✅ Using: $cluster_config_file"
+      kind create cluster --wait 5m --config="$cluster_config_file" --name "$cluster_name"
+    else
+      kind create cluster --wait 5m --name "$cluster_name"
+    fi
   elif [ "$exit_status" -ne "0" ]; then
     echo -e "$(tput setaf 1)kubectl error for $(tput bold)$cluster_name$(tput sgr0).\n" >&2
     echo -e "$(tput setaf 5)$cmd_output$(tput sgr0).\n" >&2
@@ -125,111 +132,125 @@ function create_cluster {
   fi
 }
 
-__install_krew_info=$(
-  cat <<-'END'
-    (
-      set -x; cd "$(mktemp -d)" &&
-      OS="$(uname | tr '[:upper:]' '[:lower:]')" &&
-      ARCH="$(uname -m | sed -e 's/x86_64/amd64/' -e 's/\(arm\)\(64\)\?.*/\1\2/' -e 's/aarch64$/arm64/')" &&
-      KREW="krew-${OS}_${ARCH}" &&
-      curl -fsSLO "https://github.com/kubernetes-sigs/krew/releases/latest/download/${KREW}.tar.gz" &&
-      tar zxvf "${KREW}.tar.gz" &&
-      ./"${KREW}" install krew
-    )
-END
-)
-
-function project_setup_mac {
+project_setup_darwin() {
+  # Install dependencies
   check_dependency 'brew'
-  if command -v docker &>/dev/null; then
-    echo "- docker ✅"
-  else
-    # Install via Homebrew
-    brew install docker
+  if ! hash envsubst >/dev/null 2>&1; then
+    brew install gettext
   fi
-  if brew list $selected_tool &>/dev/null; then
-    echo "- $selected_tool ✅"
-  else
-    # Install via Homebrew
-    brew install $selected_tool
-  fi
+  for cmd_name in jq yq docker kubectl kind helm mkcert; do
+    if ! hash "${cmd_name}" >/dev/null 2>&1; then
+      brew install "${cmd_name}"
+    else
+      echo "- ${cmd_name} ✅"
+    fi
+  done
   if brew list docker-mac-net-connect &>/dev/null; then
     echo "- docker-mac-net-connect ✅"
   else
-    # Install via Homebrew
     brew install chipmk/tap/docker-mac-net-connect
     # Run the service and register it to launch at boot
     brew services restart chipmk/tap/docker-mac-net-connect
   fi
-  if command -v kubectl &>/dev/null; then
-    echo "- kubectl ✅"
-  else
-    # Install via Homebrew
-    brew install kubectl
-  fi
-  if brew list minica &>/dev/null; then
-    echo "- minica ✅"
-  else
-    # Install via Homebrew
-    brew install minica
-  fi
-  if kubectl krew version &>/dev/null; then
-    echo "- krew ✅"
-  else
-    echo "- krew ❌"
-    echo -e "  Please install krew using: \n"
-    echo -e "$__install_krew_info"
-  fi
 }
 
-function cluster_pre_provisioning {
-  local tool=$1
-  local cluster_name=$2
-  local cluster_context="${tool}-${cluster_name}"
+clusters_bootstrap() {
+  local clusters="$1[@]"
+  local cluster
+  echo -e "$(tput setaf 3)Bootsrapping Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
+  for cluster in "${!clusters}"; do
+    echo -e "$(tput setaf 3)Bootsrap: $(tput setaf 6)$(tput bold)${cluster}$(tput sgr0)"
+    create_cluster "${cluster}"
+
+    control_plane_ip=$(docker container inspect "${cluster}-control-plane" --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
+
+    export control_plane_ip
+    export project_domain
+
+    echo "Control plane IP: '${control_plane_ip}'"
+
+    sudo mkdir -p /etc/resolver
+    envsubst <"${project_path}/clusters_config/resolver_project_domain.tmpl" | sudo tee "/etc/resolver/${project_domain}"
+
+    sudo dscacheutil -flushcache
+    sudo killall -HUP mDNSResponder
+
+    envsubst <"${project_path}/clusters_config/$cluster/coredns_configmap.yaml.txt" \
+      >"${project_path}/clusters/$cluster/pre-provision/coredns_configmap.yaml"
+
+    cluster_post_bootstrap "${cluster}"
+  done
+}
+
+cluster_post_bootstrap() {
+  local cluster_name=$1
+  local cluster_context="kind-${cluster_name}"
   check_dependency 'kubectl'
-  echo "$(tput setaf 3)Pre-Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
-  generate_certs "$cluster_name"
+  echo "$(tput setaf 3)Post Bootstrap $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
+
+  helm repo add jetstack https://charts.jetstack.io
+  helm repo add hashicorp https://helm.releases.hashicorp.com
+  helm repo update
+
+  echo "$(tput setaf 3)Installing $(tput setaf 6)$(tput bold)cert-manager$(tput sgr0)"
+  helm upgrade --install cert-manager jetstack/cert-manager \
+    --namespace cert-manager \
+    --create-namespace \
+    --set installCRDs=true \
+    --wait --timeout=90s
+
+  kubectl -n cert-manager create secret tls "${project_name}-ca" \
+    --context "${cluster_context}" \
+    --key "${ca_project_key}" \
+    --cert "${ca_project_cert}" \
+    --dry-run=client \
+    -o yaml \
+    | kubectl apply -f -
+
+  kubectl -n cert-manager create secret tls "${project_name}-tls" \
+    --context "${cluster_context}" \
+    --key "${domains_tls_key}" \
+    --cert "${domains_tls_crt}" \
+    --dry-run=client \
+    -o yaml \
+    | kubectl apply -f -
+
+  kubectl kustomize "clusters/${cluster_name}/pre-provision" --context "${cluster_context}" | kubectl apply -f -
+  helm upgrade --install consul hashicorp/consul --create-namespace -n consul \
+    --values "${project_path}/clusters_config/${cluster_name}/helm-consul-values.yml"
+  helm upgrade --install vault hashicorp/vault \
+    --values "${project_path}/clusters_config/${cluster_name}/helm-vault-values.yml"
 }
 
-function cluster_provisioning {
-  local tool=$1
-  local cluster_name=$2
-  local cluster_context="${tool}-${cluster_name}"
+cluster_provisioning() {
+  local cluster_name=$1
+  local cluster_context="kind-${cluster_name}"
   check_dependency 'kubectl'
   echo "$(tput setaf 3)Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
+
+  vault_unseal
+
   kubectl kustomize "clusters/$cluster_name" --context "${cluster_context}" | kubectl apply -f -
+  sleep 15
   kubectl wait --context "${cluster_context}" --namespace ingress-nginx \
     --for=condition=ready pod \
     --selector=app.kubernetes.io/component=controller \
     --timeout=90s
 }
 
-function cluster_post_provisioning {
-  local tool=$1
-  local cluster_name=$2
-  local cluster_context="${tool}-${cluster_name}"
+cluster_post_provisioning() {
+  local cluster_name=$1
+  local cluster_context="kind-${cluster_name}"
   check_dependency 'kubectl'
   echo "$(tput setaf 3)Post-Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
 }
 
-function delete_cluster {
-  local tool=$1
-  local cluster_name=$2
-  case $tool in
-    kind)
-      kind delete cluster --name "$cluster_name"
-      ;;
-    k3d)
-      k3d cluster delete "$cluster_name"
-      ;;
-    *)
-      echo -e "$(tput setaf 1)Cluster creation not implemented for $(tput bold)$1$(tput sgr0)" >&2
-      exit 1
-      ;;
-  esac
+delete_cluster() {
+  local cluster_name=$1
+  kind delete cluster --name "$cluster_name"
 }
 
-function array_contains_element {
+array_contains_element() {
   local array="$1[@]"
   local seeking=$2
   local contained
@@ -244,7 +265,7 @@ function array_contains_element {
   $contained
 }
 
-function chech_clusters {
+chech_clusters() {
   local _selected_clusters="$1[@]"
   local _available_clusters="$2[@]"
   local element
@@ -259,33 +280,22 @@ function chech_clusters {
   $valid_clusters
 }
 
-function clusters_bootstrap {
-  local clusters="$1[@]"
-  local cluster
-  echo -e "$(tput setaf 3)Bootsrapping Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
-  for cluster in "${!clusters}"; do
-    echo -e "$(tput setaf 3)Bootsrap: $(tput setaf 6)$(tput bold)${cluster}$(tput sgr0)"
-    create_cluster "${selected_tool}" "${cluster}"
-  done
-}
-
-function clusters_provisioning {
+clusters_provisioning() {
   local clusters="$1[@]"
   local cluster
   echo -e "$(tput setaf 3)Provisioning Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
   for cluster in "${!clusters}"; do
-    cluster_pre_provisioning "$selected_tool" "${cluster}"
-    cluster_provisioning "$selected_tool" "${cluster}"
-    cluster_post_provisioning "$selected_tool" "${cluster}"
+    cluster_provisioning "${cluster}"
+    cluster_post_provisioning "${cluster}"
   done
 }
 
-function clusters_delete {
+clusters_delete() {
   local clusters="$1[@]"
   local cluster
   echo -e "$(tput setaf 3)Clusters to delete: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
   for cluster in "${!clusters}"; do
-    delete_cluster "${selected_tool}" "${cluster}"
+    delete_cluster "${cluster}"
   done
 }
 
@@ -293,9 +303,8 @@ setup=false
 bootstrap=false
 provision=false
 delete=false
-add_ca_locally=false
 all_available_clusters=true
-while [ "$1" != "" ]; do
+while [ $# -gt 0 ] && [ "$1" != "" ]; do
   case $1 in
     -s | --setup)
       shift
@@ -313,21 +322,15 @@ while [ "$1" != "" ]; do
       shift
       delete=true
       ;;
-    -t | --tool)
+    -c | --clusters)
       shift
-      if array_contains_element available_tools "$1"; then
-        selected_tool="$1"
-        shift
-      else
-        echo -en "$(tput setaf 1)Tool $(tput bold)$1$(tput sgr0)" >&2
-        echo -e "$(tput setaf 1) not present in available tools: $(tput bold)${available_tools[*]}$(tput sgr0)" >&2
+      if [ $# -lt 1 ] || [[ "${1::1}" == "-" ]]; then
+        echo "$(tput setaf 1)Need a cluster name$(tput sgr0)" >&2
+        printf "$(tput setaf 1)Available clusters: $(tput bold)%s$(tput sgr0)\n" "${available_clusters[*]}" >&2
         usage
         exit 1
       fi
-      ;;
-    -c | --clusters)
-      shift
-      while [ "$1" != "" ]; do
+      while [ $# -gt 0 ] && [ "$1" != "" ]; do
         if [[ "${1::1}" == "-" ]]; then
           break
         else
@@ -337,17 +340,13 @@ while [ "$1" != "" ]; do
         fi
       done
       ;;
-    --add-ca)
-      shift
-      add_ca_locally=true
-      ;;
     -h | --help)
       shift
       usage
       exit 0
       ;;
     *)
-      echo -e "$(tput setaf 1)Unexpected argument: $(tput bold)$1$(tput sgr0)" >&2
+      printf "$(tput setaf 1)Unexpected argument: $(tput bold)%s$(tput sgr0)\n" "$1" >&2
       usage
       exit 1
       ;;
@@ -363,26 +362,25 @@ else
     exit 1
   fi
 fi
+
+printf "\nConfiguration:\n setup='%s'\n bootstrap='%s'\n provision='%s'\n delete='%s'\n" "${setup}" "${bootstrap}" "${provision}" "${delete}"
+printf "\nSelected clusters: %s\n" ${selected_clusters[@]+"${selected_clusters[@]}"}
+
 if $delete; then
   clusters_delete selected_clusters
   exit 0
 fi
+
 if $setup; then
   echo "$(tput bold)Setup$(tput sgr0)"
   case "$OSTYPE" in
-    darwin*) project_setup_mac ;;
+    darwin*) project_setup_darwin ;;
     *)
       echo "Setup step not implemented for '$OSTYPE'"
-      echo "Please install docker, $selected_tool, kubectl"
+      echo "Please install dependencies manually"
       ;;
   esac
-fi
-if $add_ca_locally; then
-  echo "Adding CA to local host"
-  case "$OSTYPE" in
-    darwin*) add_ca_locally_mac ;;
-    *) echo "Step not implemented for '$OSTYPE'" ;;
-  esac
+  generate_local_certs
 fi
 if $bootstrap; then
   clusters_bootstrap selected_clusters

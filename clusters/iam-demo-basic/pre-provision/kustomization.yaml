@@ -1,0 +1,4 @@
+resources:
+- namespaces.yaml
+- coredns_configmap.yaml
+- ../../../platform/kind

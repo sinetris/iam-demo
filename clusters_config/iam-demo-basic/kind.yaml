@@ -3,12 +3,17 @@ kind: Cluster
 nodes:
   - role: control-plane
     extraMounts:
+      - hostPath: ./data/certs/ca/rootCA.pem
+        containerPath: /opt/ca-certificates/rootCA.pem
+        readOnly: true
       - hostPath: ./data/certs/domains
         containerPath: /var/local/certs
       - hostPath: ./data/gitea
         containerPath: /var/local/gitea
       - hostPath: ./data/harbor
         containerPath: /var/local/harbor
+      - hostPath: ./data/postgres
+        containerPath: /var/local/postgres
     kubeadmConfigPatches:
       - |
         kind: InitConfiguration

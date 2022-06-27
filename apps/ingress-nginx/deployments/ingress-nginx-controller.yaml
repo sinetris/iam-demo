@@ -24,6 +24,7 @@ spec:
         - '--ingress-class=nginx'
         - '--configmap=$(POD_NAMESPACE)/ingress-nginx-controller'
         - '--tcp-services-configmap=$(POD_NAMESPACE)/tcp-services'
+        - '--udp-services-configmap=$(POD_NAMESPACE)/udp-services'
         - '--watch-ingress-without-class=true'
         - '--publish-status-address=localhost'
         env:

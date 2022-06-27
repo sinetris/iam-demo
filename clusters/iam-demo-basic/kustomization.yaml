@@ -1,11 +1,8 @@
 resources:
-- namespaces.yaml
-- ../../platform/kind
-- ../../crd/cert-manager
 - ../../apps/certificates
 - ../../apps/ingress-nginx
+- ../../apps/ingress-dns
 - ../../apps/gitea
-- ../../apps/harbor
 
 patchesJson6902:
 - target:

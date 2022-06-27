@@ -1,4 +1,4 @@
 /_docs
-/tmp
-/data
+/_tmp
+/data/*/**
 !/data/certs/kustomization.yaml

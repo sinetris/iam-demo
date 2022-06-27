@@ -18,12 +18,12 @@ spec:
         app: gitea
     spec:
       containers:
-      - envFrom:
-        - configMapRef:
-            name: gitea-config
+      - name: gitea
         image: gitea/gitea:1.16.8
         imagePullPolicy: IfNotPresent
-        name: gitea
+        envFrom:
+        - configMapRef:
+            name: gitea-config
         ports:
         - containerPort: 22
           name: gitea-ssh
