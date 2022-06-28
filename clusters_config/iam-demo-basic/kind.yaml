@@ -12,6 +12,8 @@ nodes:
         containerPath: /var/local/gitea
       - hostPath: ./data/harbor
         containerPath: /var/local/harbor
+      - hostPath: ./data/keycloak
+        containerPath: /var/local/keycloak
       - hostPath: ./data/postgres
         containerPath: /var/local/postgres
     kubeadmConfigPatches:

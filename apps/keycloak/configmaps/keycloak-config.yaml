@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-config
+  namespace: tools
+  labels:
+    app: keycloak
+data:
+  KC_HEALTH_ENABLED: 'true'
+  KC_LOG_CONSOLE_OUTPUT: json
+  KC_METRICS_ENABLED: 'true'
+  KC_PROXY: edge
+  KC_HTTP_ENABLED: 'true'
+  KC_HOSTNAME_STRICT: 'false'
+  KC_HOSTNAME_STRICT_HTTPS: 'false'

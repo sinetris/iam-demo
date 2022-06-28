@@ -3,6 +3,7 @@ resources:
 - ../../apps/ingress-nginx
 - ../../apps/ingress-dns
 - ../../apps/gitea
+- ../../apps/keycloak
 
 patchesJson6902:
 - target:
