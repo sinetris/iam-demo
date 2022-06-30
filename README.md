@@ -8,11 +8,11 @@ Identity and Access Management (IAM) demo infrastructure.
 
 ```bash
 # Install dependencies and create certificates
-./bunch-up.sh --setup
+./bunch-up --setup
 # Start and configure clusters and DNS resolvers for .test domains
-./bunch-up.sh --bootstrap
+./bunch-up --bootstrap
 # Provision resources in the clusters
-./bunch-up.sh --provision
+./bunch-up --provision
 ```
 
 ## Applications
