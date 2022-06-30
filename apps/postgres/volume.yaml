@@ -1,0 +1,31 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgres-data-pv
+  namespace: tools
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: local-sc
+  capacity:
+    storage: 15Gi
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: /var/local/postgres/data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-data-pvc
+  namespace: tools
+  labels:
+    app: postgres
+spec:
+  storageClassName: local-sc
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi

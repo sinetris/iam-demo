@@ -4,6 +4,7 @@ resources:
 - ../../apps/ingress-dns
 - ../../apps/gitea
 - ../../apps/keycloak
+- ../../apps/postgres
 
 patchesJson6902:
 - target:

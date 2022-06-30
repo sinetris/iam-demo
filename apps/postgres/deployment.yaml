@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: tools
+  labels:
+    app: postgres
+spec:
+  selector:
+    matchLabels:
+      app: postgres
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:13-alpine
+        resources:
+          limits:
+            memory: 512Mi
+            cpu: 500m
+          requests:
+            memory: 128Mi
+            cpu: 100m
+        ports:
+        - containerPort: 5432
+          name: pg-port
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: postgres-data-volume
+      volumes:
+      - name: postgres-data-volume
+        persistentVolumeClaim:
+          claimName: postgres-data-pvc
