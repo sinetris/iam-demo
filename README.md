@@ -25,11 +25,12 @@ Identity and Access Management (IAM) demo infrastructure.
 - [ ] [Harbor](https://goharbor.io/): artifacts registry (for Docker images and OPA policies)
   - [x] [Notary](https://github.com/notaryproject/notary): trust over arbitrary collections of data
   - [ ] [Trivy](https://github.com/aquasecurity/trivy): vulnerability scanners
-- [ ] [Grafana](https://grafana.com/): dashboards for metrics, logs, tracing
+- [x] [Grafana](https://grafana.com/): dashboards for metrics, logs, tracing
 - [ ] [Prometheus](https://grafana.com/oss/prometheus/): monitoring system (metrics)
-- [ ] [Grafana Loki](https://grafana.com/oss/loki/): multi-tenant log aggregation system
+- [x] [Grafana Loki](https://grafana.com/oss/loki/): multi-tenant log aggregation system
   - [ ] [Promtail](https://grafana.com/docs/loki/latest/clients/promtail/): agent to ships logs to Loki
 - [ ] [Grafana Tempo](https://github.com/grafana/tempo): distributed tracing backend
+- [ ] [Grafana OnCall](https://grafana.com/oss/oncall/): on-call management system
 - [ ] [Concourse CI](https://concourse-ci.org/): CI/CD pipelines as code
   - [ ] [tfsec](https://github.com/liamg/tfsec): terrafrom security scanners
   - [ ] [renovate](https://github.com/renovatebot/renovate): automate dependency update
