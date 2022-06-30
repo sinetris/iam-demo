@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: notary-signer
+  namespace: tools
+  labels:
+    component: notary-signer
+spec:
+  ports:
+    - port: 7899
+  selector:
+    app: notary
+    component: notary-signer

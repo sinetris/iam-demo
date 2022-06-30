@@ -4,55 +4,91 @@ Identity and Access Management (IAM) demo infrastructure.
 
 ## Start the cluster
 
-**Setup for MacOS**
+**Setup** - _Tested on a MacBook with Intel processor and macOS Monteray_
 
-```shell
+```bash
 # Install dependencies and create certificates
 ./bunch-up.sh --setup
-# Start and configure clusters and DNS resolver for .test domains
+# Start and configure clusters and DNS resolvers for .test domains
 ./bunch-up.sh --bootstrap
-# Provision applications in clusters
+# Provision resources in the clusters
 ./bunch-up.sh --provision
 ```
 
+## Applications
+
+- [x] [Gitea](https://gitea.io/): a painless self-hosted Git service
+- [x] [Keycloak](https://www.keycloak.org/): IAM, IdP and SSO
+- [x] [Vault](https://www.vaultproject.io/): secrets management
+- [x] [Consul](https://www.consul.io/): zero trust networking
+- [ ] [Open Policy Agent (OPA)](https://www.openpolicyagent.org/): general-purpose policy engine
+- [ ] [Harbor](https://goharbor.io/): artifacts registry (for Docker images and OPA policies)
+  - [x] [Notary](https://github.com/notaryproject/notary): trust over arbitrary collections of data
+  - [ ] [Trivy](https://github.com/aquasecurity/trivy): vulnerability scanners
+- [ ] [Grafana](https://grafana.com/): dashboards for metrics, logs, tracing
+- [ ] [Prometheus](https://grafana.com/oss/prometheus/): monitoring system (metrics)
+- [ ] [Grafana Loki](https://grafana.com/oss/loki/): multi-tenant log aggregation system
+  - [ ] [Promtail](https://grafana.com/docs/loki/latest/clients/promtail/): agent to ships logs to Loki
+- [ ] [Grafana Tempo](https://github.com/grafana/tempo): distributed tracing backend
+- [ ] [Concourse CI](https://concourse-ci.org/): CI/CD pipelines as code
+  - [ ] [tfsec](https://github.com/liamg/tfsec): terrafrom security scanners
+  - [ ] [renovate](https://github.com/renovatebot/renovate): automate dependency update
+  - [ ] [Conftest](https://github.com/open-policy-agent/conftest): use OPA policies to test configurations
+- [ ] [Wazuh](https://wazuh.com/): unified XDR and SIEM protection for endpoints
+and cloud workloads
+- [ ] [plantuml-server](https://github.com/plantuml/plantuml-server):  diagrams as code
+- [ ] [Boundary](https://www.boundaryproject.io/): simple and secure remote access
+- [ ] [Waypoint](https://www.waypointproject.io/): lower applications lifecicle cognitive load
+- [ ] [MailHog](https://github.com/mailhog/MailHog): Web and API based SMTP testing
+- [ ] [Fleet](https://github.com/fleetdm/fleet): UEM/MDM
+- [ ] [Falco](https://falco.org/): threat detection
+- [ ] [ERPNext](https://erpnext.com/): Enterprise Resource Planning
+- [ ] [Community](https://github.com/documize/community): wiki and knowledge-base
+- [ ] [Mattermost](https://mattermost.com/): Channels, Playbooks, Project & Task Management
+- [ ] [midPoint](https://evolveum.com/midpoint/): Identity Governance
+
+## To Do
+
+- [ ] generate PKI in a proper way
+  - [ ] check [Vault documentation](https://www.vaultproject.io/docs/secrets/pki)
+  - [ ] also check [cfssl](https://github.com/cloudflare/cfssl)
+  - [ ] follow instructions from
+        [Manage TLS Certificates in a Cluster](https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/)
+        and [PKI certificates and requirements](https://kubernetes.io/docs/setup/best-practices/certificates/)
+  - [ ] use in combination with [mkcert](https://github.com/FiloSottile/mkcert) to make local development easier
+- [ ] configure [Consul API Gateway](https://www.consul.io/docs/api-gateway)
+  - [ ] follow the [API Gateway tutorial](https://learn.hashicorp.com/tutorials/consul/kubernetes-api-gateway)
+  - [ ] and [other tutorials](https://learn.hashicorp.com/collections/consul/developer-mesh)
+- [ ] introduce [Envoy](https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy)
+- [ ] use [age](https://github.com/FiloSottile/age), a good and simple encryption tool
+
+
 ## Troubleshooting
 
-https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/
+A good start is [Monitoring, Logging, and Debugging](https://kubernetes.io/docs/tasks/debug/) in [Kubernetes Documentation](https://kubernetes.io/docs/home/).
 
-```shell
+### Debugging DNS Resolution
+
+From your host you can check if a domain can be resolved properly using:
+
+```bash
+# Example: check if we can resolve "git.iam-demo.test"
+dscacheutil -q host -a name git.iam-demo.test
+```
+
+To check from inside your cluster, start a pod and run commands from it:
+
+```bash
+# Start the pod
 kubectl apply -f https://k8s.io/examples/admin/dns/dnsutils.yaml
+# Verify that it's running
 kubectl get pods dnsutils
-kubectl exec -i -t dnsutils -- nslookup kubernetes.default
-# debug container with nice tooling
+# Check if it can resolve the domain (for example: "git.iam-demo.test")
+kubectl exec -i -t dnsutils -- nslookup git.iam-demo.test
+# There is also a nice project that include the most used tools.
+# If you don't want (or are not allowed) to run "untrusted" images, you can create
+# your own starting from the source code from https://github.com/nicolaka/netshoot
 kubectl run tmp-shell --rm -i --tty --image nicolaka/netshoot
 ```
 
-## Portainer
-
-```shell
-# Create a docker volume for portainer
-docker volume create portainer_data
-# Create certificated for the portainer domain
-mkdir -p $HOME/.config/certs/portainer.test
-mkcert -key-file "$HOME/.config/certs/portainer.test/key.pem" \
-      -cert-file "$HOME/.config/certs/portainer.test/cert.pem" \
-     'portainer.test'
-# Start portainer
-docker run -d -p 8000:8000 -p 9443:9443 \
-    --name portainer --restart always \
-    -v /var/run/docker.sock:/var/run/docker.sock \
-    -v portainer_data:/data \
-    -v $HOME/.config/certs:/certs \
-    portainer/portainer-ce:latest \
-    --sslcert /certs/portainer.test/cert.pem \
-    --sslkey /certs/portainer.test/key.pem \
-    --ssl
-# Install portainer agent in kubernetes cluster
-curl -L https://downloads.portainer.io/ce2-13/portainer-agent-k8s-lb.yaml -o portainer-agent-k8s.yaml
-kubectl apply -f portainer-agent-k8s.yaml
-# Get the Kubernetes control plane IP
-docker container inspect iam-demo-basic-control-plane  --format '{{ .NetworkSettings.Networks.kind.IPAddress }}'
-# Open portainer in a browser
-open 'https://portainer.test:9443/#!/endpoints'
-# Click 'Add environment' and use: 'Name: iam-demo-basic', 'Environment URL: <control plane ip>:
-```
+More info can be found in the Kubernetes documentation in [Debugging DNS Resolution](https://kubernetes.io/docs/tasks/administer-cluster/dns-debugging-resolution/).

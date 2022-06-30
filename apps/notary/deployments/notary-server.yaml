@@ -1,0 +1,83 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notary-server
+  namespace: tools
+  labels:
+    app: notary
+    component: notary-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notary
+      component: notary-server
+  template:
+    metadata:
+      labels:
+        app: notary
+        component: notary-server
+    spec:
+      securityContext:
+        runAsUser: 10000
+        fsGroup: 10000
+      automountServiceAccountToken: false
+      containers:
+      - name: notary-server
+        image: goharbor/notary-server-photon:v2.5.1
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 4443
+          name: http
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            memory: 256Mi
+            cpu: 100m
+        livenessProbe:
+          httpGet:
+            path: /_notary_server/health
+            scheme: HTTP
+            port: 4443
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /_notary_server/health
+            scheme: HTTP
+            port: 4443
+          initialDelaySeconds: 20
+          periodSeconds: 10
+        envFrom:
+        - configMapRef:
+            name: notary-server-config
+        - secretRef:
+            name: notary-server-secret-env
+        volumeMounts:
+        - name: config
+          mountPath: /etc/notary/server-config.postgres.json
+          subPath: server.json
+        - name: token-service-certificate
+          mountPath: /root.crt
+          subPath: tls.crt
+        - name: server-certificate
+          mountPath: /etc/ssl/notary/ca.crt
+          subPath: ca.crt
+        - name: server-certificate
+          mountPath: /etc/notary/tls/tls.crt
+          subPath: tls.crt
+        - name: server-certificate
+          mountPath: /etc/notary/tls/tls.key
+          subPath: tls.key
+      volumes:
+      - name: config
+        secret:
+          secretName: notary-server-secret
+      - name: token-service-certificate
+        secret:
+          secretName: iam-demo-ca
+      - name: server-certificate
+        secret:
+          secretName: notary-server-tls-secret

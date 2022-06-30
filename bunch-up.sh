@@ -161,6 +161,7 @@ clusters_bootstrap() {
   for cluster in "${!clusters}"; do
     echo -e "$(tput setaf 3)Bootsrap: $(tput setaf 6)$(tput bold)${cluster}$(tput sgr0)"
     create_cluster "${cluster}"
+    local cluster_context="kind-${cluster}"
 
     control_plane_ip=$(docker container inspect "${cluster}-control-plane" --format '{{ .NetworkSettings.Networks.kind.IPAddress }}')
 
@@ -175,8 +176,14 @@ clusters_bootstrap() {
     sudo dscacheutil -flushcache
     sudo killall -HUP mDNSResponder
 
-    envsubst <"${project_path}/clusters_config/$cluster/coredns_configmap.yaml.txt" \
-      >"${project_path}/clusters/$cluster/pre-provision/coredns_configmap.yaml"
+    kubectl get configmaps coredns --context "${cluster_context}" \
+      -n kube-system -o yaml >"${project_path}/clusters/$cluster/pre-provision/coredns_configmap.yaml"
+
+    corefile_data=$(envsubst <"${project_path}/clusters_config/$cluster/corefile.txt") \
+      yq '.data.Corefile = strenv(corefile_data)' -i "${project_path}/clusters/$cluster/pre-provision/coredns_configmap.yaml"
+
+    kubectl replace --context "${cluster_context}" -n kube-system \
+      -f "${project_path}/clusters/$cluster/pre-provision/coredns_configmap.yaml"
 
     cluster_post_bootstrap "${cluster}"
   done
@@ -216,6 +223,15 @@ cluster_post_bootstrap() {
     | kubectl apply -f -
 
   kubectl kustomize "clusters/${cluster_name}/pre-provision" --context "${cluster_context}" | kubectl apply -f -
+
+  kubectl -n tools create secret tls "${project_name}-ca" \
+    --context "${cluster_context}" \
+    --key "${ca_project_key}" \
+    --cert "${ca_project_cert}" \
+    --dry-run=client \
+    -o yaml \
+    | kubectl apply -f -
+
   helm upgrade --install consul hashicorp/consul --create-namespace -n consul \
     --values "${project_path}/clusters_config/${cluster_name}/helm-consul-values.yml"
   helm upgrade --install vault hashicorp/vault \
@@ -247,6 +263,7 @@ cluster_post_provisioning() {
 
 delete_cluster() {
   local cluster_name=$1
+  kind stop cluster --name "$cluster_name"
   kind delete cluster --name "$cluster_name"
 }
 
