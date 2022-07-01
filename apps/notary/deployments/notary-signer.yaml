@@ -22,7 +22,7 @@ spec:
         fsGroup: 10000
       containers:
       - name: notary-signer
-        image: goharbor/notary-signer-photon:v2.5.1
+        image: goharbor/notary-signer-photon:v2.5.2
         imagePullPolicy: Always
         envFrom:
         - configMapRef:

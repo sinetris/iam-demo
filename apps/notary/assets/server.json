@@ -6,15 +6,15 @@
   },
   "trust_service": {
     "type": "remote",
-    "hostname": "notary-signer.iam-demo.test",
-    "port": "443",
+    "hostname": "notary-signer",
+    "port": "7899",
     "tls_ca_file": "/etc/ssl/notary/ca.crt",
     "tls_key_file": "/etc/notary/tls/tls.key",
     "tls_cert_file": "/etc/notary/tls/tls.crt",
     "key_algorithm": "ecdsa"
   },
   "logging": {
-    "level": "info"
+    "level": "debug"
   },
   "storage": {
     "backend": "postgres",

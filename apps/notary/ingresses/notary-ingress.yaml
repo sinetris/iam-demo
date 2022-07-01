@@ -29,9 +29,12 @@ spec:
         pathType: Prefix
   tls:
   - hosts:
+    - notary
     - notary.iam-demo.test
+    - notary-server
     - notary-server.iam-demo.test
     secretName: notary-server-tls-secret
   - hosts:
+    - notary-signer
     - notary-signer.iam-demo.test
     secretName: notary-signer-tls-secret

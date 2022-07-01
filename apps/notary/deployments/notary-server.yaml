@@ -24,7 +24,7 @@ spec:
       automountServiceAccountToken: false
       containers:
       - name: notary-server
-        image: goharbor/notary-server-photon:v2.5.1
+        image: goharbor/notary-server-photon:v2.5.2
         imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 4443
@@ -36,20 +36,6 @@ spec:
           requests:
             memory: 256Mi
             cpu: 100m
-        livenessProbe:
-          httpGet:
-            path: /_notary_server/health
-            scheme: HTTP
-            port: 4443
-          initialDelaySeconds: 300
-          periodSeconds: 10
-        readinessProbe:
-          httpGet:
-            path: /_notary_server/health
-            scheme: HTTP
-            port: 4443
-          initialDelaySeconds: 20
-          periodSeconds: 10
         envFrom:
         - configMapRef:
             name: notary-server-config
