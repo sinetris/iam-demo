@@ -1,0 +1,15 @@
+{
+  get(orchestrator)::
+    // jsonnet doesn't allow dynamic import paths
+    local orchestrator_implementation =
+      if orchestrator == 'multipass' then
+        import 'orchestrators/multipass.libsonnet'
+      else if orchestrator == 'fake' then
+        import 'orchestrators/fake.libsonnet'
+      else
+        '';
+    assert orchestrator_implementation != '' : 'Invalid orchestrator';
+    {
+      use: orchestrator_implementation,
+    },
+}
