@@ -1,0 +1,154 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+project_generator_path="${project_path}/platform/vm-generator"
+generated_project_path="${project_generator_path}/generated"
+
+__usage=$(
+  cat <<-HELPMSG
+		$(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 [OPTIONS]$(tput sgr0)
+
+		$(tput setaf 3)$(tput bold)Manage machines provisioning.$(tput sgr0)
+
+		Options:
+		  -a, --all             $(tput setaf 8)Run all tasks to setup virtual machines$(tput sgr0)
+		  -s, --setup           $(tput setaf 8)Generate setup scripts$(tput sgr0)
+		  -c, --create          $(tput setaf 8)Create virtual machines$(tput sgr0)
+		  -p, --provision       $(tput setaf 8)Provision virtual machines$(tput sgr0)
+		  -d, --delete          $(tput setaf 8)Delete virtual machines$(tput sgr0)
+		  -h, --help            $(tput setaf 8)This help$(tput sgr0)
+HELPMSG
+)
+
+usage() {
+  echo -e "$__usage"
+}
+
+if [ $# -lt 1 ]; then
+  usage
+  exit 1
+fi
+
+check_dependency() {
+  if ! [ -x "$(command -v "$1")" ]; then
+    echo -e "$(tput setaf 2)Error: $(tput bold)$1$(tput sgr0)$(tput setaf 2) is not installed.$(tput sgr0)" >&2
+    exit 1
+  fi
+}
+
+generate_ansible_ssh_keys() {
+  if [ -f "${generated_project_path}/.ssh/id_ed25519.pub" ]; then
+    echo "Using existing SSH keys for ansible ✅"
+  else
+    check_dependency 'ssh-keygen'
+    echo "Generating SSH keys for ansible ..."
+    mkdir -p "${generated_project_path}/.ssh"
+    ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f "${generated_project_path}/.ssh/id_ed25519" -q -N ""
+  fi
+}
+
+generate_bootstrap_scripts() {
+  check_dependency 'jsonnet'
+  if [ -f "${project_generator_path}/config.jsonnet" ]; then
+    echo "Using existing $(tput bold)config.jsonnet$(tput sgr0) ✅"
+  else
+    echo "Missing config.jsonnet"
+    echo "Copying config.jsonnet.example to config.jsonnet"
+    cp "${project_generator_path}/config.jsonnet.example" "${project_generator_path}/config.jsonnet"
+  fi
+  cd "${project_generator_path}"
+  jsonnet --create-output-dirs \
+    --multi "${generated_project_path}" \
+    --tla-str orchestrator_name="multipass" \
+    --string virtual-machines.jsonnet
+  chmod u+x "${generated_project_path}"/*.sh
+}
+
+machines_creations() {
+  cd "${generated_project_path}"
+  chmod u+x *.sh
+  ./vms-bootstrap.sh
+}
+
+machines_provisioning() {
+  cd "${generated_project_path}"
+  ./vms-provisioning.sh
+}
+
+machines_delete() {
+  cd "${generated_project_path}"
+  ./vms-destroy.sh
+}
+
+create=false
+setup=false
+provision=false
+delete=false
+while [ $# -gt 0 ] && [ "$1" != "" ]; do
+  case $1 in
+    -a | --all)
+      shift
+      create=true
+      setup=true
+      provision=true
+      ;;
+    -s | --setup)
+      shift
+      setup=true
+      ;;
+    -c | --create)
+      shift
+      create=true
+      ;;
+    -p | --provision)
+      shift
+      provision=true
+      ;;
+    -d | --delete)
+      shift
+      delete=true
+      ;;
+    -h | --help)
+      shift
+      usage
+      exit 0
+      ;;
+    *)
+      printf "$(tput setaf 1)Unexpected argument: $(tput bold)%s$(tput sgr0)\n" "$1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if $delete; then
+  machines_delete
+  exit 0
+fi
+
+if $setup; then
+  echo "$(tput bold)$(tput setaf 2) - Creating virtual machines setup scripts ... - $(tput sgr0)"
+  generate_ansible_ssh_keys
+  generate_bootstrap_scripts
+  echo "$(tput bold)$(tput setaf 2) - VMs setup scripts generated ✅ - $(tput sgr0)"
+fi
+if $create; then
+  echo "$(tput bold)$(tput setaf 2) - Starting virtual machines creation ... - $(tput sgr0)"
+  machines_creations
+  echo "$(tput bold)$(tput setaf 2) - VMs creation done ✅ - $(tput sgr0)"
+fi
+if $provision; then
+  echo "$(tput bold)$(tput setaf 2) - Starting virtual machine provisioning ... - $(tput sgr0)"
+  machines_provisioning
+  echo "$(tput bold)$(tput setaf 2) - VMs provisioning done ✅ - $(tput sgr0)"
+fi
+
+echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"
+
+echo "$(tput setaf 3)Project path: $(tput bold)${project_path}$(tput sgr0)"
+echo "$(tput setaf 3)To ssh into a virtual machine use $(tput bold)vm-shell.sh <vm-name>$(tput sgr0)"
+echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
+echo
+echo "  $(tput bold)${generated_project_path}/vm-shell.sh ansible-controller$(tput sgr0)"
+exit 0
