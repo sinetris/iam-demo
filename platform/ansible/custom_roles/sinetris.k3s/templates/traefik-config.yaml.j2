@@ -1,0 +1,22 @@
+---
+apiVersion: v1
+kind: Secret
+type: Opaque
+metadata:
+  name: traefik-tls-cert
+  namespace: kube-system
+data:
+  tls.crt: {{ b64encoded_crt }}
+  tls.key: {{ b64encoded_key }}
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChartConfig
+metadata:
+  name: traefik
+  namespace: kube-system
+spec:
+  valuesContent: |-
+    tlsStore:
+      default:
+        defaultCertificate:
+          secretName: traefik-tls-cert

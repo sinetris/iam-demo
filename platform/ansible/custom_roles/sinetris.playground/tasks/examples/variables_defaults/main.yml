@@ -1,0 +1,59 @@
+---
+# playground_dict1
+- name: Add defaults (from vars/main.yml) to variables (from defaults/main.yml)
+  ansible.builtin.import_tasks: set_defaults.yml
+  notify:
+    - "the playground handler"
+- name: Print playground_dict1 default
+  ansible.builtin.debug:
+    var: playground_dict1
+- name: Print playground_dict1 default (use task)
+  ansible.builtin.import_tasks: show_variable.yml
+  vars:
+    variable_to_debug: "{{ playground_dict1 }}"
+- name: Add defaults (from vars/main.yml) to variables (override defaults/main.yml)
+  ansible.builtin.import_tasks: examples/variables_defaults/set_defaults.yml
+  notify:
+    - "the playground handler"
+  vars:
+    playground_dict1:
+      val2: dict1val1_newvar
+      required1: dict1required1_override
+      sub_dict1:
+        val1: sub1dict1val1_override
+        required2: sub1dict1required1
+      sub_dict2:
+        val1: sub2dict1val1_newvar
+# NOTE: playground_dict1 didn't change
+- name: Print playground_dict1 override
+  ansible.builtin.debug:
+    var: playground_dict1
+- name: Print playground_dict1 override (use task)
+  ansible.builtin.import_tasks: show_variable.yml
+  vars:
+    variable_to_debug: "{{ playground_dict1 }}"
+# playground_dict2
+- name: Print __playground_dict2
+  ansible.builtin.debug:
+    var: __playground_dict2
+- name: Print __playground_dict2 overrides 1
+  ansible.builtin.debug:
+    var: __playground_dict2
+  vars:
+    playground_dict2:
+      required2: dict2required2_override
+      sub_dict1:
+        other_val: sub1dict2other_val
+        required1: sub1dict2required1_override
+- name: Print __playground_dict2 overrides 2
+  ansible.builtin.debug:
+    var: __playground_dict2
+  vars:
+    playground_dict2:
+      val2: dict2val1_newvar
+      required1: dict2required1_override
+      sub_dict1:
+        val1: sub1dict2val1_override
+        required2: sub1dict2required1
+      sub_dict2:
+        val1: sub2dict2val1_newvar

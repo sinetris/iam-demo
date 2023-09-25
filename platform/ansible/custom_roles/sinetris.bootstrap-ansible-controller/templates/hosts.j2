@@ -1,0 +1,16 @@
+{# Better show a comment on the generated file to avoid surprises -#}
+# The content of this file is generated and changes to this file will be lost.
+# Please make the needed changes in the Ansible role {{ role_name }}
+127.0.1.1 {{ ansible_facts["fqdn"] }} {{ ansible_facts["hostname"] }}
+127.0.0.1 localhost
+
+# The following lines are desirable for IPv6 capable hosts
+::1 localhost ip6-localhost ip6-loopback
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+
+{% for host in groups['all'] -%}
+{% if host != ansible_facts["nodename"] -%}
+{{ hostvars[host]['ansible_host'] }} {{ hostvars[host]['ansible_facts']['fqdn'] }} {{ hostvars[host]['ansible_facts']['hostname'] }}
+{% endif %}
+{% endfor %}

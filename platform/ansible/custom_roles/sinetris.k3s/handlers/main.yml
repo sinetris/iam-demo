@@ -1,0 +1,39 @@
+---
+- name: Reload systemd
+  become: "{{ k3s_become }}"
+  ansible.builtin.systemd:
+    daemon_reload: true
+    scope: "system"
+- name: Reload service
+  become: "{{ k3s_become }}"
+  ansible.builtin.set_fact:
+    k3s_service_reloaded: true
+- name: Restart k3s systemd
+  become: "{{ k3s_become }}"
+  retries: 3
+  delay: 3
+  failed_when:
+    - k3s_systemd_restart_k3s is not success
+    - not ansible_check_mode
+  ansible.builtin.systemd:
+    name: k3s
+    state: restarted
+    scope: "system"
+    enabled: "{{ k3s_start_on_boot }}"
+  register: k3s_systemd_restart_k3s
+- name: Restart k3s service
+  become: "{{ k3s_become }}"
+  retries: 3
+  delay: 3
+  failed_when:
+    - k3s_service_restart_k3s is not success
+    - not ansible_check_mode
+  ansible.builtin.service:
+    name: k3s
+    state: restarted
+    enabled: "{{ k3s_start_on_boot }}"
+  register: k3s_service_restart_k3s
+- name: Uncomment the lines below to use 'listen' again
+  listen: "Copied kube config file to home on remote"
+  ansible.builtin.debug:
+    msg: 'Copied kube config file'

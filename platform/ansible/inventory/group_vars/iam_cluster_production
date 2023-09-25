@@ -1,0 +1,5 @@
+---
+k3s_registration_address: iam-control-plane.iam-demo.test
+k3s_cluster_name: iam-demo-tech
+k3s_copy_ca_certs: true
+k3s_kubeconfig: /var/local/data/.kube/config-{{ k3s_cluster_name }}

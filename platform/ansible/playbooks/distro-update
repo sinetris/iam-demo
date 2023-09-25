@@ -1,0 +1,12 @@
+---
+- name: update all hosts
+  hosts: all
+  become: true
+  gather_facts: true
+  vars:
+    update_autoremove: true
+    update_cache_valid_time: 1
+    update_force_a_reboot: true
+    update_upgrade_command: dist
+  roles:
+    - sinetris.update

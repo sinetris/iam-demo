@@ -1,0 +1,6 @@
+---
+- name: Bootstrap ansible-controller
+  hosts: ansible-controller
+  gather_facts: true
+  roles:
+    - role: sinetris.bootstrap-ansible-controller

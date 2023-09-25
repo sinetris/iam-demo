@@ -1,0 +1,6 @@
+---
+- name: "Update /etc/hosts"
+  ansible.builtin.template:
+    src: hosts.j2
+    dest: "/etc/hosts"
+    mode: u=rw,g=r,o=r

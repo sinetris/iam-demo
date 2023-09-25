@@ -1,0 +1,26 @@
+---
+- name: Test if variables are set correctly
+  ansible.builtin.assert:
+    that:
+      - ca_root_certs_path is defined
+      - ca_root_certs_path is string
+      - system_ca_root_path is defined
+      - system_ca_root_path is string
+      - project_name is defined
+      - project_name is string
+    quiet: true
+- name: Copy custom Root CA certs
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/root-ca.crt"
+    dest: "{{ system_ca_root_path }}/{{ project_name }}-root-ca.crt"
+    mode: "u=rw,g=r,o=r"
+- name: Copy custom Intermediate CA certs
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/intermediate-ca.crt"
+    dest: "{{ system_ca_root_path }}/{{ project_name }}-intermediate-ca.crt"
+    mode: "u=rw,g=r,o=r"
+- name: Install local CA certs
+  become: true
+  changed_when: false
+  ansible.builtin.command:
+    cmd: update-ca-certificates

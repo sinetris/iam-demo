@@ -1,0 +1,14 @@
+---
+- name: Test if ca_root_certs_path is set correctly
+  ansible.builtin.assert:
+    that:
+      - ca_root_certs_path is defined
+      - ca_root_certs_path is string
+    quiet: true
+- name: Ensures ca_root_certs_path dir exists
+  ansible.builtin.file:
+    path: "{{ ca_root_certs_path }}"
+    state: directory
+    group: adm
+    owner: root
+    mode: "u=rwx,g=rwx,o=rx"

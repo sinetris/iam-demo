@@ -1,0 +1,30 @@
+---
+ansible_user: ansible
+ansible_controller_user: ubuntu
+ansible_python_interpreter: /usr/bin/python3
+kubernetes_project_path: /kubernetes
+project_name: iam-demo
+project_domain: iam-demo.test
+kubernetes_gpg_keyring: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
+base_certs_path: /usr/local/etc/certs
+ca_root_certs_path: "{{ base_certs_path }}/ca"
+do_not_log: false
+is_dns_server: false
+bootstrap_network:
+  internal_dns: true
+  domains:
+    - "{{ project_domain }}"
+  dnssec: allow-downgrade
+  dns:
+    - "{{ named_hosts['ansible-controller'] }}"
+  fallbackdns:
+    - 1.0.0.1
+    - 1.1.1.1
+  dhcpv4:
+    usedns: false
+    usedomains: false
+  dhcpv6:
+    usedns: false
+    usedomains: false
+  ipv6acceptra:
+    usedns: false

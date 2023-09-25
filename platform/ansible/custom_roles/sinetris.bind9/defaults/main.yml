@@ -1,0 +1,117 @@
+---
+# OS user and group used for bind
+bind9_user: bind
+bind9_group: bind
+
+bind9_only_ipv4: false
+bind9_internal_dns: false
+bind9_listen_on_ipv4:
+  - any
+bind9_listen_on_ipv6:
+  - any
+
+bind9_recursor: false
+bind9_authoritative: false
+bind9_forwarder: false
+
+bind9_forwarders: []
+# bind9_forwarders:
+#   - 1.1.1.1
+#   - 1.0.0.1
+
+bind9_admin_email: hostmaster
+
+# QNAME minimization: atm | bind9 | relaxed (default)
+bind9_qname_minimization: 'relaxed'
+
+# DNSSEC validation mode: yes | no | auto
+bind9_dnssec_validation_mode: 'auto'
+
+# When hidden primary limit queries to our_networks
+bind9_hidden_primary: false
+
+# Only notify nameservers from also-notify, not from the zone NS records.
+# Necessary to keep traffic between nameservers in private network.
+bind9_notify_explicit: false
+
+# Default zone type
+bind9_default_zone_type: primary
+
+# Hosts/networks allowed to query
+bind9_queries_allowed_networks:
+  - localhost
+  - localnets
+
+# Hosts/networks allowed to zone transfers
+bind9_transfer_allowed_networks:
+  - none
+
+# Global primaries for all zones (if configured as secondary)
+bind9_primaries: []
+# bind9_primaries:
+#  - name: ns-primary
+#    addresses:
+#      - 1.2.3.4
+
+# Enable BIND's XML statistics-channels (for monitoring purposes)
+bind9_statistics:
+  enabled: false
+  # default_port: 8888
+  # channels:
+  #   - host: 127.0.0.1
+  #     port: 8080
+  #     allow: 127.0.0.1
+
+# DNS zones
+bind9_zones: []
+# bind9_zones:
+#   - name: my-domain.test  # zone name (also set in $ORIGIN namespace)
+#     serial: "1694823768"  # must be between 1 and 4294967295 (default ansible_date_time.epoch)
+#     default_ttl: 1d
+#     refresh: 1h
+#     retry: 1m
+#     expire: 4h
+#     minimum: 5m
+#     transfer_allowed_networks:
+#       - localhost
+#       - localnets
+#     ns_records:
+#       - content: ns1.dns-server.test.
+#     resource_records:
+#       - label: '@'
+#         type: NS
+#         content: ns2.dns-demo.test
+#       - label: '@'
+#         type: MX
+#         content: mail
+#       - label: ns1
+#         ttl: 10m
+#         type: A
+#         content: 10.0.1.10
+#       - label: mail
+#         ttl: 10m
+#         type: CNAME
+#         content: ns1
+#     include_text: |
+#       ; in case there is something you want to add
+#       ; at the end fo the zone file
+
+# Authoritative include files
+bind9_authoritative_includes: []
+
+bind9_named_local_include_text: |
+  // Change this if you want to add something
+  // at the end of named.conf.local
+
+bind9_named_options_include_text: |
+  // Change this if you want to add something
+  // at the end of named.conf.options
+
+bind9_packages:
+  - acl
+  - bind9
+  - bind9utils
+  - bind9-doc
+  - dnsutils
+
+bind9_zonedir: /etc/bind/zones

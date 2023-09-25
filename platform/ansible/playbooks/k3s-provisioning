@@ -1,0 +1,68 @@
+---
+- name: K3S cluster applications setup
+  hosts: k3s_cluster
+  become: true
+  tasks:
+    - name: Install helm repos
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      delegate_to: localhost
+      ansible.builtin.import_tasks: tasks/k3s_install_helm_repos.yaml
+    - name: Basic apps configuration
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      delegate_to: localhost
+      ansible.builtin.import_tasks: tasks/k3s_install_apps.yaml
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"
+    # - name: Setup CoreDNS customization
+    #   when:
+    #     - k3s_primary_control_node
+    #     - k3s_state is defined
+    #     - k3s_state == 'installed'
+    #   delegate_to: localhost
+    #   ansible.builtin.import_tasks: tasks/setup_coredns_customization.yaml
+    #   environment:
+    #     KUBECONFIG: "{{ k3s_kubeconfig }}"
+    - name: Run kustomize for kubernetes-dashboard
+      delegate_to: localhost
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      kubernetes.core.k8s:
+        definition: "{{
+            lookup('kubernetes.core.kustomize', dir=kubernetes_dashboard_path)
+          }}"
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"
+    - name: Create root CA secret in cert-manager namespace
+      connection: local
+      vars:
+        secret_type: kubernetes.io/tls
+        secret_metadata_name: iam-demo-ca
+        secret_metadata_namespace: cert-manager
+        b64encoded_crt: "{{ lookup('file', '{{ ca_root_certs_path }}/intermediate-ca.crt') | b64encode }}"
+        b64encoded_key: "{{ lookup('file', '{{ ca_root_certs_path }}/intermediate-ca.key') | b64encode }}"
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"
+      kubernetes.core.k8s:
+        apply: true
+        definition: "{{ lookup('template', 'ca-secrets.yaml.j2') }}"
+      no_log: "{{ do_not_log }}"
+    - name: Run kustomize
+      delegate_to: localhost
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      kubernetes.core.k8s:
+        definition: "{{
+            lookup('kubernetes.core.kustomize', dir=kustomize_project_path)
+          }}"
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"

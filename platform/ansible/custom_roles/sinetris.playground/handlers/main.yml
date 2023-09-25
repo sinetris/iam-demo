@@ -1,0 +1,6 @@
+---
+# Handlers run only on changes and (usually) only once per play
+- name: Playground handler
+  ansible.builtin.debug:
+    msg: "Running the playground handler - {{ ansible_date_time.epoch }}"
+  listen: "the playground handler"

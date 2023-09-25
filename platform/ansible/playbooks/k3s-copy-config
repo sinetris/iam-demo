@@ -1,0 +1,36 @@
+---
+- name: Copy k3s clusters config file to other hosts
+  hosts: all
+  become: true
+  tasks:
+    - name: Create kube config directory for each user
+      when:
+        - k3s_copy_cluster_config is defined
+        - k3s_copy_cluster_config | list
+        - k3s_copy_cluster_config | length > 0
+      ansible.builtin.file:
+        path: "/home/{{ k3s_cluster.1 }}/.kube"
+        state: directory
+        group: "{{ k3s_cluster.1 }}"
+        owner: "{{ k3s_cluster.1 }}"
+        mode: "u=rwx,g=rx,o="
+      loop: "{{ k3s_copy_cluster_config | default([]) | subelements('users') }}"
+      loop_control:
+        loop_var: k3s_cluster
+        label: "{{ k3s_cluster.0.name }}"
+    - name: Copy kube config file to each home directory for defined clusters
+      when:
+        - k3s_copy_cluster_config is defined
+        - k3s_copy_cluster_config | list
+        - k3s_copy_cluster_config | length > 0
+      no_log: "{{ do_not_log }}"
+      ansible.builtin.copy:
+        src: "/var/local/data/.kube/config-{{ k3s_cluster.0.name }}"
+        dest: "/home/{{ k3s_cluster.1 }}/.kube/config-{{ k3s_cluster.0.name }}"
+        group: "{{ k3s_cluster.1 }}"
+        owner: "{{ k3s_cluster.1 }}"
+        mode: "u=rw,g=,o="
+      loop: "{{ k3s_copy_cluster_config | default([]) | subelements('users') }}"
+      loop_control:
+        loop_var: k3s_cluster
+        label: "{{ k3s_cluster.0.name }}"

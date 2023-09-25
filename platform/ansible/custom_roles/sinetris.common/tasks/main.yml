@@ -1,0 +1,6 @@
+---
+## Include a task from other roles using:
+# - name: Run a task from this role
+#   ansible.builtin.include_role:
+#     name: sinetris.common
+#     tasks_from: <a file under tasks>

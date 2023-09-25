@@ -1,0 +1,9 @@
+---
+- name: Ensure pre configuration
+  ansible.builtin.import_tasks: ensure/pre_configuration.yml
+- name: Ensure k3s is downloaded
+  ansible.builtin.import_tasks: ensure/downloads.yml
+- name: Ensure k3s is installed on all nodes
+  ansible.builtin.import_tasks: ensure/installed.yml
+- name: Ensure remote copy of kube config
+  ansible.builtin.import_tasks: ensure/remote_copy_kube_config.yml

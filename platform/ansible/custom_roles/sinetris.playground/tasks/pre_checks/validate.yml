@@ -1,0 +1,7 @@
+---
+- name: Check that playground_example is in the list
+  ansible.builtin.assert:
+    that:
+      - playground_example in __examples
+    fail_msg: "playground_example '{{ playground_example }}' not valid."
+    success_msg: "playground_example is valid."

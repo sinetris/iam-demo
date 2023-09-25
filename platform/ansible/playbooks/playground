@@ -1,0 +1,57 @@
+---
+- name: Demo debug tasks
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Show hostname
+      debug:
+        msg: 'hostname: {{ inventory_hostname }}'
+    - name: Show host info
+      debug:
+        msg: '{{ hostvars[inventory_hostname] }}'
+    - name: Show host IP (show wrong IP when using Vagrant)
+      debug:
+        msg: 'IP: {{ ansible_default_ipv4.address }}'
+    - name: Show host IP
+      debug:
+        msg: "IP: {{ hostvars[inventory_hostname]['ansible_host'] }}"
+    - name: Simple A record (IPV4 address) lookup
+      ansible.builtin.debug:
+        msg: 'google.com lookup: {{ lookup(''community.general.dig'', ''google.com'')}}'
+- name: Playground examples
+  hosts: ansible-controller
+  gather_facts: true
+  tasks:
+    - name: Create script test directory
+      become: true
+      become_user: ubuntu
+      ansible.builtin.file:
+        path: /home/ubuntu/playground
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+        mode: "u=rwx,g=rwx,o=rx"
+    - name: Run code example
+      ansible.builtin.debug:
+        msg: |
+          Result1: {{
+            (splitted1 | length > 1)
+              | ternary(
+                  (splitted1 | first | regex_escape()) ~ '.' ~ (splitted1 | last) ~ '.',
+                  original1 | regex_escape()
+                )
+          }}
+          Result: {{ (splitted1 | first | regex_escape()) ~ '.' ~ (splitted1 | last) }}
+      vars:
+        original1: part1.part2@mail.example.com
+        # original1: part1.part2
+        # original1: hostmaster
+        splitted1: "{{ original1 | split('@') }}"
+    - name: Epoch time
+      ansible.builtin.debug:
+        msg: "Result: {{ ansible_date_time.epoch }}"
+- name: Playground role examples
+  hosts: ansible-controller
+  gather_facts: true
+  roles:
+    - sinetris.playground

@@ -1,0 +1,97 @@
+---
+- name: Install bind9 packages
+  ansible.builtin.apt:
+    pkg: "{{ bind9_packages }}"
+    state: present
+    cache_valid_time: 600
+
+- name: Set default named options
+  ansible.builtin.set_fact:
+    named_options: ["-u", "bind"]
+
+- name: Set IPv4 named options
+  ansible.builtin.set_fact:
+    named_options: "{{ named_options + ['-4'] }}"
+  when:
+    - bind9_only_ipv4
+
+- name: Configure bind9 default named
+  ansible.builtin.template:
+    src: "etc/default_named.j2"
+    dest: /etc/default/named
+    owner: root
+    group: "{{ bind9_group }}"
+    mode: "0644"
+  notify:
+    - "reload bind9"
+
+- name: Create bind9 directory for primary zones
+  ansible.builtin.file:
+    path: "{{ bind9_zonedir }}"
+    state: directory
+    owner: root
+    group: "{{ bind9_group }}"
+    mode: "02775"
+  when: bind9_authoritative
+
+- name: Create bind9 directory for primary zone includes
+  ansible.builtin.file:
+    path: "{{ bind9_zonedir }}/includes"
+    state: directory
+    owner: root
+    group: "{{ bind9_group }}"
+    mode: "0755"
+  when: bind9_authoritative
+
+- name: Configure bind9 named.conf files
+  ansible.builtin.template:
+    src: "bind/{{ item }}.j2"
+    dest: /etc/bind/{{ item }}
+    owner: root
+    group: "{{ bind9_group }}"
+    mode: "0644"
+  with_items:
+    - named.conf.local
+    - named.conf.options
+  notify:
+    - "reload bind9"
+
+- name: Check validity of named.conf
+  ansible.builtin.command: named-checkconf
+  become: true
+  become_user: "{{ bind9_user }}"
+  changed_when: false
+  vars:
+    ansible_ssh_pipelining: true
+
+- name: Create bind9 zone files
+  ansible.builtin.template:
+    src: "bind/zones/db.template.j2"
+    dest: "{{ bind9_zonedir }}/db.{{ zone.name }}"
+    owner: root
+    group: "{{ bind9_group }}"
+    mode: "0644"
+  loop_control:
+    loop_var: zone
+  with_items: "{{ bind9_zones }}"
+  when:
+    - bind9_authoritative
+    - zone.type | default(bind9_default_zone_type) is eq('primary')
+  notify:
+    - "reload bind9"
+
+- name: Check validity of zone files
+  ansible.builtin.command: >
+    named-checkzone -k fail -M fail -n fail -r fail -S fail
+      {{ zone.name }} {{ bind9_zonedir }}/db.{{ zone.name }}
+  register: bind9_reg_named_checkzone
+  become: true
+  become_user: "{{ bind9_user }}"
+  loop_control:
+    loop_var: zone
+  with_items:
+    - "{{ bind9_zones }}"
+  when: zone.type | default(bind9_default_zone_type) is eq('primary')
+  changed_when: false
+  vars:
+    ansible_ssh_pipelining: true

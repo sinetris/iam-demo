@@ -1,0 +1,9 @@
+---
+- name: Bootstrap bind
+  hosts: all
+  gather_facts: true
+  become: true
+  roles:
+    - role: sinetris.bind9
+      when:
+        - is_dns_server

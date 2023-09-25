@@ -1,0 +1,43 @@
+---
+- name: Check that k3s tls directory exists
+  failed_when: >-
+    not k3s_tls_path.stat.exists
+    or not k3s_tls_path.stat.isdir
+  ansible.builtin.stat:
+    path: "{{ k3s_tls_dir }}"
+  register: k3s_tls_path
+- name: Copy root-ca.pem
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/root-ca.pem"
+    dest: "{{ k3s_tls_dir }}/root-ca.pem"
+    mode: "u=rw,g=r,o="
+- name: Copy root-ca.key
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/root-ca.key"
+    dest: "{{ k3s_tls_dir }}/root-ca.key"
+    mode: "u=rw,g=r,o="
+- name: Copy root-ca.crt
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/root-ca.crt"
+    dest: "{{ k3s_tls_dir }}/root-ca.crt"
+    mode: "u=rw,g=r,o="
+- name: Copy intermediate-ca.pem
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/intermediate-ca.pem"
+    dest: "{{ k3s_tls_dir }}/intermediate-ca.pem"
+    mode: "u=rw,g=r,o="
+- name: Copy intermediate-ca.key
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/intermediate-ca.key"
+    dest: "{{ k3s_tls_dir }}/intermediate-ca.key"
+    mode: "u=rw,g=r,o="
+- name: Copy intermediate-ca.crt
+  ansible.builtin.copy:
+    src: "{{ ca_root_certs_path }}/intermediate-ca.crt"
+    dest: "{{ k3s_tls_dir }}/intermediate-ca.crt"
+    mode: "u=rw,g=r,o="
+- name: Generate k3s certs from custom CA
+  ansible.builtin.shell:
+    cmd: curl -sL https://github.com/k3s-io/k3s/raw/master/contrib/util/generate-custom-ca-certs.sh | bash -
+    chdir: "{{ k3s_tls_dir }}"
+    creates: "{{ k3s_tls_dir }}/etcd/server-ca.crt"

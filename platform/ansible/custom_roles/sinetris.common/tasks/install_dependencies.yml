@@ -1,0 +1,21 @@
+---
+- name: Ensure basic dependencies are installed
+  ansible.builtin.apt:
+    pkg:
+      - git
+      - acl
+      - golang-go
+      - ca-certificates
+- name: Install python library using pip - {{ library }}
+  when:
+    - python_libraries is defined
+    - python_libraries is iterable
+    - python_libraries is not string
+  ansible.builtin.pip:
+    name: "{{ library }}"
+    umask: "0022"
+  loop: "{{ python_libraries|default([]) }}"
+  loop_control:
+    loop_var: library
+- name: Install k8s clients
+  ansible.builtin.import_tasks: install_k8s_clients.yaml

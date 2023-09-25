@@ -1,0 +1,41 @@
+{# Start code to ensure the email used in SOA is in the right format #}
+{% set tmp_zone_admin_email = zone.admin_email|default(bind9_admin_email) %}
+{% set zone_admin_splitted = tmp_zone_admin_email|split('@') %}
+{%- set zone_admin_email = (zone_admin_splitted|length > 1) 
+   |ternary(
+      (zone_admin_splitted|first|regex_escape()) ~ '.' ~ (zone_admin_splitted|last) ~ '.',
+      tmp_zone_admin_email|regex_escape()
+   )
+-%}
+{# End code for SOA email #}
+;; {{ ansible_managed }}
+
+; zone file for {{ zone.name }}
+
+$TTL {{ zone.default_ttl|default('1d') }}    ; default TTL for zone
+$ORIGIN {{ zone.name }}.
+; Start of Authority
+@         IN      SOA   {{ zone.primary|default(zone.ns_records.0.content) }} {{ zone_admin_email }} (
+                  ; Serial number
+                  {{ zone.serial|default(ansible_date_time.epoch) }}
+                  ; Refresh
+                  {{ zone.refresh|default('3h') }}
+                  ; Retry
+                  {{ zone.retry|default('15m') }}
+                  ; Expire
+                  {{ zone.expire|default('1d') }}
+                  ; Minimum
+                  {{ zone.minimum|default('2h') }} 
+)
+
+{% for ns in zone.ns_records %}
+                     IN {{ (ns.ttl|default()).ljust(6) }} NS           {{ ns.content }}
+{% endfor %}
+{% for rr in zone.resource_records %}
+{% set rr_priority = (rr.type|upper is eq('MX'))|ternary(rr.priority|default(10)|string, '') %}
+{% set rr_priority = (rr.type|upper is eq('MX'))|ternary(rr.priority|default(10)|string, '') %}
+{{ rr.label.ljust(20) }} IN {{ (rr.ttl|default()|string).ljust(6) }} {{ rr.type.ljust(8) }} {{ rr_priority.ljust(3) }} {{ rr.content }}
+{% endfor %}
+{% if zone.extended_text is defined %}
+{{ zone.extended_text }}
+{% endif %}

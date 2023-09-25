@@ -1,0 +1,54 @@
+---
+# - name: Generate /etc/systemd/resolved.conf.j2
+#   ansible.builtin.template:
+#     src: etc/systemd/resolved.conf.j2
+#     dest: /etc/systemd/resolved.conf
+#     mode: u=rw,g=r,o=r
+#   notify:
+#     - "reboot machine"
+# - name: Generate 50-dhcp-no-dns.network
+#   ansible.builtin.copy:
+#     dest: /etc/systemd/network/50-dhcp-no-dns.network
+#     content: |
+#       [Match]
+#       Name=en*
+#       [Network]
+#       DNS={{ bootstrap_network.dns|join(' ') }}
+#       Domains={{ bootstrap_network.domains|join(' ') }}
+#   notify:
+#     - "reboot machine"
+- name: Read cloud-init netplan file
+  ansible.builtin.slurp:
+    path: "{{ cloud_init_netplan_file_path }}"
+  register: cloudinit_netplan_file
+- name: Extract netplan the data
+  ansible.builtin.set_fact:
+    cloudinit_netplan_data: "{{ cloudinit_netplan_file['content'] | b64decode | from_yaml }}"
+- name: Update the fact
+  ansible.utils.update_fact:
+    updates:
+      - path: cloudinit_netplan_data.network.ethernets.ens3.dhcp4-overrides
+        value:
+          use-dns: false
+          use-domains: false
+      - path: cloudinit_netplan_data.network.ethernets.ens3.dhcp6-overrides
+        value:
+          use-dns: false
+          use-domains: false
+      - path: cloudinit_netplan_data.network.ethernets.ens3.nameservers
+        value:
+          addresses: "{{ bootstrap_network.dns }}"
+  register: updated
+- name: Debug cloud-init netplan
+  ansible.builtin.debug:
+    var: updated.cloudinit_netplan_data
+  when:
+    - updated.changed
+- name: Write back cloud-init netplan file
+  copy:
+    content: '{{ updated.cloudinit_netplan_data | to_nice_yaml }}'
+    dest: "{{ cloud_init_netplan_file_path }}"
+  when:
+    - updated.changed
+  notify:
+    - "reboot machine"

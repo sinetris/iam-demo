@@ -1,0 +1,62 @@
+// Local configurations
+{% for primary in bind9_primaries %}
+primaries {{ primary.name }} {
+{%   for addr in primary.addresses -%}
+  {{ addr }};
+{%   endfor %}
+};
+{% endfor %}
+{% if bind9_statistics.enabled %}
+statistics-channels {
+{%   for stat_channel in bind9_statistics.channels %}
+  inet {{ stat_channel.host }} port {{ stat_channel.port|default(bind9_statistics.default_port) }} allow { {{ stat_channel.allow }}; };
+{%   endfor %}
+};
+{% endif %}
+
+{% for zone in bind9_zones | sort(attribute='name') %}
+{%   set zone_type = zone.type | default(bind9_default_zone_type) %}
+zone "{{ zone.name }}" {
+  type {{ zone_type }};
+{%   if zone_type == 'primary' %}
+  file "{{ bind9_zonedir }}/db.{{ zone.name }}";
+{%     if bind9_notify_explicit|default() %}
+  notify explicit;
+{%     elif zone.notify|default(true) %}
+  notify yes;
+{%     endif %}
+{%     if zone.update_policy_grant|default() %}
+  update-policy {
+    grant {{ zone.name }}_ddns_update {{ zone.update_policy_grant }};
+  };
+{%     endif %}
+{%   elif zone_type == 'slave' %}
+  file "/var/lib/bind/db.{{ zone.name }}";
+{%     if zone.masters|default() or bind9_masters|default() %}
+    notify no;
+    masters {
+{%       if zone.masters|default() %}
+{%         for master in zone.masters %}
+      {{ master }};
+{%         endfor %}
+{%       elif bind9_masters|default() %}
+{%         for master in bind9_masters %}
+      {{ master.name }};
+{%         endfor %}
+{%       endif %}
+  };
+{%     endif %}
+{%   else %}
+{%     if zone_type == 'forward' %}
+    forwarders {
+{%       for fwd in zone.forwarders %}
+    {{ fwd }}; 
+{%       endfor %}
+  }; 
+{%     endif %}
+{%   endif %}
+};
+{% endfor %}
+{% if bind9_named_local_include_text is defined %}
+{{ bind9_named_local_include_text }}
+{% endif %}

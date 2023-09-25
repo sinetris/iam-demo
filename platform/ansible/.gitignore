@@ -1,0 +1,20 @@
+# Generated artifacts
+/inventory/machines_config.json
+/inventory/machines_ips
+/inventory/group_vars/all/10-hosts
+
+# ---> Ansible
+/tmp
+*.retry
+
+# Testing files
+.cache
+.molecule
+.tox
+molecule/*/.molecule
+tests/__pycache__
+
+# Ansible files
+meta/.galaxy_install_info
+galaxy_cache
+/galaxy_token

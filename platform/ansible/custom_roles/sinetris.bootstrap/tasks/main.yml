@@ -1,0 +1,26 @@
+---
+- name: Basic setup
+  block:
+    - name: Install dependencies
+      ansible.builtin.include_role:
+        name: sinetris.common
+        tasks_from: install_dependencies.yml
+    - name: Use internal DNS
+      ansible.builtin.import_tasks: use_internal_dns.yml
+      when:
+        - bootstrap_network.internal_dns
+    - name: Prepare prerequisites for shared self signed root CA
+      ansible.builtin.import_tasks: self_signed_root_ca_prerequisites.yml
+      when:
+        - use_selfsigned_root_ca
+    - name: Install shared self signed root CA
+      ansible.builtin.include_role:
+        name: sinetris.common
+        tasks_from: install_custom_ca_in_system.yml
+      when:
+        - use_selfsigned_root_ca
+    - name: Setup linux-desktop
+      ansible.builtin.import_tasks: setup_linux_desktop.yml
+      when:
+        - is_linux_desktop is defined
+        - is_linux_desktop

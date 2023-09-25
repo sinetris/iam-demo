@@ -1,0 +1,22 @@
+---
+__examples:
+  - variables_defaults
+__playground_defaults_dict1:
+  required1: dict1required1_default
+  required2: dict1required2_default
+  sub_dict1:
+    required1: sub1dict1required1_default
+    required2: sub1dict1required2_default
+__playground_defaults_dict2:
+
+__playground_dict2: >-
+  {{
+    {
+      'required1': 'dict2required1_default',
+      'required2': 'dict2required2_default',
+      'sub_dict1': {
+        'required1': 'sub1dict2required1_default',
+        'required2': 'sub1dict2required2_default',
+      },
+    } | ansible.builtin.combine(playground_dict2, recursive=true)
+  }}

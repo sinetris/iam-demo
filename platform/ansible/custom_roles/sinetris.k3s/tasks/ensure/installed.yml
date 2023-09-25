@@ -1,0 +1,34 @@
+---
+- name: Ensure directories exist
+  ansible.builtin.include_tasks: ensure/directories.yml
+  loop: "{{ k3s_ensure_directories_exist }}"
+  loop_control:
+    loop_var: directory
+- name: Ensure custom Root CA certs are used
+  when:
+    - k3s_primary_control_node
+    - k3s_copy_ca_certs
+    - not ansible_check_mode
+  ansible.builtin.include_tasks: ensure/use_generated_ca_certs.yml
+- name: Ensure k3s pre-installation configuration
+  when:
+    - k3s_primary_control_node
+    - not ansible_check_mode
+  ansible.builtin.include_tasks: ensure/configure_packaged_components.yml
+- name: Ensure node exist
+  when:
+    - ((k3s_control_node and k3s_controller_list | length == 1)
+        or (k3s_primary_control_node and k3s_controller_list | length > 1))
+    - not ansible_check_mode
+  ansible.builtin.include_tasks: ensure/installed_node.yml
+- name: Flush Handlers
+  ansible.builtin.meta: flush_handlers
+- name: Determine if the systems are already clustered
+  ansible.builtin.stat:
+    path: "{{ k3s_token_location }}"
+  register: k3s_token_cluster_check
+- name: Ensure control plane started
+  when: (k3s_control_node and k3s_controller_list | length == 1)
+        or (k3s_primary_control_node and k3s_controller_list | length > 1)
+        or k3s_token_cluster_check.stat.exists
+  ansible.builtin.include_tasks: ensure/control_plane_started.yml

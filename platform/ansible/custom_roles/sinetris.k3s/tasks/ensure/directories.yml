@@ -1,0 +1,11 @@
+---
+- name: Ensure existsence of  {{ directory.name }}
+  when:
+    - directory.path is defined
+    - directory.path | length > 0
+    - directory.path != omit
+  become: "{{ k3s_become }}"
+  ansible.builtin.file:
+    path: "{{ directory.path }}"
+    state: directory
+    mode: "{{ directory.mode|default(755) }}"

@@ -1,0 +1,62 @@
+options {
+  directory "/var/cache/bind";
+
+  // To open the needed ports on a firewall, see:
+  // http://www.kb.cert.org/vuls/id/800113
+
+  // List of nameservers to forward request too for domains not managed by
+  // this DNS server.
+
+{% if bind9_forwarder %}
+  forwarders {
+{%   for forwarder in bind9_forwarders %}
+    {{ forwarder|indent(width=4) }};
+{%   endfor %}
+  };
+{% endif +%}
+
+  //========================================================================
+  // If BIND logs error messages about the root key being expired,
+  // you will need to update your keys.  See https://www.isc.org/bind-keys
+  //========================================================================
+  dnssec-validation {{ bind9_dnssec_validation_mode }};
+  qname-minimization {{ bind9_qname_minimization }};
+
+  listen-on { listen_ipv4_allowed_networks; };
+{% if not bind9_only_ipv4 %}
+  listen-on-v6 { listen_ipv6_allowed_networks; };
+{% endif %}
+  recursion {{ bind9_recursor|ternary('yes', 'no') }};
+  allow-recursion { {{ bind9_recursor|ternary('queries_allowed_networks', 'none') }}; };
+
+  allow-query { queries_allowed_networks; };
+  allow-transfer { {{ bind9_internal_dns|ternary('transfer_allowed_networks', 'none') }}; };
+};
+
+acl queries_allowed_networks {
+{% for network in bind9_queries_allowed_networks -%}
+  {{ network|indent(width=2, first=true) }};
+{% endfor %}
+};
+
+acl transfer_allowed_networks {
+{% for network in bind9_transfer_allowed_networks -%}
+  {{ network|indent(width=2, first=true) }};
+{% endfor %}
+};
+
+acl listen_ipv4_allowed_networks {
+{% for network in bind9_listen_on_ipv4 %}
+  {{ network|indent(width=2) }};
+{% endfor %}
+};
+
+acl listen_ipv6_allowed_networks {
+{% for network in bind9_listen_on_ipv6 %}
+  {{ network|indent(width=2) }};
+{% endfor %}
+};
+
+{% if bind9_named_options_include_text is defined %}
+{{ bind9_named_options_include_text }}
+{% endif %}

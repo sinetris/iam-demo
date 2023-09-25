@@ -1,0 +1,36 @@
+---
+use_selfsigned_root_ca: true
+system_ca_root_path: "/usr/local/share/ca-certificates"
+system_ca_bundle_file: /etc/ssl/certs/ca-certificates.crt
+cloud_init_netplan_file_path: /etc/netplan/50-cloud-init.yaml
+bootstrap_network:
+  internal_dns: false
+# bootstrap_network:
+#   internal_dns: true
+#   domains:
+#     - example.com
+#   dnssec: allow-downgrade  # true | false | allow-downgrade
+#   dns:
+#     - 1.1.1.1
+#     - 1.0.0.1
+#   fallbackdns:
+#     - 1.0.0.1
+#     - 1.1.1.1
+#   dhcpv4:
+#     usedns: false
+#     usedomains: false
+#   dhcpv6:
+#     usedns: false
+#     usedomains: false
+#   ipv6acceptra:
+#     usedns: false
+#   resolve_txt: |
+#     #DNSOverTLS=no
+#     #MulticastDNS=no
+#     #LLMNR=no
+#     #Cache=no-negative
+#     #CacheFromLocalhost=no
+#     #DNSStubListener=yes
+#     #DNSStubListenerExtra=
+#     #ReadEtcHosts=yes
+#     #ResolveUnicastSingleLabel=no

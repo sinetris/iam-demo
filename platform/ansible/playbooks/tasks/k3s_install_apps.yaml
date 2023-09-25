@@ -1,0 +1,70 @@
+---
+- name: Install cert-manager helm chart
+  kubernetes.core.helm:
+    name: cert-manager
+    chart_ref: jetstack/cert-manager
+    chart_version: v1.12.0
+    namespace: cert-manager
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-cert-manager-values.yaml"
+- name: Configure cert-manager cluster issuer
+  kubernetes.core.k8s:
+    definition: "{{
+        lookup('kubernetes.core.kustomize', dir=cluster_issuer_app_path)
+      }}"
+  vars:
+    cluster_issuer_app_path: "{{ kubernetes_project_path }}/apps/certificates"
+# - name: Install trust-manager
+#   kubernetes.core.helm:
+#     name: trust-manager
+#     chart_ref: jetstack/trust-manager
+#     namespace: cert-manager
+#     create_namespace: true
+#     update_repo_cache: true
+#     timeout: 10m
+#     state: present
+#     wait: true
+- name: Install consul
+  kubernetes.core.helm:
+    name: consul
+    chart_ref: hashicorp/consul
+    namespace: techops
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-consul-values.yaml"
+- name: Install prometheus
+  kubernetes.core.helm:
+    name: prometheus
+    chart_ref: prometheus-community/kube-prometheus-stack
+    namespace: monitoring
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-prometheus-stack-values.yaml"
+# - name: Install loki
+#   kubernetes.core.helm:
+#     name: loki
+#     chart_ref: grafana/loki
+#     namespace: monitoring
+#     create_namespace: true
+#     timeout: 10m
+#     state: present
+#     wait: true
+# - name: Install opa
+#   kubernetes.core.helm:
+#     name: opa
+#     chart_ref: opa/opa-kube-mgmt
+#     namespace: techops
+#     create_namespace: true
+#     timeout: 10m
+#     state: present
+#     wait: true

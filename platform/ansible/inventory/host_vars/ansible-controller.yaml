@@ -1,0 +1,101 @@
+---
+ansible_connection: local
+ansible_user: ubuntu
+is_ansible_controller: true
+use_selfsigned_root_ca: true
+python_libraries:
+  - dnspython
+  - kubernetes
+k3s_copy_cluster_config:
+  - name: 'iam-demo-tech'
+    users:
+      - iamadmin
+      - ubuntu
+is_dns_server: true
+
+bind9_only_ipv4: true
+bind9_listen_on_ipv4:
+  - localhost
+  - localnets
+bind9_listen_on_ipv6:
+  - localhost
+  - localnets
+bind9_admin_email: hostmaster
+bind9_authoritative: true
+bind9_recursor: true
+bind9_forwarder: true
+bind9_forwarders:
+  - 1.1.1.1
+  - 1.0.0.1
+bind9_statistics:
+  enabled: true
+  default_port: 8888
+  channels:
+    - host: 127.0.0.1
+      allow: 127.0.0.1
+    - host: "{{ named_hosts['ansible-controller'] }}"
+      allow: localnets
+bind9_zones:
+  - name: "{{ project_domain }}"
+    serial: '1694903878'
+    default_ttl: 4h
+    refresh: 1h
+    retry: 1m
+    expire: 4h
+    minimum: 5m
+    transfer_allowed_networks:
+      - localhost
+      - localnets
+    ns_records:
+      - content: ns
+    resource_records:
+      - label: ''
+        type: NS
+        content: ns-ipv6
+      - label: '@'
+        type: MX
+        content: mail
+        priority: 10
+      - label: ns
+        ttl: 10m
+        type: A
+        content: "{{ named_hosts['ansible-controller'] }}"
+      - label: ns-ipv6
+        ttl: 1m
+        type: AAAA
+        content: fd8e:9a36:400:9689:5054:ff:fe6a:1d98
+      - label: ansible-controller
+        ttl: 10m
+        type: A
+        content: "{{ named_hosts['ansible-controller'] }}"
+      - label: iam-control-plane
+        ttl: 10m
+        type: A
+        content: "{{named_hosts['iam-control-plane'] }}"
+      - label: linux-desktop
+        ttl: 10m
+        type: A
+        content: "{{named_hosts['linux-desktop'] }}"
+      - label: mail
+        ttl: 1m
+        type: A
+        content: "{{named_hosts['iam-control-plane'] }}"
+      - label: kubernetes
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: grafana
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: prometheus
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: git
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+    include_text: |
+      ; in case there is something you want to add
+      ; at the end of the zone file

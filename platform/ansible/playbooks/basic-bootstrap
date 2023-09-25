@@ -1,0 +1,14 @@
+---
+- name: Gather facts for all hosts
+  hosts: all
+  gather_facts: true
+  tasks:
+    - name: Get all fqdn
+      ansible.builtin.debug:
+        msg: 'fqdn: {{ ansible_facts["fqdn"] }}'
+- name: Bootstrap hosts
+  hosts: all
+  become: true
+  gather_facts: true
+  roles:
+    - role: sinetris.bootstrap

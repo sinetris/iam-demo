@@ -1,0 +1,102 @@
+---
+# Minimum supported versions
+k3s_min_version: 1.26.2
+k3s_ansible_min_version: 2.10.8
+k3s_python_min_version: 3.10
+# Valid states for this role
+k3s_valid_states:
+  - installed
+  - uninstalled
+# Map ansible fact gathering architecture to a release name and suffix in github.
+k3s_arch_lookup:
+  amd64:
+    arch: amd64
+    suffix: ""
+  x86_64:
+    arch: amd64
+    suffix: ""
+  arm64:
+    arch: arm64
+    suffix: "-arm64"
+  aarch64:
+    arch: arm64
+    suffix: "-arm64"
+  arm:
+    arch: arm
+    suffix: "-armhf"
+  arm6l:
+    arch: arm
+    suffix: "-armhf"
+  armv6l:
+    arch: arm
+    suffix: "-armhf"
+  arm7:
+    arch: arm
+    suffix: "-armhf"
+  armv7l:
+    arch: arm
+    suffix: "-armhf"
+  armhf:
+    arch: arm
+    suffix: "-armhf"
+# K3s updates API
+k3s_api_releases: "{{ k3s_api_url }}/v1-release/channels"
+# Download location for releases
+k3s_github_download_url: "{{ k3s_github_url }}/releases/download"
+# Generate a runtime config dictionary
+k3s_runtime_config: "{{
+    (k3s_control_node is defined and k3s_control_node) |
+    ternary((k3s_server | default({})) | combine(k3s_agent | default({})),
+      (k3s_agent | default({})),
+      (k3s_server | default({})) | combine(k3s_agent | default({})))
+  }}"
+# Determine if a cluster should be built
+k3s_conf_build_cluster: "{{
+    not ((ansible_play_hosts_all | length < 2) and k3s_registration_address is not defined)
+  }}"
+# Empty array for counting the number of control plane nodes
+k3s_controller_list: []
+# Control plane port default
+k3s_control_plane_port: "{{ k3s_runtime_config['https-listen-port'] | default(6443) }}"
+# Directory for systemd unit files to be installed. As this role doesn't use package
+# management, this should live in /etc/systemd, not /lib/systemd
+k3s_systemd_unit_dir: "/etc/systemd/system"
+# Directory for installing logrotate config
+k3s_logrotate_dir: /etc/logrotate.d
+# Data directory location for k3s
+k3s_data_dir: "{{ k3s_runtime_config['data-dir'] | default('/var/lib/rancher/k3s') }}"
+# Config directory location for k3s
+k3s_config_dir: "{{ k3s_config_file | dirname }}"
+# Directory for gathering the k3s token for clustering. I don't see this changing.
+k3s_token_location: "{{ k3s_config_dir }}/cluster-token"
+# Path for additional Kubernetes Manifests
+# https://rancher.com/docs/k3s/latest/en/advanced/#auto-deploying-manifests
+k3s_server_manifests_dir: "{{ k3s_data_dir }}/server/manifests"
+k3s_tls_dir: "{{ k3s_data_dir }}/server/tls"
+# OS formatted strings
+k3s_os_distribution: "{{ ansible_distribution | replace(' ', '-') | lower }}"
+k3s_os_version: "{{ ansible_distribution_version | replace([' ', '.'], '-') | lower }}"
+k3s_os_distribution_version: "{{ k3s_os_distribution }}-{{ k3s_os_version }}"
+k3s_os_family: "{{ ansible_os_family | replace(' ', '-') | lower }}"
+# Directories that we need to ensure exist
+k3s_ensure_directories_exist:
+  - name: Config directory
+    path: "{{ k3s_config_dir }}"
+  - name: Config.yaml.d directory
+    path: "{{ k3s_config_yaml_d_dir }}"
+  - name: Systemd unit file directory
+    path: "{{ k3s_systemd_unit_dir }}"
+  - name: Data directory
+    path: "{{ k3s_data_dir }}"
+  - name: Auto-deploying manifests directory
+    path: "{{ k3s_server_manifests_dir }}"
+  - name: Default local storage path
+    path: "{{ k3s_runtime_config['default-local-storage-path'] | default(omit) }}"
+  - name: Private registry config file
+    path: "{{ (k3s_runtime_config['private-registry'] | default(omit)) | dirname }}"
+  - name: CA certs directory
+    path: "{{ k3s_tls_dir }}"
+# Drain command
+k3s_drain_command:
+  true: delete-emptydir-data
+  false: delete-local-data

@@ -1,0 +1,90 @@
+---
+- name: "Verify that required string variables are defined"
+  ansible.builtin.assert:
+    that:
+      - "{{ tmp_var }} is defined"
+      - "{{ tmp_var }} | length > 0"
+      - "{{ tmp_var }} != None"
+    fail_msg: "{{ tmp_var }} needs to be set for the role to work"
+    success_msg: "Required variable {{ tmp_var }} is defined"
+  loop_control:
+    loop_var: tmp_var
+  with_items:
+    - ansible_user
+    - k3s_cluster_name
+    - k3s_registration_address
+- name: Create directory .kube in ansible-controller if doesn't exist
+  when:
+    - k3s_primary_control_node
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: "~/.kube"
+    state: directory
+    mode: "u=rwx,g=rx,o="
+- name: Get k3s config file stats
+  when:
+    - k3s_primary_control_node
+  ansible.builtin.stat:
+    path: /etc/rancher/k3s/k3s.yaml
+  register: k3s_cfg_original_file
+- name: Create directory .kube if doesn't exist
+  when:
+    - k3s_primary_control_node
+  ansible.builtin.file:
+    path: ~{{ ansible_user }}/.kube
+    state: directory
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
+    mode: "u=rwx,g=rx,o="
+- name: Copy kube config file to home directory for {{ ansible_user }}
+  when:
+    - k3s_primary_control_node
+    - k3s_cfg_original_file.stat.exists
+  ansible.builtin.copy:
+    src: "{{ k3s_cfg_original_file.stat.path }}"
+    dest: ~{{ ansible_user }}/.kube/config
+    remote_src: true
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
+    mode: "u=rw,g=,o="
+  register: k3s_backup_file
+#   notify:
+#     - Copied kube config file to home on remote
+# - name: Flush Handlers
+#   ansible.builtin.meta: flush_handlers
+- name: Copy kube config file for remote
+  when:
+    - k3s_primary_control_node
+  ansible.builtin.copy:
+    src: /home/{{ ansible_user }}/.kube/config
+    dest: /home/{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
+    remote_src: true
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
+    mode: "u=rw,g=,o="
+- name: Replace cluster server host for remote
+  when:
+    - k3s_primary_control_node
+  changed_when: true
+  ansible.builtin.command: >-
+    k3s kubectl config set-cluster default \
+      --server=https://{{ k3s_registration_address }}:6443 \
+      --kubeconfig=/home/{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
+- name: Save cluster config in ansible-controller
+  when:
+    - k3s_primary_control_node
+  become: true
+  ansible.builtin.fetch:
+    src: ~{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
+    dest: /var/local/data/.kube/config-{{ k3s_cluster_name }}
+    owner: "{{ ansible_controller_user }}"
+    group: "{{ ansible_controller_user }}"
+    mode: "u=rw,g=,o="
+    flat: true
+- name: Ensure right permissions for cluster config in ansible-controller
+  when:
+    - k3s_primary_control_node
+  delegate_to: localhost
+  ansible.builtin.file:
+    path: /var/local/data/.kube/config-{{ k3s_cluster_name }}
+    mode: "u=rw,g=,o="

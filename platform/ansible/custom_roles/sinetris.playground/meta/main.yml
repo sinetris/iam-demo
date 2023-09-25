@@ -1,0 +1,7 @@
+---
+galaxy_info:
+  role_name: sinetris_playground
+  author: sinetris
+  description: "Manage Red Hat subscription and repositories."
+  license: Apache 2.0
+  min_ansible_version: "8.3"

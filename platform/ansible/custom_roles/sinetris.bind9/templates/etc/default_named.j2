@@ -1,0 +1,7 @@
+# file: /etc/default/named
+#
+# run resolvconf?
+RESOLVCONF=no
+
+# startup options for the server
+OPTIONS="{{ named_options | join(' ') }}"

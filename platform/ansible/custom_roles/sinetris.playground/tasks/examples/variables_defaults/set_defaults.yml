@@ -1,0 +1,8 @@
+---
+- name: Set defaults for playground_dict1
+  ansible.builtin.set_fact:
+    playground_dict1: >-
+      {{
+        __playground_defaults_dict1
+        | ansible.builtin.combine(playground_dict1, recursive=true)
+      }}

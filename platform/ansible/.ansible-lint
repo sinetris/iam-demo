@@ -1,0 +1,34 @@
+---
+# .ansible-lint
+
+# profile: min, basic, moderate, safety, shared, production
+profile: production
+
+exclude_paths:
+  - .cache/
+  - installed/
+  - tmp/
+
+# Enable checking of loop variable prefixes in roles
+loop_var_prefix: "^(__|{role}_)"
+
+# Enforce variable names to follow pattern below, in addition to Ansible own
+# requirements, like avoiding python identifiers. To disable add `var-naming`
+# to skip_list.
+var_naming_pattern: "^[a-z_][a-z0-9_]*$"
+
+use_default_rules: true
+
+enable_list:
+  - yaml
+#   - args
+#   - empty-string-compare  # opt-in
+#   - no-log-password  # opt-in
+#   - no-same-owner  # opt-in
+#   - name[prefix]  # opt-in
+#   # add yaml here if you want to avoid ignoring yaml checks when yamllint
+#   # library is missing. Normally its absence just skips using that rule.
+#   - yaml
+
+skip_list:
+  - "no-handler"
