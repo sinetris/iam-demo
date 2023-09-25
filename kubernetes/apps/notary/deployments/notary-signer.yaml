@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: notary
+    component: notary-signer
+  name: notary-signer
+  namespace: tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notary
+      component: notary-signer
+  template:
+    metadata:
+      labels:
+        app: notary
+        component: notary-signer
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: notary-signer-config
+        - secretRef:
+            name: notary-signer-secret-env
+        image: goharbor/notary-signer-photon:v2.5.2
+        imagePullPolicy: Always
+        name: notary-signer
+        ports:
+        - containerPort: 7899
+          name: grpc
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - mountPath: /etc/notary/signer-config.postgres.json
+          name: config
+          subPath: signer.json
+        - mountPath: /etc/ssl/notary/tls.crt
+          name: signer-certificate
+          subPath: tls.crt
+        - mountPath: /etc/ssl/notary/tls.key
+          name: signer-certificate
+          subPath: tls.key
+      securityContext:
+        fsGroup: 10000
+      volumes:
+      - name: config
+        secret:
+          secretName: notary-signer-secret
+      - name: signer-certificate
+        secret:
+          secretName: notary-signer-tls-secret

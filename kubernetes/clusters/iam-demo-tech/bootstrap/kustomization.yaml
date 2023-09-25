@@ -1,0 +1,6 @@
+resources:
+- namespaces.yaml
+# - ../../../apps/vault
+- ../../../apps/certificates
+# - ../../../apps/ingress-nginx
+# - ../../../apps/ingress-dns

@@ -1,0 +1,85 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: harbor
+    component: chartmuseum
+  name: harbor-chartmuseum
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: harbor
+      component: chartmuseum
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: harbor
+        component: chartmuseum
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: INTERNAL_TLS_ENABLED
+          value: "true"
+        - name: INTERNAL_TLS_KEY_PATH
+          value: /etc/harbor/ssl/chartmuseum/tls.key
+        - name: INTERNAL_TLS_CERT_PATH
+          value: /etc/harbor/ssl/chartmuseum/tls.crt
+        - name: INTERNAL_TLS_TRUST_CA_PATH
+          value: /etc/harbor/ssl/chartmuseum/ca.crt
+        - name: BASIC_AUTH_PASS
+          valueFrom:
+            secretKeyRef:
+              key: secret
+              name: harbor-core
+        - name: AWS_SDK_LOAD_CONFIG
+          value: "1"
+        envFrom:
+        - configMapRef:
+            name: harbor-chartmuseum
+        - secretRef:
+            name: harbor-chartmuseum
+        image: goharbor/chartmuseum-photon:v2.5.2
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9443
+            scheme: HTTPS
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        name: chartmuseum
+        ports:
+        - containerPort: 9443
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9443
+            scheme: HTTPS
+          initialDelaySeconds: 1
+          periodSeconds: 10
+        volumeMounts:
+        - mountPath: /chart_storage
+          name: chartmuseum-data
+        - mountPath: /etc/harbor/ssl/chartmuseum
+          name: chart-internal-certs
+      securityContext:
+        fsGroup: 10000
+        runAsUser: 10000
+      volumes:
+      - name: chartmuseum-data
+        persistentVolumeClaim:
+          claimName: harbor-chartmuseum
+      - name: chart-internal-certs
+        secret:
+          secretName: harbor-chartmuseum-internal-tls

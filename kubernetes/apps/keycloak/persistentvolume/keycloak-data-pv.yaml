@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: keycloak
+    type: local
+  name: keycloak-data-pv
+  namespace: tools
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 50Gi
+  hostPath:
+    path: /var/local/data/keycloak
+  storageClassName: local-path

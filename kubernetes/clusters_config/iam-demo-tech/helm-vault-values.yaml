@@ -1,0 +1,25 @@
+---
+server:
+  ingress:
+    enabled: true
+    annotations:
+      cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    labels:
+      app: vault
+    hosts:
+    - host: vault.iam-demo.test
+    tls:
+    - secretName: iam-demo-vault-tls
+      hosts:
+      - vault.iam-demo.test
+  resources:
+    requests:
+      memory: 128Mi
+      cpu: 100m
+    limits:
+      memory: 256Mi
+      cpu: 250m
+prometheus:
+  enabled: true
+ui:
+  enabled: true

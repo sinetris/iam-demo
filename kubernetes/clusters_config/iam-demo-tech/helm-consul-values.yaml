@@ -1,0 +1,29 @@
+client:
+  dataDirectoryHostPath: /var/local/data/consul-client
+
+global:
+  datacenter: local-demo
+  name: consul
+
+prometheus:
+  enabled: true
+
+server:
+  bootstrapExpect: 1
+  disruptionBudget:
+    maxUnavailable: 0
+  replicas: 1
+
+ui:
+  enabled: true
+  ingress:
+    enabled: true
+    annotations: |
+      cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    hosts:
+    - host: consul.iam-demo.test
+      path: /
+    tls:
+    - hosts:
+      - consul.iam-demo.test
+      secretName: iam-demo-consul-tls

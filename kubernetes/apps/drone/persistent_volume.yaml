@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: drone
+    type: local
+  name: drone-data-pv
+spec:
+  storageClassName: local-path
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 15Gi
+  hostPath:
+    path: /var/local/data/drone

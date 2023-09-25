@@ -1,0 +1,406 @@
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+project_name="iam-demo"
+vault_namespace=tools
+project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+while IFS='' read -r line; do available_clusters+=("$line"); done < \
+  <(find clusters -type d -maxdepth 1 -mindepth 1 -exec basename {} \;)
+
+__usage=$(
+  cat <<-HELPMSG
+		$(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 [OPTIONS]$(tput sgr0)
+
+		$(tput setaf 3)$(tput bold)Manage clusters provisioning.$(tput sgr0)
+
+		Options:
+		  -s, --setup-prerequisite          $(tput setaf 8)Prepare requirements$(tput sgr0)
+		  -c, --create                      $(tput setaf 8)Create clusters$(tput sgr0)
+		  -b, --bootstrap                   $(tput setaf 8)Basic clusters setup$(tput sgr0)
+		  -p, --provision                   $(tput setaf 8)Provision clusters$(tput sgr0)
+		  -e, --deprovision                 $(tput setaf 8)Deprovision clusters$(tput sgr0)
+		  -d, --delete                      $(tput setaf 8)Delete clusters$(tput sgr0)
+		  -l, --limit-to-clusters $(tput setaf 6)<CLUSTER1> <...> <CLUSTERn>$(tput sgr0)
+		                                    $(tput setaf 8)Limit actions to selected clusters$(tput sgr0)
+		    $(tput setaf 3)If no cluster is selected, default to: $(tput sgr0)
+		      $(tput setaf 6)$(tput bold)${available_clusters[*]}$(tput sgr0)
+		  -h, --help                        $(tput setaf 8)This help$(tput sgr0)
+HELPMSG
+)
+
+project_certs_path=${project_path:?}/data/certs
+project_tmp_path=${project_path:?}/data/tmp
+ca_project_certs_path=${project_certs_path}/ca
+ca_global_certs_path=$(mkcert -CAROOT)
+domains_tls_path=${project_certs_path}/domains/${project_name}
+ca_project_key=${ca_project_certs_path}/rootCA-key.pem
+ca_project_cert=${ca_project_certs_path}/rootCA.pem
+domains_tls_key=${domains_tls_path}/key.pem
+domains_tls_crt=${domains_tls_path}/cert.pem
+project_domain="${project_name}"'.test'
+
+vault_unseal() {
+  declare -a vault_pods=()
+  vault_data_path="${project_path}/data/vault"
+  mkdir -p "${vault_data_path}"
+
+  # The exit code reflects the seal status:
+  #     - 0 - unsealed
+  #     - 1 - error
+  #     - 2 - sealed
+  vault_status=$(kubectl exec -n ${vault_namespace} vault-0 -- vault status -format=json) && exit_code=$? || exit_code=$?
+
+  if [ $exit_code -eq 0 ]; then
+    echo "Vault is already unsealed ✅"
+  elif [ $exit_code -eq 2 ]; then
+    while IFS='' read -r line; do vault_pods+=("${line}"); done < \
+      <(kubectl get pods -n ${vault_namespace} -l app.kubernetes.io/name=vault --no-headers -o custom-columns=":metadata.name")
+
+    if [ ${#vault_pods[@]} -gt 0 ]; then
+      echo "Initializing Vault"
+      if [ -f "${vault_data_path}/cluster-keys.json" ]; then
+        local vault_keys_bu
+        vault_keys_bu="${vault_data_path}/cluster-keys.json.$(date +"%Y-%m-%d_%H-%M-%S")"
+        echo "🔥 Backup existing Vault cluster-keys.json in: ${vault_keys_bu}"
+        mv "${vault_data_path}/cluster-keys.json" "${vault_keys_bu}"
+      fi
+      kubectl exec -n ${vault_namespace} vault-0 -- vault operator init -key-shares=1 -key-threshold=1 -format=json >"${vault_data_path}/cluster-keys.json"
+      echo "Vault unseal"
+      vault_unseal_key=$(jq -r ".unseal_keys_b64[]" "${vault_data_path}/cluster-keys.json")
+      for vault_pod in "${vault_pods[@]}"; do
+        kubectl exec -n ${vault_namespace} "${vault_pod}" -- vault operator unseal "${vault_unseal_key}"
+      done
+    else
+      echo "Vault is already initialized ✅"
+    fi
+  else
+    echo "Error checking vault status ❌"
+    echo "${vault_status}" | jq
+  fi
+}
+
+vault_pki() {
+  local cluster_name=$1
+  echo "Initializing Vault PKI in ${cluster_name}"
+  vault_config_path="${project_path}/configs/vault"
+  vault_data_path="${project_path}/data/vault"
+  current_year=$(date +"%Y")
+
+  echo "Vault login"
+  vault_root_token=$(jq -r ".root_token" "${vault_data_path}/cluster-keys.json")
+  kubectl exec -n ${vault_namespace} vault-0 -- vault login "${vault_root_token}"
+
+  echo "Add admin policy in PKI"
+  kubectl cp "${vault_config_path}/admin-policy.hcl" ${vault_namespace}/vault-0:/tmp/admin-policy.hcl
+  kubectl exec -n ${vault_namespace} vault-0 -- vault policy write admin /tmp/admin-policy.hcl
+
+  echo "Add pki-admin policy in PKI"
+  kubectl cp "${vault_config_path}/pki-policy.hcl" ${vault_namespace}/vault-0:/tmp/pki-policy.hcl
+  kubectl exec -n ${vault_namespace} vault-0 -- vault policy write pki-admin /tmp/pki-policy.hcl
+
+  echo "List enabled secrets engines in Vault"
+  kubectl exec -n ${vault_namespace} vault-0 -- vault secrets list
+
+  echo "Initializing pki/ path in Vault"
+  for i in {1..5}; do
+    local exit_status
+    local cmd_output
+    cmd_output=$(kubectl exec -n ${vault_namespace} vault-0 -- vault secrets enable pki 2>&1) && exit_status=$? || exit_status=$?
+    if [[ $cmd_output =~ "Error from server: error dialing backend: EOF" ]]; then
+      seconds=$((i * 3))
+      sleep $seconds
+    elif [[ $cmd_output =~ "already in use" ]]; then
+      echo -e "$(tput setaf 3)pki/ already exist (skipping)$(tput sgr0)"
+      break
+    elif [ "${exit_status}" -ne "0" ]; then
+      echo -e "$(tput setaf 1)Error creating $(tput bold)pki/$(tput sgr0).\n" >&2
+      echo -e "$(tput setaf 5)${cmd_output}$(tput sgr0).\n" >&2
+      exit 2
+    else
+      break
+    fi
+  done
+
+  echo "Tune PKI max_lease_ttl"
+  kubectl exec -n ${vault_namespace} vault-0 -- vault secrets tune -max-lease-ttl=87600h pki
+
+  echo "Generate root certs in PKI"
+  for i in {1..5}; do
+    local exit_status
+    local cmd_output
+    cmd_output=$(kubectl exec -n ${vault_namespace} vault-0 -- vault write -field=certificate pki/root/generate/internal \
+      common_name="${project_domain}" \
+      issuer_name="root-${project_name}-${current_year}-1" \
+      ttl=87600h 2>&1 | tee "${ca_project_certs_path}/root_${project_name}_ca.crt") && exit_status=$? || exit_status=$?
+    if [[ $cmd_output =~ "Error from server: error dialing backend: EOF" ]]; then
+      seconds=$((i * 3))
+      echo "Fail $i - retry in $seconds seconds"
+      sleep $seconds
+    elif [[ $cmd_output =~ "already in use" ]]; then
+      echo -e "$(tput setaf 3)pki/ already exist (skipping)$(tput sgr0)"
+      break
+    elif [ "${exit_status}" -ne "0" ]; then
+      echo -e "$(tput setaf 1)Error creating $(tput bold)root certs in PKI$(tput sgr0) Exit status: '${exit_status}'.\n" >&2
+      echo -e "$(tput setaf 5)${cmd_output}$(tput sgr0).\n" >&2
+      exit 2
+    else
+      echo -e "$(tput setaf 3)Saving root certs in $(tput bold)${ca_project_certs_path}/root_${project_name}_ca.crt$(tput sgr0)"
+      echo "$cmd_output" > "${ca_project_certs_path}/root_${project_name}_ca.crt"
+      break
+    fi
+  done
+
+  echo "Create a role for the root CA in PKI"
+  for i in {1..5}; do
+    local exit_status
+    local cmd_output
+    cmd_output=$(kubectl exec -n ${vault_namespace} vault-0 -- vault write "pki/roles/${current_year}-servers" allow_any_name=true 2>&1) && exit_status=$? || exit_status=$?
+    if [[ $cmd_output =~ "Error from server: error dialing backend: EOF" ]]; then
+      seconds=$((i * 3))
+      sleep $seconds
+    elif [[ $cmd_output =~ "already in use" ]]; then
+      echo -e "$(tput setaf 3)pki/ already exist (skipping)$(tput sgr0)"
+      break
+    elif [ "${exit_status}" -ne "0" ]; then
+      echo -e "$(tput setaf 1)Error creating $(tput bold)root CA role in PKI$(tput sgr0).\n" >&2
+      echo -e "$(tput setaf 5)${cmd_output}$(tput sgr0).\n" >&2
+      exit 2
+    else
+      break
+    fi
+  done
+
+  echo "List roles in PKI"
+  kubectl exec -n ${vault_namespace} vault-0 -- vault list pki/issuers/
+}
+
+cluster_bootstrap() {
+  local cluster_name=$1
+  local cluster_context=$2
+
+  kubectl -n cert-manager create secret tls "${project_name}-ca" \
+    --context "${cluster_context}" \
+    --key "${ca_project_key}" \
+    --cert "${ca_project_cert}" \
+    --dry-run=client \
+    -o yaml \
+    | kubectl apply -f -
+
+  kubectl -n cert-manager create secret tls "${project_name}-tls" \
+    --context "${cluster_context}" \
+    --key "${domains_tls_key}" \
+    --cert "${domains_tls_crt}" \
+    --dry-run=client \
+    -o yaml \
+    | kubectl apply -f -
+
+  echo "$(tput setaf 3)Applying kustomize $(tput setaf 6)$(tput bold)bootstrap$(tput sgr0)"
+  kubectl kustomize "clusters/${cluster_name}/bootstrap" --context "${cluster_context}" | kubectl apply -f -
+
+  # echo "$(tput setaf 3)Create secret tls $(tput setaf 6)$(tput bold)${project_name}-ca$(tput sgr0)"
+  # kubectl -n ${vault_namespace} create secret tls "${project_name}-ca" \
+  #   --context "${cluster_context}" \
+  #   --key "${ca_project_key}" \
+  #   --cert "${ca_project_cert}" \
+  #   --dry-run=client \
+  #   -o yaml \
+  #   | kubectl apply -f -
+
+  # echo "$(tput setaf 3)Helm install $(tput setaf 6)$(tput bold)consul$(tput sgr0)"
+  # helm upgrade --install consul hashicorp/consul --create-namespace -n consul \
+  #   --values "${project_path}/clusters_config/${cluster_name}/helm-consul-values.yaml"
+  # echo "$(tput setaf 3)Helm install $(tput setaf 6)$(tput bold)prometheus$(tput sgr0)"
+  # helm upgrade --install prometheus --create-namespace prometheus-community/kube-prometheus-stack \
+  #   --values "${project_path}/clusters_config/${cluster_name}/helm-prometheus-stack-values.yaml"
+  # echo "$(tput setaf 3)Helm install $(tput setaf 6)$(tput bold)loki$(tput sgr0)"
+  # helm upgrade --install loki --namespace=monitoring grafana/loki
+  # echo "$(tput setaf 3)Helm install $(tput setaf 6)$(tput bold)opa$(tput sgr0)"
+  # helm upgrade --install opa --create-namespace --namespace opa opa/opa-kube-mgmt
+  # helm upgrade --install gatekeeper --create-namespace --namespace gatekeeper-system gatekeeper/gatekeeper \
+  #   --values "${project_path}/clusters_config/${cluster_name}/helm-gatekeeper-values.yaml"
+}
+
+cluster_provisioning() {
+  local cluster_name=$1
+  local cluster_context=$2
+  check_dependency 'kubectl'
+  echo "$(tput setaf 3)Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
+  vault_unseal
+  vault_pki "${cluster_name}"
+
+  kubectl kustomize "clusters/$cluster_name" --context "${cluster_context}" | kubectl apply -f -
+  echo "$(tput setaf 3)Checking if ready $(tput setaf 6)$(tput bold)ingress-nginx$(tput sgr0)"
+  sleep 15
+  kubectl wait --context "${cluster_context}" --namespace ingress-nginx \
+    --for=condition=ready pod \
+    --selector=app.kubernetes.io/component=controller \
+    --timeout=90s
+}
+
+cluster_post_provisioning() {
+  local cluster_name=$1
+  local cluster_context=$2
+  check_dependency 'kubectl'
+  echo "$(tput setaf 3)Post-Provisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
+}
+
+array_contains_element() {
+  local array="$1[@]"
+  local seeking=$2
+  local contained
+  local element
+  contained=false
+  for element in "${!array}"; do
+    if [[ $element == "$seeking" ]]; then
+      contained=true
+      break
+    fi
+  done
+  $contained
+}
+
+chech_clusters() {
+  local _selected_clusters="$1[@]"
+  local _available_clusters="$2[@]"
+  local element
+  valid_clusters=true
+  for element in "${!_selected_clusters}"; do
+    if ! array_contains_element "$_available_clusters" "$element"; then
+      echo -en "$(tput setaf 1)Cluster $(tput bold)$element$(tput sgr0)" >&2
+      echo -e "$(tput setaf 1) not present in available clusters: $(tput bold)${!_available_clusters}$(tput sgr0)" >&2
+      valid_clusters=false
+    fi
+  done
+  $valid_clusters
+}
+
+clusters_provisioning() {
+  local clusters="$1[@]"
+  local cluster
+  echo -e "$(tput setaf 3)Provisioning Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
+  for cluster in "${!clusters}"; do
+    cluster_provisioning "${cluster}" "${cluster}"
+    cluster_post_provisioning "${cluster}" "${cluster}"
+  done
+}
+
+clusters_delete() {
+  local clusters="$1[@]"
+  local cluster
+  echo -e "$(tput setaf 3)Clusters to delete: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
+  for cluster in "${!clusters}"; do
+    minikube delete --profile "${cluster}"
+  done
+}
+
+clusters_deprovisioning() {
+  local clusters="$1[@]"
+  local cluster
+  echo -e "$(tput setaf 3)Deprovisioning Clusters: $(tput setaf 6)$(tput bold)${!clusters}$(tput sgr0)"
+  for cluster in "${!clusters}"; do
+    cluster_deprovisioning "${cluster}" "${cluster}"
+  done
+}
+
+cluster_deprovisioning() {
+  local cluster_name=$1
+  local cluster_context=$2
+  check_dependency 'kubectl'
+  echo "$(tput setaf 3)Deprovisioning $(tput setaf 6)$(tput bold)$cluster_name$(tput sgr0)"
+
+  kubectl kustomize "clusters/$cluster_name" --context "${cluster_context}" | kubectl delete -f -
+}
+
+setup=false
+bootstrap=false
+provision=false
+deprovision=false
+delete=false
+all_available_clusters=true
+while [ $# -gt 0 ] && [ "$1" != "" ]; do
+  case $1 in
+    -s | --setup)
+      shift
+      setup=true
+      ;;
+    -b | --bootstrap)
+      shift
+      bootstrap=true
+      ;;
+    -p | --provision)
+      shift
+      provision=true
+      ;;
+    -e | --deprovision)
+      shift
+      deprovision=true
+      ;;
+    -d | --delete)
+      shift
+      delete=true
+      ;;
+    -l | --limit-to-clusters)
+      shift
+      if [ $# -lt 1 ] || [[ "${1::1}" == "-" ]]; then
+        echo "$(tput setaf 1)Need a cluster name$(tput sgr0)" >&2
+        printf "$(tput setaf 1)Available clusters: $(tput bold)%s$(tput sgr0)\n" "${available_clusters[*]}" >&2
+        usage
+        exit 1
+      fi
+      while [ $# -gt 0 ] && [ "$1" != "" ]; do
+        if [[ "${1::1}" == "-" ]]; then
+          break
+        else
+          all_available_clusters=false
+          selected_clusters+=("$1")
+          shift
+        fi
+      done
+      ;;
+    -h | --help)
+      shift
+      usage
+      exit 0
+      ;;
+    *)
+      printf "$(tput setaf 1)Unexpected argument: $(tput bold)%s$(tput sgr0)\n" "$1" >&2
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+if $all_available_clusters; then
+  selected_clusters=("${available_clusters[@]}")
+else
+  echo "Checking clusters $(tput bold)${selected_clusters[*]}$(tput sgr0)"
+  if ! chech_clusters selected_clusters available_clusters; then
+    usage
+    exit 1
+  fi
+fi
+
+if $delete; then
+  clusters_delete selected_clusters
+  exit 0
+fi
+
+if $setup; then
+  project_setup_darwin_minikube
+  generate_local_certs
+fi
+if $create; then
+  clusters_creation_minikube selected_clusters
+fi
+if $bootstrap; then
+  clusters_bootstrap selected_clusters
+fi
+if $provision; then
+  clusters_provisioning selected_clusters
+fi
+if $provision; then
+  clusters_provisioning selected_clusters
+fi
+
+exit 0

@@ -1,0 +1,13 @@
+resources:
+- configmaps/keycloak-config.yaml
+- deployments/keycloak.yaml
+- ingresses/keycloak-ingress.yaml
+- persistentvolume/keycloak-data-pv.yaml
+- persistentvolumeclaims/keycloak-data-pvc.yaml
+- services/keycloak.yaml
+secretGenerator:
+- literals:
+  - KEYCLOAK_ADMIN=keycloak
+  - KEYCLOAK_ADMIN_PASSWORD=password1234
+  name: keycloak-secret
+  namespace: tools

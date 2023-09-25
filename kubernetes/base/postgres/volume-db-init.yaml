@@ -1,0 +1,31 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: postgres-db-init-pv
+  labels:
+    type: local
+    app: postgres
+spec:
+  storageClassName: local-path
+  capacity:
+    storage: 15Gi
+  accessModes:
+  - ReadWriteMany
+  hostPath:
+    path: /var/local/assets/postgres
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: postgres-db-init-pvc
+  labels:
+    app: postgres
+spec:
+  storageClassName: local-path
+  volumeMode: Filesystem
+  volumeName: postgres-db-init-pv
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi

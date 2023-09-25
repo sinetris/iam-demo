@@ -1,0 +1,10 @@
+namespace: tools
+resources:
+- vault-data-pv.yaml
+- vault-data-pvc.yaml
+- vault-home-pv.yaml
+- vault-home-pvc.yaml
+- injector
+- server
+- tests
+- ui

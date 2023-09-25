@@ -1,0 +1,5 @@
+resources:
+- portal-cm.yaml
+- portal-dpl.yaml
+- portal-svc.yaml
+- portal-tls.yaml

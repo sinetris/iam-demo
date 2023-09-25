@@ -1,0 +1,7 @@
+resources:
+- clusterrole.yaml
+- clusterrolebinding.yaml
+- deployment.yaml
+- mutating-webhook.yaml
+- service.yaml
+- serviceaccount.yaml

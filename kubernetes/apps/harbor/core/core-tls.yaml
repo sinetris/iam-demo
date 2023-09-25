@@ -1,0 +1,17 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  labels:
+    app: harbor
+  name: harbor-core-internal-tls
+spec:
+  secretName: harbor-core-internal-tls
+  dnsNames:
+  - harbor-core
+  - harbor-core.default
+  - harbor-core.default.svc
+  - harbor-core.default.svc.cluster
+  - harbor-core.default.svc.cluster.local
+  issuerRef:
+    kind: ClusterIssuer
+    name: iam-demo-certs-issuer

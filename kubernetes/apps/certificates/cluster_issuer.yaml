@@ -1,0 +1,8 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: iam-demo-certs-issuer
+  namespace: cert-manager
+spec:
+  ca:
+    secretName: iam-demo-ca

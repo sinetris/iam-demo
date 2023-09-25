@@ -1,0 +1,26 @@
+---
+# Source: drone/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: drone
+  labels:
+    app: drone
+  # annotations:
+  #   cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+spec:
+  # tls:
+  #   - hosts:
+  #       - "drone.iam-demo.test"
+  #     secretName: iam-demo-drone-tls
+  rules:
+    - host: "drone.iam-demo.test"
+      http:
+        paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              name: drone
+              port:
+                number: 8080

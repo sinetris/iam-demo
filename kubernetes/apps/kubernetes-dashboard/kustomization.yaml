@@ -1,0 +1,4 @@
+resources:
+- dashboard.yaml
+- serviceaccount.yaml
+- clusterrolebinding.yaml

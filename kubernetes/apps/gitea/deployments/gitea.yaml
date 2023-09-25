@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  namespace: tools
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: gitea
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gitea
+    spec:
+      containers:
+      - envFrom:
+        - configMapRef:
+            name: gitea-config
+        image: gitea/gitea:1.16.8
+        imagePullPolicy: IfNotPresent
+        name: gitea
+        ports:
+        - containerPort: 22
+          name: gitea-ssh
+          protocol: TCP
+        - containerPort: 3000
+          name: gitea-http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 250m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        volumeMounts:
+        - mountPath: /data
+          name: gitea-data-volume
+      volumes:
+      - name: gitea-data-volume
+        persistentVolumeClaim:
+          claimName: gitea-data-pvc

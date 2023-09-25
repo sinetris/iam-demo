@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: keycloak
+  name: keycloak
+  namespace: tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - args:
+        - start-dev
+        envFrom:
+        - configMapRef:
+            name: keycloak-config
+        - secretRef:
+            name: keycloak-secret
+        image: quay.io/keycloak/keycloak:18.0.2
+        name: keycloak
+        ports:
+        - containerPort: 8080
+          name: http
+        readinessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 200m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /opt/keycloak/data
+          name: keycloak-data-volume
+      volumes:
+      - name: keycloak-data-volume
+        persistentVolumeClaim:
+          claimName: keycloak-data-pvc

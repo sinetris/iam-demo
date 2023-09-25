@@ -1,0 +1,36 @@
+commonLabels:
+  app: notary
+configMapGenerator:
+- literals:
+  - MIGRATIONS_PATH=migrations/server/postgresql
+  name: notary-server-config
+  namespace: tools
+- literals:
+  - MIGRATIONS_PATH=migrations/signer/postgresql
+  - NOTARY_SIGNER_DEFAULTALIAS=defaultalias
+  name: notary-signer-config
+  namespace: tools
+resources:
+- postgres
+- deployments/notary-server.yaml
+- deployments/notary-signer.yaml
+- ingresses/notary-ingress.yaml
+- services/notary-server.yaml
+- services/notary-signer.yaml
+secretGenerator:
+- literals:
+  - DB_URL=postgres://postgres:password@notary-postgres:5432/notaryserver?sslmode=disable
+  name: notary-server-secret-env
+  namespace: tools
+- files:
+  - server.json=assets/server.json
+  name: notary-server-secret
+  namespace: tools
+- literals:
+  - DB_URL=postgres://postgres:password@notary-postgres:5432/notarysigner?sslmode=disable
+  name: notary-signer-secret-env
+  namespace: tools
+- files:
+  - signer.json=assets/signer.json
+  name: notary-signer-secret
+  namespace: tools

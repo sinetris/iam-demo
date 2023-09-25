@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: opa
+  name: opa
+  namespace: tools
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opa
+  template:
+    metadata:
+      labels:
+        app: opa
+      name: opa
+    spec:
+      containers:
+      - args:
+        - run
+        - "--ignore=.*"
+        - "--server"
+        - /policies
+        image: openpolicyagent/opa:0.12.2
+        name: opa
+        ports:
+        - containerPort: 8181
+          name: http
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        volumeMounts:
+        - mountPath: /policies
+          name: opa-policy
+          readOnly: true
+      volumes:
+      - name: opa-policy
+        persistentVolumeClaim:
+          claimName: opa-policy-pvc

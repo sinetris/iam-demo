@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-world-app
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: hello-world-app
+  template:
+    metadata:
+      labels:
+        app: hello-world-app
+    spec:
+      containers:
+      - image: gcr.io/google-samples/hello-app:2.0
+        name: hello-world-app
+        ports:
+        - containerPort: 8080
+        resources:
+          limits:
+            cpu: 200m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+  name: example-ingress
+  namespace: kube-system
+spec:
+  rules:
+  - host: hello-john.iam-demo.test
+    http:
+      paths:
+      - backend:
+          service:
+            name: external-hello-world-app
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  - host: hello-jane.iam-demo.test
+    http:
+      paths:
+      - backend:
+          service:
+            name: external-hello-world-app
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - hello-john.iam-demo.test
+    - hello-jane.iam-demo.test
+    secretName: iam-demo-example-tls
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: external-hello-world-app
+  namespace: kube-system
+spec:
+  externalName: hello-world-app.default.svc.cluster.local
+  type: ExternalName
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-world-app
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: hello-world-app

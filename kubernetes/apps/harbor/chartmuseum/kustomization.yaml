@@ -1,0 +1,7 @@
+resources:
+- chartmuseum-cm.yaml
+- chartmuseum-dpl.yaml
+- chartmuseum-pvc.yaml
+- chartmuseum-secret.yaml
+- chartmuseum-svc.yaml
+- chartmuseum-tls.yaml

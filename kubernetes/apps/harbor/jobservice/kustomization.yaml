@@ -1,0 +1,8 @@
+resources:
+- jobservice-cm-env.yaml
+- jobservice-cm.yaml
+- jobservice-dpl.yaml
+- jobservice-pvc.yaml
+- jobservice-secrets.yaml
+- jobservice-svc.yaml
+- jobservice-tls.yaml

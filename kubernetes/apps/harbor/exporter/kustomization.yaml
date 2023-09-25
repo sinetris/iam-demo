@@ -1,0 +1,5 @@
+resources:
+- exporter-cm-env.yaml
+- exporter-dpl.yaml
+- exporter-secret.yaml
+- exporter-svc.yaml

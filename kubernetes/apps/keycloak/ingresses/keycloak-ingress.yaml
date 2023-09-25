@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  # annotations:
+  #   cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+  name: keycloak-ingress
+  namespace: tools
+spec:
+  rules:
+  - host: keycloak.iam-demo.test
+    http:
+      paths:
+      - backend:
+          service:
+            name: keycloak
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  # tls:
+  # - hosts:
+  #   - keycloak.iam-demo.test
+  #   secretName: iam-demo-keycloak-tls

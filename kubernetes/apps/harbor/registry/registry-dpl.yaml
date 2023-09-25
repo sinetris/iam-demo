@@ -1,0 +1,160 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: harbor
+    component: registry
+  name: harbor-registry
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: harbor
+      component: registry
+  strategy:
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: harbor
+        component: registry
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - args:
+        - serve
+        - /etc/registry/config.yml
+        env:
+        - name: INTERNAL_TLS_ENABLED
+          value: "true"
+        - name: INTERNAL_TLS_KEY_PATH
+          value: /etc/harbor/ssl/registry/tls.key
+        - name: INTERNAL_TLS_CERT_PATH
+          value: /etc/harbor/ssl/registry/tls.crt
+        - name: INTERNAL_TLS_TRUST_CA_PATH
+          value: /etc/harbor/ssl/registry/ca.crt
+        envFrom:
+        - secretRef:
+            name: harbor-registry
+        image: goharbor/registry-photon:v2.5.2
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5443
+            scheme: HTTPS
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        name: registry
+        ports:
+        - containerPort: 5443
+        - containerPort: 5001
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5443
+            scheme: HTTPS
+          initialDelaySeconds: 1
+          periodSeconds: 10
+        volumeMounts:
+        - mountPath: /storage
+          name: registry-data
+        - mountPath: /etc/registry/passwd
+          name: registry-htpasswd
+          subPath: passwd
+        - mountPath: /etc/registry/config.yml
+          name: registry-config
+          subPath: config.yml
+        - mountPath: /etc/harbor/ssl/registry
+          name: registry-internal-certs
+      - env:
+        - name: CORE_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: secret
+              name: harbor-core
+        - name: JOBSERVICE_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: JOBSERVICE_SECRET
+              name: harbor-jobservice
+        - name: INTERNAL_TLS_ENABLED
+          value: "true"
+        - name: INTERNAL_TLS_KEY_PATH
+          value: /etc/harbor/ssl/registry/tls.key
+        - name: INTERNAL_TLS_CERT_PATH
+          value: /etc/harbor/ssl/registry/tls.crt
+        - name: INTERNAL_TLS_TRUST_CA_PATH
+          value: /etc/harbor/ssl/registry/ca.crt
+        envFrom:
+        - configMapRef:
+            name: harbor-registryctl
+        - secretRef:
+            name: harbor-registry
+        - secretRef:
+            name: harbor-registryctl
+        image: goharbor/harbor-registryctl:v2.5.2
+        imagePullPolicy: IfNotPresent
+        resources:
+          limits:
+            cpu: 100m
+            memory: 50Mi
+          requests:
+            cpu: 10m
+            memory: 50Mi
+        livenessProbe:
+          httpGet:
+            path: /api/health
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        name: registryctl
+        ports:
+        - containerPort: 8443
+        readinessProbe:
+          httpGet:
+            path: /api/health
+            port: 8443
+            scheme: HTTPS
+          initialDelaySeconds: 1
+          periodSeconds: 10
+        volumeMounts:
+        - mountPath: /storage
+          name: registry-data
+        - mountPath: /etc/registry/config.yml
+          name: registry-config
+          subPath: config.yml
+        - mountPath: /etc/registryctl/config.yml
+          name: registry-config
+          subPath: ctl-config.yml
+        - mountPath: /etc/harbor/ssl/registry
+          name: registry-internal-certs
+      securityContext:
+        fsGroup: 10000
+        runAsUser: 10000
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - name: registry-htpasswd
+        secret:
+          items:
+          - key: REGISTRY_HTPASSWD
+            path: passwd
+          secretName: harbor-registry-htpasswd
+      - configMap:
+          name: harbor-registry
+        name: registry-config
+      - name: registry-data
+        persistentVolumeClaim:
+          claimName: harbor-registry
+      - name: registry-internal-certs
+        secret:
+          secretName: harbor-registry-internal-tls

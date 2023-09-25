@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: drone
+  labels:
+    app: drone
+data:
+  DRONE_GITEA_SERVER: "https://gitea.iam-demo.test"
+  DRONE_SERVER_HOST: "drone.iam-demo.test"
+  DRONE_SERVER_PROTO: "https"

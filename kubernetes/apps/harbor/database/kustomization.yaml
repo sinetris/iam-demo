@@ -1,0 +1,4 @@
+resources:
+- database-secret.yaml
+- database-ss.yaml
+- database-svc.yaml

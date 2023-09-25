@@ -1,0 +1,6 @@
+resources:
+- configmap.yaml
+- volume.yaml
+- volume-db-init.yaml
+- deployment.yaml
+- service.yaml

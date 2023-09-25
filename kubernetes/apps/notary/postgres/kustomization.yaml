@@ -1,0 +1,23 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: tools
+namePrefix: notary-
+resources:
+- ../../../base/postgres
+patchesJson6902:
+- target:
+    version: v1
+    kind: PersistentVolume
+    name: postgres-data-pv
+  patch: |-
+    - op: replace
+      path: /spec/hostPath/path
+      value: "/var/local/data/notary-postgres"
+- target:
+    version: v1
+    kind: PersistentVolume
+    name: postgres-db-init-pv
+  patch: |-
+    - op: replace
+      path: /spec/hostPath/path
+      value: "/var/local/assets/notary/postgres-init"

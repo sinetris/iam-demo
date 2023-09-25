@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    # cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    ingress.kubernetes.io/proxy-body-size: '0'
+    ingress.kubernetes.io/ssl-redirect: 'true'
+    nginx.ingress.kubernetes.io/proxy-body-size: '0'
+    nginx.ingress.kubernetes.io/ssl-redirect: 'true'
+  name: notary-ingress
+  namespace: tools
+spec:
+  rules:
+  - host: notary-server.iam-demo.test
+    http:
+      paths:
+      - backend:
+          service:
+            name: notary-server
+            port:
+              number: 4443
+        path: /
+        pathType: Prefix
+  - host: notary-signer.iam-demo.test
+    http:
+      paths:
+      - backend:
+          service:
+            name: notary-signer
+            port:
+              number: 7899
+        path: /
+        pathType: Prefix
+  # tls:
+  # - hosts:
+  #   - notary.iam-demo.test
+  #   - notary-server.iam-demo.test
+  #   secretName: notary-server-tls-secret
+  # - hosts:
+  #   - notary-signer.iam-demo.test
+  #   secretName: notary-signer-tls-secret

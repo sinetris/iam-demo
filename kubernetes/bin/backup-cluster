@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -Eeuo pipefail
+
+CLUSTER_NAME='iam-demo-basic'
+BACKUP_PATH=../.tmp
+
+while read -r resource; do
+  echo "  scanning resource '${resource}'"
+  while read -r namespace item _details; do
+    k8s_backup_path="${BACKUP_PATH}/${CLUSTER_NAME}/${namespace}/${resource}"
+    mkdir -p "${k8s_backup_path}"
+    echo "    exporting item '${namespace} ${item}'"
+    kubectl get "$resource" -n "$namespace" "$item" -o yaml >"${bu_path}/$item.yaml" &
+  done < <(kubectl get "$resource" --all-namespaces 2>&1 | tail -n +2)
+done < <(kubectl api-resources --namespaced=true 2>/dev/null | grep -v "events" | tail -n +2 | awk '{print $1}')
+
+echo "Waiting to complete..."
+wait
+echo "Kubernetes cluster resources description created in:"
+echo "  '${BACKUP_PATH}/${CLUSTER_NAME}/'"

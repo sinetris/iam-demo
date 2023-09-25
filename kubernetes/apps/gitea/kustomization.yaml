@@ -1,0 +1,8 @@
+namespace: tools
+resources:
+- configmaps/gitea-config.yaml
+- persistentvolume/gitea-data-pv.yaml
+- persistentvolumeclaims/gitea-data-pvc.yaml
+- deployments/gitea.yaml
+- services/gitea.yaml
+- ingresses/gitea-ingress.yaml

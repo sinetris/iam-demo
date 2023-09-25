@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    app: gitea
+    type: local
+  name: gitea-data-pv
+spec:
+  accessModes:
+  - ReadWriteMany
+  capacity:
+    storage: 500Gi
+  hostPath:
+    path: /var/local/data/gitea
+  storageClassName: local-path

@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  labels:
+    app: harbor
+    component: database
+  name: harbor-database
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: harbor
+      component: database
+  serviceName: harbor-database
+  template:
+    metadata:
+      labels:
+        app: harbor
+        component: database
+    spec:
+      automountServiceAccountToken: false
+      containers:
+      - env:
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        envFrom:
+        - secretRef:
+            name: harbor-database
+        image: goharbor/harbor-db:v2.5.2
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          exec:
+            command:
+            - /docker-healthcheck.sh
+          initialDelaySeconds: 300
+          periodSeconds: 10
+        name: database
+        readinessProbe:
+          exec:
+            command:
+            - /docker-healthcheck.sh
+          initialDelaySeconds: 1
+          periodSeconds: 10
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: database-data
+        - mountPath: /dev/shm
+          name: shm-volume
+      initContainers:
+      - args:
+        - '-c'
+        - '[ -e /var/lib/postgresql/data/postgresql.conf ] && [ ! -d /var/lib/postgresql/data/pgdata ] && mkdir -m 0700 /var/lib/postgresql/data/pgdata && mv /var/lib/postgresql/data/* /var/lib/postgresql/data/pgdata/ || true'
+        command:
+        - /bin/sh
+        image: goharbor/harbor-db:v2.5.2
+        imagePullPolicy: IfNotPresent
+        name: data-migrator
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: database-data
+      - args:
+        - '-c'
+        - chmod -R 700 /var/lib/postgresql/data/pgdata || true
+        command:
+        - /bin/sh
+        image: goharbor/harbor-db:v2.5.2
+        imagePullPolicy: IfNotPresent
+        name: data-permissions-ensurer
+        volumeMounts:
+        - mountPath: /var/lib/postgresql/data
+          name: database-data
+      securityContext:
+        fsGroup: 999
+        runAsUser: 999
+      terminationGracePeriodSeconds: 120
+      volumes:
+      - emptyDir:
+          medium: Memory
+          sizeLimit: 512Mi
+        name: shm-volume
+  volumeClaimTemplates:
+  - metadata:
+      labels:
+        app: harbor
+      name: database-data
+    spec:
+      accessModes:
+      - ReadWriteMany
+      resources:
+        requests:
+          storage: 1Gi

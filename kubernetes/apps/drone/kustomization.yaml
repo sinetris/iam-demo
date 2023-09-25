@@ -1,0 +1,15 @@
+namespace: tools
+resources:
+- configmap.yaml
+- deployment.yaml
+- ingress.yaml
+- service.yaml
+- serviceaccount.yaml
+- persistent_volume.yaml
+- persistent_volume_claim.yaml
+secretGenerator:
+- literals:
+  - DRONE_GITEA_CLIENT_ID=abc
+  - DRONE_GITEA_CLIENT_SECRET=123
+  name: drone-gitea-secrets
+  namespace: tools
