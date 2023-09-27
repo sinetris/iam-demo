@@ -92,6 +92,14 @@ bind9_zones:
         ttl: 1m
         type: CNAME
         content: iam-control-plane
+      - label: alertmanager
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: consul
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
       - label: git
         ttl: 1m
         type: CNAME
