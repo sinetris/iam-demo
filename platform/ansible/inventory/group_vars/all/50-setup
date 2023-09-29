@@ -8,7 +8,7 @@ project_domain: iam-demo.test
 kubernetes_gpg_keyring: /etc/apt/keyrings/kubernetes-archive-keyring.gpg
 base_certs_path: /usr/local/etc/certs
 ca_root_certs_path: "{{ base_certs_path }}/ca"
-do_not_log: false
+do_not_log: true
 is_dns_server: false
 bootstrap_network:
   internal_dns: true

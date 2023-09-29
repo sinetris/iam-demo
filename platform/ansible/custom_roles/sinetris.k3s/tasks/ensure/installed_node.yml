@@ -41,6 +41,7 @@
       become: "{{ k3s_become }}"
       notify:
         - "Restart k3s systemd"
+      no_log: "{{ do_not_log }}"
 - name: Ensure k3s service unit file is present
   become: "{{ k3s_become }}"
   ansible.builtin.template:

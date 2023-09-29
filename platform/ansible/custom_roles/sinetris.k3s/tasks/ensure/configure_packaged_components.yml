@@ -3,10 +3,12 @@
   ansible.builtin.slurp:
     src: "{{ k3s_tls_dir }}/server-ca.crt"
   register: server_ca_crt
+  no_log: "{{ do_not_log }}"
 - name: Read server-ca.key
   ansible.builtin.slurp:
     src: "{{ k3s_tls_dir }}/server-ca.key"
   register: server_ca_key
+  no_log: "{{ do_not_log }}"
 - name: "Setup Traefik Helm chart"
   vars:
     b64encoded_crt: "{{ server_ca_crt['content']|b64encode }}"
@@ -15,3 +17,4 @@
     src: traefik-config.yaml.j2
     dest: "{{ k3s_server_manifests_dir }}/traefik-config.yaml"
     mode: u=rw,g=r,o=
+    no_log: "{{ do_not_log }}"

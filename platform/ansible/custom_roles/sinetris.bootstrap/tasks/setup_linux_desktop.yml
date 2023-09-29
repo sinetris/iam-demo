@@ -10,6 +10,7 @@
     dest: '/etc/firefox/certificates/{{ item }}'
     state: hard
     mode: u=rw,g=r,o=r
+  no_log: "{{ do_not_log }}"
   loop:
       - "{{ project_name }}-root-ca.crt"
       - "{{ project_name }}-intermediate-ca.crt"

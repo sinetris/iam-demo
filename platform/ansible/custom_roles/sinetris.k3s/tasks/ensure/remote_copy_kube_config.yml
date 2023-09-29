@@ -48,6 +48,7 @@
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
   register: k3s_backup_file
+  no_log: "{{ do_not_log }}"
 #   notify:
 #     - Copied kube config file to home on remote
 # - name: Flush Handlers
@@ -62,6 +63,7 @@
     group: "{{ ansible_user }}"
     owner: "{{ ansible_user }}"
     mode: "u=rw,g=,o="
+  no_log: "{{ do_not_log }}"
 - name: Replace cluster server host for remote
   when:
     - k3s_primary_control_node
