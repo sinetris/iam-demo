@@ -1,3 +1,6 @@
+---
+# To generate reference values, run:
+#   helm show values prometheus-community/kube-prometheus-stack
 nameOverride: grafana-stack
 namespaceOverride: monitoring
 
@@ -9,8 +12,10 @@ alertmanager:
   enabled: true
   ingress:
     enabled: true
+    ingressClassName: traefik
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
     labels:
       app.kubernetes.io/name: alertmanager
     hosts:
@@ -28,8 +33,10 @@ grafana:
   adminPassword: iam-demo-operator
   ingress:
     enabled: true
+    ingressClassName: traefik
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
     labels:
       app.kubernetes.io/name: grafana
     hosts:
@@ -46,8 +53,10 @@ prometheus:
   enabled: true
   ingress:
     enabled: true
+    ingressClassName: traefik
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
     labels:
       app.kubernetes.io/name: prometheus
     hosts:
@@ -59,3 +68,49 @@ prometheus:
     - secretName: iam-demo-prometheus-tls
       hosts:
       - prometheus.iam-demo.test
+  monitor:
+    relabelings:
+      - action: replace
+        replacement: loki
+        targetLabel: cluster
+
+cleanPrometheusOperatorObjectNames: true
+
+kubelet:
+  serviceMonitor:
+    cAdvisorRelabelings:
+      - action: replace
+        replacement: loki
+        targetLabel: cluster
+      - targetLabel: metrics_path
+        sourceLabels:
+          - "__metrics_path__"
+      - targetLabel: "instance"
+        sourceLabels:
+          - "node"
+
+defaultRules:
+  additionalRuleLabels:
+    cluster: loki
+
+"kube-state-metrics":
+  prometheus:
+    monitor:
+      relabelings:
+        - action: replace
+          replacement: loki
+          targetLabel: cluster
+        - targetLabel: "instance"
+          sourceLabels:
+            - "__meta_kubernetes_pod_node_name"
+
+"prometheus-node-exporter":
+  prometheus:
+    monitor:
+      relabelings:
+        - action: replace
+          replacement: loki
+          targetLabel: cluster
+        - targetLabel: "instance"
+          sourceLabels:
+            - "__meta_kubernetes_pod_node_name"

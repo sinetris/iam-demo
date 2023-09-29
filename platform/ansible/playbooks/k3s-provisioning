@@ -54,7 +54,7 @@
         apply: true
         definition: "{{ lookup('template', 'ca-secrets.yaml.j2') }}"
       no_log: "{{ do_not_log }}"
-    - name: Run kustomize
+    - name: Run kustomize project bootstrap
       delegate_to: localhost
       when:
         - k3s_primary_control_node
@@ -62,7 +62,19 @@
         - k3s_state == 'installed'
       kubernetes.core.k8s:
         definition: "{{
-            lookup('kubernetes.core.kustomize', dir=kustomize_project_path)
+            lookup('kubernetes.core.kustomize', dir=project_bootstrap_kustomize_path)
+          }}"
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"
+    - name: Run kustomize for the project
+      delegate_to: localhost
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      kubernetes.core.k8s:
+        definition: "{{
+            lookup('kubernetes.core.kustomize', dir=project_kustomize_path)
           }}"
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"

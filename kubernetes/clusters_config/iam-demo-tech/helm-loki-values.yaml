@@ -1,0 +1,54 @@
+---
+# To generate reference values, run:
+#   helm show values grafana/loki
+
+ingress:
+  enabled: true
+  ingressClassName: traefik
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  labels:
+    app.kubernetes.io/name: loki
+  hosts:
+  - loki.iam-demo.test
+  tls:
+  - secretName: iam-demo-loki-tls
+    hosts:
+    - loki.iam-demo.test
+
+gateway:
+  ingress:
+    ingressClassName: traefik
+    annotations:
+      cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    labels:
+      app.kubernetes.io/name: loki-gw
+    hosts:
+    - host: loki-gw.iam-demo.test
+      paths:
+      - path: /
+        pathType: Prefix
+    tls:
+    - secretName: loki-gateway-tls
+      hosts:
+      - loki-gw.iam-demo.test
+
+minio:
+  enabled: true
+
+monitoring:
+  dashboards:
+    namespace: monitoring
+  rules:
+    namespace: monitoring
+    additionalGroups:
+    - name: loki-rules
+      rules:
+      - record: job:loki_request_duration_seconds_bucket:sum_rate
+        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
+      - record: job_route:loki_request_duration_seconds_bucket:sum_rate
+        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
+      - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
+        expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)

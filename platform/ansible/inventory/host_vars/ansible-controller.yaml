@@ -100,6 +100,14 @@ bind9_zones:
         ttl: 1m
         type: CNAME
         content: iam-control-plane
+      - label: loki
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: loki-gw
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
       - label: git
         ttl: 1m
         type: CNAME

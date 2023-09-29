@@ -67,6 +67,7 @@ check_hostnames_on_port=( \
   'prometheus 443' \
   'alertmanager 443' \
   'consul 443' \
+  'loki 443' \
 )
 
 good_result=$(tput bold)$(tput setaf 2)+$(tput sgr0)

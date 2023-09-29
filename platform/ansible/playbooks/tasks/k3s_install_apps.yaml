@@ -10,12 +10,10 @@
     state: present
     wait: true
     values_files:
-      - "{{ kubernetes_cluster_config_path }}/helm-cert-manager-values.yaml"
+    - "{{ kubernetes_cluster_config_path }}/helm-cert-manager-values.yaml"
 - name: Configure cert-manager cluster issuer
   kubernetes.core.k8s:
-    definition: "{{
-        lookup('kubernetes.core.kustomize', dir=cluster_issuer_app_path)
-      }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir=cluster_issuer_app_path) }}"
   vars:
     cluster_issuer_app_path: "{{ kubernetes_project_path }}/apps/certificates"
 # - name: Install trust-manager
@@ -38,7 +36,7 @@
     state: present
     wait: true
     values_files:
-      - "{{ kubernetes_cluster_config_path }}/helm-consul-values.yaml"
+    - "{{ kubernetes_cluster_config_path }}/helm-consul-values.yaml"
 - name: Install prometheus
   kubernetes.core.helm:
     name: prometheus
@@ -49,16 +47,18 @@
     state: present
     wait: true
     values_files:
-      - "{{ kubernetes_cluster_config_path }}/helm-prometheus-stack-values.yaml"
-# - name: Install loki
-#   kubernetes.core.helm:
-#     name: loki
-#     chart_ref: grafana/loki
-#     namespace: monitoring
-#     create_namespace: true
-#     timeout: 10m
-#     state: present
-#     wait: true
+    - "{{ kubernetes_cluster_config_path }}/helm-prometheus-stack-values.yaml"
+- name: Install loki
+  kubernetes.core.helm:
+    name: loki
+    chart_ref: grafana/loki
+    namespace: monitoring
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+    - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
 # - name: Install opa
 #   kubernetes.core.helm:
 #     name: opa

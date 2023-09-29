@@ -26,10 +26,6 @@
       ansible.builtin.apt:
         name: helm
         state: present
-    - name: Install kubectl dependencies
-      ansible.builtin.apt:
-        name: apt-transport-https
-        state: present
     - name: Add kubectl Signing Certificate
       ansible.builtin.apt_key:
         url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
