@@ -214,8 +214,13 @@ local provision_vms(config, provisionings) =
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
+      if [ $# -lt 1 ]; then
+        machine_list="%(vms)s"
+      else
+        machine_list=$@
+      fi
       multipass info \
-        --format yaml %(vms)s
+        --format yaml ${machine_list}
     ||| % {
       vms: std.join(' ', vms),
     },

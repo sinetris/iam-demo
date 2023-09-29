@@ -66,7 +66,7 @@
         content: |||
           xfce4-session
         |||,
-        permissions: '0640',
+        permissions: '0o640',
       };
 
     local manifest = {
@@ -85,6 +85,16 @@
       },
       users: ['default'] + [user_mapping(user) for user in vm.users],
       apt: {
+        // APT config
+        conf: |||
+          APT {
+            Install-Recommends "%(install_recommends)s";
+            Install-Suggests "false";
+            Get {
+              Fix-Broken "true";
+            };
+          };
+        ||| % { install_recommends: is_desktop },
         primary: [
           {
             arches: ['default'],

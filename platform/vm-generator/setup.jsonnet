@@ -1,30 +1,48 @@
 local config = import 'config.jsonnet';
 assert std.isObject(config);
 
-local admin_user = {
-  username: config.admin_user,
-  is_admin: true,
-  password: config.admin_password,
-  [if std.objectHas(config, 'admin_ssh_authorized_keys') then 'ssh_authorized_keys']:
-    config.admin_ssh_authorized_keys,
-  [if std.objectHas(config, 'admin_ssh_import_ids') then 'ssh_import_ids']:
-    config.admin_ssh_import_ids,
-};
-local ansible_user = {
-  username: 'ansible',
-  is_admin: true,
-  [if std.objectHas(config, 'ansible_ssh_authorized_keys') then 'ssh_authorized_keys']:
-    config.ansible_ssh_authorized_keys,
-  [if std.objectHas(config, 'ansible_ssh_import_ids') then 'ssh_import_ids']:
-    config.ansible_ssh_import_ids,
-};
+local admin_user =
+  local use_ssh_authorized_keys =
+    std.objectHas(config, 'admin_ssh_authorized_keys')
+    && std.isArray(config.admin_ssh_authorized_keys)
+    && std.length(config.admin_ssh_authorized_keys) > 0;
+  local use_ssh_import_ids =
+    std.objectHas(config, 'admin_ssh_import_ids')
+    && std.isArray(config.admin_ssh_import_ids)
+    && std.length(config.admin_ssh_import_ids) > 0;
+  {
+    username: config.admin_user,
+    is_admin: true,
+    password: config.admin_password,
+    [if use_ssh_authorized_keys then 'ssh_authorized_keys']:
+      config.admin_ssh_authorized_keys,
+    [if use_ssh_import_ids then 'ssh_import_ids']:
+      config.admin_ssh_import_ids,
+  };
+local ansible_user =
+  local use_ssh_authorized_keys =
+    std.objectHas(config, 'ansible_ssh_authorized_keys')
+    && std.isArray(config.ansible_ssh_authorized_keys)
+    && std.length(config.ansible_ssh_authorized_keys) > 0;
+  local use_ssh_import_ids =
+    std.objectHas(config, 'ansible_ssh_import_ids')
+    && std.isArray(config.ansible_ssh_import_ids)
+    && std.length(config.ansible_ssh_import_ids) > 0;
+  {
+    username: 'ansible',
+    is_admin: true,
+    [if use_ssh_authorized_keys then 'ssh_authorized_keys']:
+      config.ansible_ssh_authorized_keys,
+    [if use_ssh_import_ids then 'ssh_import_ids']:
+      config.ansible_ssh_import_ids,
+  };
 
 local add_default_machine_data(vm) = {
-  host_path: error 'Must override "spirit"',
+  host_path: error 'Must override "host_path"',
   cpus: 1,
   memory: '1G',
   timeout: 15 * 60,
-  storage_space: '5G',
+  storage_space: '10G',
   users: [admin_user],
   mounts: [
     {
@@ -36,7 +54,7 @@ local add_default_machine_data(vm) = {
 
 {
   application: 'iam-demo',
-  app_dir: '$HOME/.configs/apps/' + self.application,
+  app_dir: '$HOME/.local/projects-data/' + self.application,
   ansible_inventory_path:
     if std.objectHas(config, 'ansible_inventory_path') then
       config.ansible_inventory_path
@@ -66,7 +84,7 @@ local add_default_machine_data(vm) = {
       host_path: $.app_dir + '/' + self.hostname,
       cpus: 4,
       memory: '8G',
-      storage_space: '15G',
+      storage_space: '25G',
       tags: [
         'kubernetes',
         'nested-hw-virtualization',
@@ -79,7 +97,6 @@ local add_default_machine_data(vm) = {
 
       cpus: 2,
       memory: '4G',
-      storage_space: '8G',
       tags: [
         'desktop',
       ],
@@ -108,6 +125,7 @@ local add_default_machine_data(vm) = {
       destination_host: 'ansible-controller',
       script:
         |||
+          set -Eeuo pipefail
           cloud-init status --wait --long
           source $HOME/.profile
           sudo snap install yq
@@ -126,6 +144,7 @@ local add_default_machine_data(vm) = {
       working_directory: '/ansible',
       script:
         |||
+          set -Eeuo pipefail
           source $HOME/.profile
           cat inventory/machines_config.json \
             | jq '.list | {all: {hosts: map({(.name|tostring): {ansible_host: .ipv4[0]}}) | add}}' \
@@ -144,11 +163,12 @@ local add_default_machine_data(vm) = {
       working_directory: '/ansible',
       script:
         |||
+          set -Eeuo pipefail
           source $HOME/.profile
           ansible-playbook playbooks/bootstrap-ansible-controller
           ansible-playbook playbooks/bootstrap-bind
           ansible-playbook playbooks/basic-bootstrap
-          [ -f /var/run/reboot-required ] && sudo shutdown -r +1 "Rebooting in 1 minute" || true
+          [ -f /var/run/reboot-required ] && echo "Remember to reboot ansible-controller" || true
         |||,
     },
     {
@@ -157,6 +177,7 @@ local add_default_machine_data(vm) = {
       working_directory: '/ansible',
       script:
         |||
+          set -Eeuo pipefail
           source $HOME/.profile
           ansible-playbook playbooks/k3s-bootstrap
           ansible-playbook playbooks/k3s-provisioning
