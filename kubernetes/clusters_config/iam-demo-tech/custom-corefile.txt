@@ -1,5 +1,0 @@
-${project_domain}:53 {
-   errors
-   cache 30
-   forward . ${control_plane_ip}
-}
