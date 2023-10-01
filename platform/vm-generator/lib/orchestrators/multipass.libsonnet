@@ -120,17 +120,41 @@ local provision_vms(config, provisionings) =
         if std.objectHas(opts, 'working_directory') then
           "--working-directory '" + opts.working_directory + "'"
         else '';
-  
+      local pre_command =
+        if std.objectHas(opts, 'reboot_on_error') then
+          'set +e'
+        else '';
+      local post_command =
+        if std.objectHas(opts, 'reboot_on_error') then
+          |||
+            exit_code=$? || exit_code=$?
+
+            if [ $exit_code -eq 0 ]; then
+              echo "No need to reboot"
+            else
+              echo "Reboot"
+              multipass restart %(destination_host)s
+            fi
+            set -e
+          ||| % {
+            destination_host: opts.destination_host,
+          }
+        else '';
+
       |||
+        %(pre_command)s
         multipass exec %(destination_host)s \
           %(working_directory)s -- \
           /bin/bash <<-'END'
         %(script)s
         END
+        %(post_command)s
       ||| % {
+        pre_command: std.stripChars(pre_command, '\n'),
         working_directory: cwd,
         script: std.stripChars(opts.script, '\n'),
         destination_host: opts.destination_host,
+        post_command: std.stripChars(post_command, '\n'),
       };
     local generate_provisioning(opts) =
       assert std.objectHas(opts, 'type');
@@ -148,7 +172,7 @@ local provision_vms(config, provisionings) =
 
 {
   virtualmachines_bootstrap(config)::
-    local provisionings = 
+    local provisionings =
       if std.objectHas(config, 'base_provisionings') then
         config.base_provisionings
       else [];
@@ -173,7 +197,7 @@ local provision_vms(config, provisionings) =
       vms_provision: provision_vms(config, provisionings),
     },
   virtualmachines_provisioning(config)::
-    local provisionings = 
+    local provisionings =
       if std.objectHas(config, 'app_provisionings') then
         config.app_provisionings
       else [];

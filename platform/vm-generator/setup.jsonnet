@@ -155,8 +155,6 @@ local add_default_machine_data(vm) = {
           ansible 'all' -m ping
         |||,
     },
-  ],
-  app_provisionings: [
     {
       type: 'inline-shell',
       destination_host: 'ansible-controller',
@@ -168,9 +166,21 @@ local add_default_machine_data(vm) = {
           ansible-playbook playbooks/bootstrap-ansible-controller
           ansible-playbook playbooks/bootstrap-bind
           ansible-playbook playbooks/basic-bootstrap
-          [ -f /var/run/reboot-required ] && echo "Remember to reboot ansible-controller" || true
         |||,
     },
+    {
+      type: 'inline-shell',
+      destination_host: 'ansible-controller',
+      working_directory: '/ansible',
+      script:
+        |||
+          set -Eeuo pipefail
+          [ -f /var/run/reboot-required ] && exit 1 || exit 0
+        |||,
+      reboot_on_error: true,
+    },
+  ],
+  app_provisionings: [
     {
       type: 'inline-shell',
       destination_host: 'ansible-controller',
