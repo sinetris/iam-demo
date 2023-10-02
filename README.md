@@ -67,7 +67,7 @@ check_hostnames_on_port=( \
   'prometheus 443' \
   'alertmanager 443' \
   'consul 443' \
-  'loki 443' \
+  'keycloak 443' \
 )
 
 good_result=$(tput bold)$(tput setaf 2)+$(tput sgr0)
@@ -150,13 +150,15 @@ The [kubernetes](kubernetes/) folder is mounted inside the `ansible-controller` 
 Connect to `linux-desktop` [using Remote Desktop](#connect-using-remote-desktop).
 
 Open Firefox inside the VM, and use the following URLs:
+(**Note:** you can find them in Firefox bookmarks)
 
 - Grafana: <https://grafana.iam-demo.test>
   - user: admin
-  - password: iam-demo-operator
+  - password: grafana-admin
 - Prometheus: <https://prometheus.iam-demo.test>
 - Alertmanager: <https://alertmanager.iam-demo.test>
 - Consul: <https://consul.iam-demo.test>
+- Keycloak: <https://keycloak.iam-demo.test>
 
 To access Traefik or Kubernetes dashboards, follow the instructions in the respective subsections.
 
@@ -167,9 +169,9 @@ Open a terminal and start port forwarding using:
 ```sh
 export KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl port-forward \
-  --namespace kube-system \
+  --namespace tools \
   $(kubectl get pods \
-    --namespace kube-system \
+    --namespace tools \
     --selector "app.kubernetes.io/name=traefik" \
     --output=name) \
   9000:9000
