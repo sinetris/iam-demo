@@ -1,50 +1,33 @@
 ---
 # To generate reference values, run:
 #   helm show values grafana/loki
+# 
+# NOTE: the hard anti-affinity was removed because this demo uses only one node
+#   Changes:
+# - requiredDuringSchedulingIgnoredDuringExecution
+# + preferredDuringSchedulingIgnoredDuringExecution
 
-ingress:
-  enabled: true
-  ingressClassName: traefik
-  annotations:
-    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-  labels:
-    app.kubernetes.io/name: loki
-  hosts:
-  - loki.iam-demo.test
-  tls:
-  - secretName: iam-demo-loki-tls
-    hosts:
-    - loki.iam-demo.test
+loki:
+  auth_enabled: false
 
 gateway:
-  ingress:
-    ingressClassName: traefik
-    annotations:
-      cert-manager.io/cluster-issuer: iam-demo-certs-issuer
-      traefik.ingress.kubernetes.io/router.entrypoints: websecure
-    labels:
-      app.kubernetes.io/name: loki-gw
-    hosts:
-    - host: loki-gw.iam-demo.test
-      paths:
-      - path: /
-        pathType: Prefix
-    tls:
-    - secretName: loki-gateway-tls
-      hosts:
-      - loki-gw.iam-demo.test
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
 
 minio:
   enabled: true
 
 monitoring:
   dashboards:
-    namespace: monitoring
+    namespace: observability
   rules:
-    namespace: monitoring
+    namespace: observability
     additionalGroups:
-    - name: loki-rules
+    - name: additional-loki-rules
       rules:
       - record: job:loki_request_duration_seconds_bucket:sum_rate
         expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
@@ -52,3 +35,27 @@ monitoring:
         expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
       - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
         expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
+
+write:
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+
+read:
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname
+
+backend:
+  affinity: |
+    podAntiAffinity:
+      preferredDuringSchedulingIgnoredDuringExecution:
+        - weight: 100
+          podAffinityTerm:
+            topologyKey: kubernetes.io/hostname

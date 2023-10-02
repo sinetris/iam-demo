@@ -1,12 +1,17 @@
 ---
 # To generate reference values, run:
 #   helm show values prometheus-community/kube-prometheus-stack
-nameOverride: grafana-stack
+# or see:
+# https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
+
+# nameOverride: observability-stack
+fullnameOverride: o11y-stack
+
 namespaceOverride: observability
 
 commonLabels:
-  app.kubernetes.io/component: observability
-  app.kubernetes.io/part-of: grafana-stack
+  app.kubernetes.io/component: monitoring
+  app.kubernetes.io/part-of: observability
 
 alertmanager:
   enabled: true
@@ -30,7 +35,17 @@ alertmanager:
 
 grafana:
   enabled: true
-  adminPassword: iam-demo-operator
+  adminPassword: grafana-admin
+  additionalDataSources:
+  - name: Loki
+    type: loki
+    orgId: 1
+    url: http://loki-gateway
+    editable: true
+  # # Send logs to file
+  # env:
+  #   GF_LOG_MODE: console file
+  #   GF_PATHS_LOGS: /var/log/grafana/
   ingress:
     enabled: true
     ingressClassName: traefik
@@ -48,6 +63,17 @@ grafana:
     - secretName: iam-demo-grafana-tls
       hosts:
       - grafana.iam-demo.test
+  sidecar:
+    dashboards:
+      enabled: true
+      searchNamespace: ALL
+      label: grafana_dashboard
+      labelValue: '1'
+    datasources:
+      enabled: true
+      searchNamespace: ALL
+      label: grafana_datasource
+      labelValue: '1'
 
 prometheus:
   enabled: true
@@ -70,47 +96,47 @@ prometheus:
       - prometheus.iam-demo.test
   monitor:
     relabelings:
-      - action: replace
-        replacement: loki
-        targetLabel: cluster
+    - action: replace
+      replacement: loki
+      targetLabel: cluster
 
 cleanPrometheusOperatorObjectNames: true
 
 kubelet:
   serviceMonitor:
     cAdvisorRelabelings:
-      - action: replace
-        replacement: loki
-        targetLabel: cluster
-      - targetLabel: metrics_path
-        sourceLabels:
-          - "__metrics_path__"
-      - targetLabel: "instance"
-        sourceLabels:
-          - "node"
+    - action: replace
+      replacement: loki
+      targetLabel: cluster
+    - targetLabel: metrics_path
+      sourceLabels:
+      - __metrics_path__
+    - targetLabel: instance
+      sourceLabels:
+      - node
 
 defaultRules:
   additionalRuleLabels:
     cluster: loki
 
-"kube-state-metrics":
+kube-state-metrics:
   prometheus:
     monitor:
-      relabelings:
-        - action: replace
-          replacement: loki
-          targetLabel: cluster
-        - targetLabel: "instance"
-          sourceLabels:
-            - "__meta_kubernetes_pod_node_name"
+    relabelings:
+      - action: replace
+        replacement: loki
+        targetLabel: cluster
+      - targetLabel: instance
+        sourceLabels:
+        - __meta_kubernetes_pod_node_name
 
-"prometheus-node-exporter":
+prometheus-node-exporter:
   prometheus:
     monitor:
       relabelings:
-        - action: replace
-          replacement: loki
-          targetLabel: cluster
-        - targetLabel: "instance"
-          sourceLabels:
-            - "__meta_kubernetes_pod_node_name"
+      - action: replace
+        replacement: loki
+        targetLabel: cluster
+      - targetLabel: instance
+        sourceLabels:
+        - __meta_kubernetes_pod_node_name
