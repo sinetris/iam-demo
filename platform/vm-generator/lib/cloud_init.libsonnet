@@ -1,3 +1,5 @@
+local addArrayIf(condition, array, elseArray=[]) = if condition then array else elseArray;
+
 {
   cloud_config(config, vm)::
     assert std.isObject(config);
@@ -10,6 +12,8 @@
         vm.tags
       else [];
     local is_desktop = std.member(tags, 'desktop');
+    local is_vnc_server = std.member(tags, 'vnc-server');
+    local is_rdp_server = std.member(tags, 'rdpserver');
     local is_ansible_controller = std.member(tags, 'ansible-controller');
     local user_mapping(user) =
       assert std.isObject(user);
@@ -18,7 +22,7 @@
       {
         name: user.username,
         shell: '/bin/bash',
-        groups: if is_admin then [
+        groups: addArrayIf(is_admin, [
           'adm',
           'audio',
           'cdrom',
@@ -33,12 +37,13 @@
           'sudo',
           'users',
           'video',
-          'xrdp',
-        ] else [
+          'rdptest',
+        ], [
           'staff',
           'users',
+        ]) + addArrayIf(is_rdp_server, [
           'xrdp',
-        ],
+        ]),
         [if is_admin then 'sudo']: 'ALL=(ALL) NOPASSWD:ALL',
         [if std.objectHas(user, 'password') then 'passwd']: user.password,
         [if std.objectHas(user, 'plain_text_passwd') then 'plain_text_passwd']: user.plain_text_passwd,
@@ -60,14 +65,37 @@
         ['mkdir', '-p', home_path + '/.local/bin'],
         ['chown', '-R', ownership, home_path + '/.local'],
       ];
-    local xsession_file() =
+    local write_files() = if is_desktop then [
       {
         path: '/etc/skel/.xsession',
         content: |||
           xfce4-session
         |||,
         permissions: '0o640',
-      };
+      },
+    ] else [] + if is_vnc_server then [
+      {
+        path: '/lib/systemd/system/x11vnc.service',
+        content: |||
+          [Unit]
+          Description=VNC service
+          Requires=display-manager.service
+          After=display-manager.service
+
+          [Service]
+          Type=forking
+          ExecStart=/usr/bin/x11vnc -forever -noxrecord -auth guess -rfbauth /etc/x11vnc.passwd
+          # /usr/bin/x11vnc -display :0 -noxrecord -noxfixes -noxdamage -auth guess -rfbauth /etc/x11vnc.passwd
+          ExecStop=/usr/bin/killall x11vnc
+          Restart=on-failure
+          RestartSec=10
+
+          [Install]
+          WantedBy=multi-user.target
+        |||,
+        permissions: '0o644',
+      },
+    ] else [];
 
     local manifest = {
       hostname: vm.hostname,
@@ -125,29 +153,41 @@
         'apt-transport-https',
         'gnupg2',
         'jq',
-      ] + if is_desktop then [
+      ] + addArrayIf(is_desktop, [
         'xfce4',
         'xfce4-session',
-        'xrdp',
-        'xclip',
+        'xfce4-goodies',
+        'xfce4-panel',
+        'xfce4-terminal',
         'xfce4-clipman-plugin',
+        'xclip',
         'firefox',
-      ] else [],
-      runcmd: [
-        ['apt', 'install', '--fix-broken', '-y'],
-        ['apt', 'clean'],
-        ['apt', 'auto-clean'],
-      ] + if is_desktop then [
+      ]) + addArrayIf(is_rdp_server, [
+        'xrdp',
+      ]) + addArrayIf(is_vnc_server, [
+        'lightdm',
+        'xvfb',
+        'novnc',
+        'x11vnc',
+      ]),
+      runcmd: addArrayIf(is_desktop, [
         ['snap', 'install', 'code', '--classic'],
+      ]) + addArrayIf(is_rdp_server, [
         ['systemctl', 'enable', 'xrdp'],
         ['service', 'xrdp', 'restart'],
-      ] else [] + std.flatMap(
+      ]) + addArrayIf(is_vnc_server, [
+        ['x11vnc', '-storepasswd', 'iamdemo', '/etc/x11vnc.passwd'],
+        ['systemctl', 'enable', 'x11vnc'],
+        ['service', 'x11vnc', 'restart'],
+      ]) + std.flatMap(
         runcmd_for_user,
         ['ubuntu'] + [user.username for user in vm.users]
-      ),
-      write_files: if is_desktop then [
-        xsession_file(),
-      ] else [],
+      ) + [
+        ['apt', 'install', '--fix-broken', '-y'],
+        ['apt', 'clean'],
+        ['apt', 'autoclean'],
+      ],
+      write_files: write_files(),
       final_message: |||
         ## template: jinja
         cloud-init final message

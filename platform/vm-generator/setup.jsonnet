@@ -98,6 +98,7 @@ local add_default_machine_data(vm) = {
       cpus: 2,
       memory: '4G',
       tags: [
+        'rdpserver',
         'desktop',
       ],
       users+: [ansible_user],
