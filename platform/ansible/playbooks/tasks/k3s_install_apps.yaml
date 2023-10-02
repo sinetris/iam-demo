@@ -4,7 +4,7 @@
     name: cert-manager
     chart_ref: jetstack/cert-manager
     chart_version: v1.12.0
-    namespace: cert-manager
+    namespace: security
     create_namespace: true
     timeout: 10m
     state: present
@@ -20,7 +20,7 @@
 #   kubernetes.core.helm:
 #     name: trust-manager
 #     chart_ref: jetstack/trust-manager
-#     namespace: cert-manager
+#     namespace: security
 #     create_namespace: true
 #     update_repo_cache: true
 #     timeout: 10m
@@ -30,7 +30,7 @@
   kubernetes.core.helm:
     name: consul
     chart_ref: hashicorp/consul
-    namespace: techops
+    namespace: tools
     create_namespace: true
     timeout: 10m
     state: present
@@ -41,7 +41,7 @@
   kubernetes.core.helm:
     name: prometheus
     chart_ref: prometheus-community/kube-prometheus-stack
-    namespace: monitoring
+    namespace: observability
     create_namespace: true
     timeout: 10m
     state: present
@@ -52,7 +52,7 @@
   kubernetes.core.helm:
     name: loki
     chart_ref: grafana/loki
-    namespace: monitoring
+    namespace: observability
     create_namespace: true
     timeout: 10m
     state: present
@@ -63,7 +63,7 @@
 #   kubernetes.core.helm:
 #     name: opa
 #     chart_ref: opa/opa-kube-mgmt
-#     namespace: techops
+#     namespace: tools
 #     create_namespace: true
 #     timeout: 10m
 #     state: present

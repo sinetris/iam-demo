@@ -18,7 +18,7 @@ webhooks:
   clientConfig:
     service:
       name: vault-agent-injector-svc
-      namespace: monitoring
+      namespace: security
       path: /mutate
     caBundle: ''
   rules:

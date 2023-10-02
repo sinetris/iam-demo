@@ -2,10 +2,10 @@
 # To generate reference values, run:
 #   helm show values prometheus-community/kube-prometheus-stack
 nameOverride: grafana-stack
-namespaceOverride: monitoring
+namespaceOverride: observability
 
 commonLabels:
-  app.kubernetes.io/component: monitoring
+  app.kubernetes.io/component: observability
   app.kubernetes.io/part-of: grafana-stack
 
 alertmanager:

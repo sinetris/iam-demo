@@ -45,7 +45,7 @@
       vars:
         secret_type: kubernetes.io/tls
         secret_metadata_name: iam-demo-ca
-        secret_metadata_namespace: cert-manager
+        secret_metadata_namespace: security
         b64encoded_crt: "{{ lookup('file', '{{ ca_root_certs_path }}/intermediate-ca.crt') | b64encode }}"
         b64encoded_key: "{{ lookup('file', '{{ ca_root_certs_path }}/intermediate-ca.key') | b64encode }}"
       environment:

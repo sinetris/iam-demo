@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: vault
-  namespace: monitoring
+  namespace: security
   labels:
     app.kubernetes.io/name: vault
     app.kubernetes.io/instance: vault

@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 project_name="iam-demo"
-vault_namespace=tools
+vault_namespace=security
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 while IFS='' read -r line; do available_clusters+=("$line"); done < \
@@ -214,7 +214,7 @@ cluster_bootstrap() {
   # helm upgrade --install prometheus --create-namespace prometheus-community/kube-prometheus-stack \
   #   --values "${project_path}/clusters_config/${cluster_name}/helm-prometheus-stack-values.yaml"
   # echo "$(tput setaf 3)Helm install $(tput setaf 6)$(tput bold)loki$(tput sgr0)"
-  # helm upgrade --install loki --namespace=monitoring grafana/loki
+  # helm upgrade --install loki --namespace=observability grafana/loki
   # echo "$(tput setaf 3)Helm install $(tput setaf 6)$(tput bold)opa$(tput sgr0)"
   # helm upgrade --install opa --create-namespace --namespace opa opa/opa-kube-mgmt
   # helm upgrade --install gatekeeper --create-namespace --namespace gatekeeper-system gatekeeper/gatekeeper \

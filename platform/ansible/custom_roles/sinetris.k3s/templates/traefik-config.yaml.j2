@@ -4,7 +4,7 @@ kind: Secret
 type: Opaque
 metadata:
   name: traefik-tls-cert
-  namespace: kube-system
+  namespace: tools
 data:
   tls.crt: {{ b64encoded_crt }}
   tls.key: {{ b64encoded_key }}
@@ -13,7 +13,7 @@ apiVersion: helm.cattle.io/v1
 kind: HelmChartConfig
 metadata:
   name: traefik
-  namespace: kube-system
+  namespace: tools
 spec:
   valuesContent: |-
     tlsStore:
