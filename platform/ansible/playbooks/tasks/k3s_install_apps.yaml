@@ -26,7 +26,7 @@
 #     timeout: 10m
 #     state: present
 #     wait: true
-- name: Install consul
+- name: Install Consul
   kubernetes.core.helm:
     name: consul
     chart_ref: hashicorp/consul
@@ -37,7 +37,7 @@
     wait: true
     values_files:
     - "{{ kubernetes_cluster_config_path }}/helm-consul-values.yaml"
-- name: Install prometheus
+- name: Install Prometheus and Grafana
   kubernetes.core.helm:
     name: prometheus
     chart_ref: prometheus-community/kube-prometheus-stack
@@ -48,7 +48,7 @@
     wait: true
     values_files:
     - "{{ kubernetes_cluster_config_path }}/helm-prometheus-stack-values.yaml"
-- name: Install loki
+- name: Install Loki
   kubernetes.core.helm:
     name: loki
     chart_ref: grafana/loki
@@ -59,7 +59,7 @@
     wait: true
     values_files:
     - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
-# - name: Install opa
+# - name: Install Open Policy Agent
 #   kubernetes.core.helm:
 #     name: opa
 #     chart_ref: opa/opa-kube-mgmt

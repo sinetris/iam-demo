@@ -19,7 +19,7 @@
     path: /etc/firefox/policies
     state: directory
     mode: "u=rwx,g=rwx,o=rx"
-- name: Install certificates into Firefox certificate store.
+- name: Install managed policies into Firefox
   ansible.builtin.template:
     src: firefox-policies.json.j2
     dest: "/etc/firefox/policies/policies.json"
