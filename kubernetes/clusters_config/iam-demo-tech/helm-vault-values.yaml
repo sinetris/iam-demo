@@ -19,7 +19,9 @@ server:
     limits:
       memory: 256Mi
       cpu: 250m
+
 prometheus:
   enabled: true
+
 ui:
   enabled: true

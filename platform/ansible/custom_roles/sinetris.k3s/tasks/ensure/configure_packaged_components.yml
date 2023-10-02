@@ -17,4 +17,4 @@
     src: traefik-config.yaml.j2
     dest: "{{ k3s_server_manifests_dir }}/traefik-config.yaml"
     mode: u=rw,g=r,o=
-    no_log: "{{ do_not_log }}"
+  no_log: "{{ do_not_log }}"

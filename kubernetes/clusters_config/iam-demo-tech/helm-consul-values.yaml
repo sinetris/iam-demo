@@ -1,3 +1,4 @@
+---
 client:
   dataDirectoryHostPath: /var/local/data/consul-client
 

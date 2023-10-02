@@ -1,3 +1,4 @@
+---
 # Default values for opa.
 # -----------------------
 #
@@ -8,11 +9,10 @@
 # yamllint disable-line rule:line-length
 # See https://www.openpolicyagent.org/docs/latest/kubernetes-admission-control/#3-deploy-opa-on-top-of-kubernetes
 # and the `mgmt.configmapPolicies` section below for more details.
----
 opa:
   services:
     controller:
-      url: "https://www.openpolicyagent.org"
+      url: https://www.openpolicyagent.org
   bundles:
     quickstart:
       service: controller
@@ -22,8 +22,8 @@ opa:
 # Setup the webhook using cert-manager
 certManager:
   enabled: false
-  rootCACertificateDuration: 43800h # 5y
-  servingCertificateDuration: 8760h # 1y
+  rootCACertificateDuration: 43800h  # 5y
+  servingCertificateDuration: 8760h  # 1y
 
 # Expose the prometheus scraping endpoint
 prometheus:
@@ -35,9 +35,9 @@ serviceMonitor:
   ## If the operator is installed in your cluster, set to true to create a
   # Service Monitor Entry
   enabled: false
-  interval: "15s"
+  interval: 15s
   ## Namespace in which the service monitor is created
-  # namespace: monitoring
+  # namespace: observability
   # Added to the ServiceMonitor object so that prometheus-operator is able to
   # discover it
   # yamllint disable-line rule:line-length
@@ -77,7 +77,7 @@ admissionController:
   # Adds a namespace selector to the admission controller webhook
   namespaceSelector:
     matchExpressions:
-      - { key: openpolicyagent.org/webhook, operator: NotIn, values: [ignore] }
+    - {key: openpolicyagent.org/webhook, operator: NotIn, values: [ignore]}
 
   # SideEffectClass for the webhook, setting to NoneOnDryRun enables dry-run.
   # Only None and NoneOnDryRun are permitted for admissionregistration.k8s.io/v1
@@ -87,10 +87,10 @@ admissionController:
   # policy checks, see the settings below. By default, all resources and
   # operations are subject to OPA policy checks.
   rules:
-    - operations: ["*"]
-      apiGroups: ["*"]
-      apiVersions: ["*"]
-      resources: ["*"]
+  - operations: ['*']
+    apiGroups: ['*']
+    apiVersions: ['*']
+    resources: ['*']
 
 # The helm Chart will automatically generate a CA and server certificate for
 # the OPA. If you want to supply your own certificates, set the field below to
@@ -104,17 +104,17 @@ admissionController:
 # If the common name is not set correctly, the apiserver will refuse to
 # communicate with the OPA.
 generateCerts: true
-CA: ""
-cert: ""
-key: ""
+CA: ''
+cert: ''
+key: ''
 
 # Controls a PodDisruptionBudget for the OPA pod. Suggested use if having opa
 # always running for admission control is important
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
-# maxUnavailable: 1
 
+# maxUnavailable: 1
 authz:
   # Disable if you don't want authorization.
   # Mostly useful for debugging.
@@ -139,7 +139,6 @@ useHttps: true
 
 # Port to which the opa pod will bind itself,
 port: 8181
-
 extraArgs: []
 
 # Extra environment variables to be loaded into the OPA container
@@ -149,7 +148,7 @@ mgmt:
   enabled: true
   image:
     repository: openpolicyagent/kube-mgmt
-    tag: null # appVersion is used by default, set to desired value to override
+    tag:  # appVersion is used by default, set to desired value to override
     pullPolicy: IfNotPresent
   extraArgs: []
   extraEnv: []
@@ -243,7 +242,6 @@ sar:
 # use a small timeout for webhooks. If the webhook call times out, the request
 # is handled according to the webhook'sfailure policy.
 # timeoutSeconds: 20
-
 securityContext:
   enabled: false
   runAsNonRoot: true
@@ -254,7 +252,6 @@ deploymentStrategy: {}
 #     maxSurge: 1
 #     maxUnavailable: 0
 #   type: RollingUpdate
-
 extraContainers: []
 ## Additional containers to be added to the opa pod.
 # - name: example-app
@@ -271,13 +268,11 @@ extraContainers: []
 #   volumeMounts:
 #     - name: example-app-auth-config
 #       mountPath: /etc/example-app-conf
-
 extraVolumes: []
 ## Additional volumes to the opa pod.
 # - name: example-app-auth-config
 #   secret:
 #     secretName: example-app-auth-config
-
 extraPorts: []
 ## Additional ports to the opa services. Useful to expose extra container ports.
 # - port: 11811

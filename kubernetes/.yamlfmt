@@ -5,3 +5,6 @@ formatter:
   line_ending: lf
   compact_sequence_indent: false
   include_document_start: true
+  disallow_anchors: true
+  indentless_arrays: true
+  retain_line_breaks: true
