@@ -38,6 +38,7 @@
       - path: cloudinit_netplan_data.network.ethernets.ens3.nameservers
         value:
           addresses: "{{ bootstrap_network.dns }}"
+          search: "{{ bootstrap_network.domains }}"
   register: updated
 - name: Debug cloud-init netplan
   ansible.builtin.debug:
