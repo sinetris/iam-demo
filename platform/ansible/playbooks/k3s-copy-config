@@ -20,6 +20,8 @@
         label: "{{ k3s_cluster.0.name }}"
     - name: Copy kube config file to each home directory for defined clusters
       when:
+        - k3s_state is defined
+        - k3s_state == 'installed'
         - k3s_copy_cluster_config is defined
         - k3s_copy_cluster_config | list
         - k3s_copy_cluster_config | length > 0
