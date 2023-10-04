@@ -3,6 +3,8 @@
 # Global/Cluster Configuration
 ##
 
+k3s_cluster_domain: "cluster.local"
+
 # k3s state, options: installed, uninstalled
 k3s_state: installed
 
