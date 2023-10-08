@@ -191,8 +191,8 @@ local add_default_machine_data(vm) = {
           set -Eeuo pipefail
           source $HOME/.profile
           ansible-playbook playbooks/k3s-bootstrap
-          ansible-playbook playbooks/k3s-provisioning
           ansible-playbook playbooks/k3s-copy-config
+          ansible-playbook playbooks/k3s-provisioning
         |||,
     },
   ],

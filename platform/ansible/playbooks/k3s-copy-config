@@ -18,21 +18,42 @@
       loop_control:
         loop_var: k3s_cluster
         label: "{{ k3s_cluster.0.name }}"
-    - name: Copy kube config file to each home directory for defined clusters
+    - name: Compose clusters config for copying
       when:
-        - k3s_state is defined
-        - k3s_state == 'installed'
         - k3s_copy_cluster_config is defined
         - k3s_copy_cluster_config | list
         - k3s_copy_cluster_config | length > 0
-      no_log: "{{ do_not_log }}"
-      ansible.builtin.copy:
-        src: "/var/local/data/.kube/config-{{ k3s_cluster.0.name }}"
-        dest: "/home/{{ k3s_cluster.1 }}/.kube/config-{{ k3s_cluster.0.name }}"
-        group: "{{ k3s_cluster.1 }}"
-        owner: "{{ k3s_cluster.1 }}"
-        mode: "u=rw,g=,o="
+      ansible.builtin.set_fact:
+        k3s_clusters_cfg_composed: >-
+          {{
+            k3s_clusters_cfg_composed|default([]) + [ {
+              'name': k3s_cluster_cfg_name,
+              'src': k3s_cluster_cfg_src,
+              'dest': k3s_cluster_cfg_dest,
+              'user': k3s_cluster_cfg_user
+            } ]
+          }}
       loop: "{{ k3s_copy_cluster_config | default([]) | subelements('users') }}"
       loop_control:
         loop_var: k3s_cluster
         label: "{{ k3s_cluster.0.name }}"
+      vars:
+        k3s_cluster_cfg_name: "{{ k3s_cluster.0.name }}"
+        k3s_cluster_cfg_src: "/var/local/data/.kube/config-{{ k3s_cluster.0.name }}"
+        k3s_cluster_cfg_dest: "/home/{{ k3s_cluster.1 }}/.kube/config-{{ k3s_cluster.0.name }}"
+        k3s_cluster_cfg_user: "{{ k3s_cluster.1 }}"
+    - name: Copy kube config file (if exists) to each home directory for defined clusters
+      when:
+        - k3s_clusters_cfg_composed is defined
+        - k3s_cluster_cfg.src is file
+      no_log: "{{ do_not_log }}"
+      ansible.builtin.copy:
+        src: "{{ k3s_cluster_cfg.src }}"
+        dest: "{{ k3s_cluster_cfg.dest }}"
+        group: "{{ k3s_cluster_cfg.user }}"
+        owner: "{{ k3s_cluster_cfg.user }}"
+        mode: "u=rw,g=,o="
+      loop: "{{ k3s_clusters_cfg_composed }}"
+      loop_control:
+        loop_var: k3s_cluster_cfg
+        label: "{{ k3s_cluster_cfg.name }}"

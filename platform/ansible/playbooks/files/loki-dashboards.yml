@@ -7,7 +7,6 @@ providers:
   name: loki-1
   options:
     path: /var/lib/grafana/dashboards/loki-1
-  orgId: 1
   type: file
 - disableDeletion: true
   editable: false
@@ -15,5 +14,4 @@ providers:
   name: loki-2
   options:
     path: /var/lib/grafana/dashboards/loki-2
-  orgId: 1
   type: file

@@ -39,9 +39,10 @@ grafana:
   additionalDataSources:
   - name: Loki
     type: loki
-    orgId: 1
     url: http://loki-gateway
     editable: true
+    jsonData:
+      maxLines: 1000
   # # Send logs to file
   # env:
   #   GF_LOG_MODE: console file
