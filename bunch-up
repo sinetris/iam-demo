@@ -2,8 +2,9 @@
 set -Eeuo pipefail
 
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+generated_path=generated
 project_generator_path="${project_path}/platform/vm-generator"
-generated_project_path="${project_generator_path}/generated"
+generated_project_path="${project_generator_path}/${generated_path}"
 
 __usage=$(
   cat <<-HELPMSG
@@ -12,9 +13,10 @@ __usage=$(
 		$(tput setaf 3)$(tput bold)Manage machines provisioning.$(tput sgr0)
 
 		Options:
-		  -a, --all             $(tput setaf 8)Run all tasks to setup virtual machines$(tput sgr0)
-		  -s, --setup           $(tput setaf 8)Generate setup scripts$(tput sgr0)
+		  -a, --all             $(tput setaf 8)Run all tasks to setup virtual machines (in order: generate create setup provision)$(tput sgr0)
+		  -g, --generate        $(tput setaf 8)Generate setup scripts$(tput sgr0)
 		  -c, --create          $(tput setaf 8)Create virtual machines$(tput sgr0)
+		  -s, --setup           $(tput setaf 8)Setup virtual machines$(tput sgr0)
 		  -p, --provision       $(tput setaf 8)Provision virtual machines$(tput sgr0)
 		  -d, --delete          $(tput setaf 8)Delete virtual machines$(tput sgr0)
 		  -h, --help            $(tput setaf 8)This help$(tput sgr0)
@@ -67,8 +69,12 @@ generate_bootstrap_scripts() {
 
 machines_creations() {
   cd "${generated_project_path}"
-  chmod u+x *.sh
-  ./vms-bootstrap.sh
+  ./vms-create.sh
+}
+
+machines_setup() {
+  cd "${generated_project_path}"
+  ./vms-setup.sh
 }
 
 machines_provisioning() {
@@ -82,24 +88,30 @@ machines_delete() {
 }
 
 create=false
-setup=false
+generate=false
 provision=false
+setup=false
 delete=false
 while [ $# -gt 0 ] && [ "$1" != "" ]; do
   case $1 in
     -a | --all)
       shift
+      generate=true
       create=true
       setup=true
       provision=true
       ;;
-    -s | --setup)
+    -g | --generate)
       shift
-      setup=true
+      generate=true
       ;;
     -c | --create)
       shift
       create=true
+      ;;
+    -s | --setup)
+      shift
+      setup=true
       ;;
     -p | --provision)
       shift
@@ -127,7 +139,7 @@ if $delete; then
   exit 0
 fi
 
-if $setup; then
+if $generate; then
   echo "$(tput bold)$(tput setaf 2) - Creating virtual machines setup scripts ... - $(tput sgr0)"
   generate_ansible_ssh_keys
   generate_bootstrap_scripts
@@ -138,6 +150,11 @@ if $create; then
   machines_creations
   echo "$(tput bold)$(tput setaf 2) - VMs creation done ✅ - $(tput sgr0)"
 fi
+if $setup; then
+  echo "$(tput bold)$(tput setaf 2) - Running virtual machines setup ... - $(tput sgr0)"
+  machines_setup
+  echo "$(tput bold)$(tput setaf 2) - VMs setup done ✅ - $(tput sgr0)"
+fi
 if $provision; then
   echo "$(tput bold)$(tput setaf 2) - Starting virtual machine provisioning ... - $(tput sgr0)"
   machines_provisioning
@@ -145,10 +162,14 @@ if $provision; then
 fi
 
 echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"
-
-echo "$(tput setaf 3)Project path: $(tput bold)${project_path}$(tput sgr0)"
-echo "$(tput setaf 3)To ssh into a virtual machine use $(tput bold)vm-shell.sh <vm-name>$(tput sgr0)"
-echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
 echo
-echo "  $(tput bold)${generated_project_path}/vm-shell.sh ansible-controller$(tput sgr0)"
+echo "$(tput setaf 3)Project path: $(tput bold)${project_path}$(tput sgr0)"
+
+if $create || $setup || $provision; then
+  echo
+  echo "$(tput setaf 3)To ssh into a virtual machine use $(tput bold)vm-shell.sh <vm-name>$(tput sgr0) from the project path."
+  echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
+  echo "  $(tput bold)cd ${project_path}$(tput sgr0)"
+  echo "  $(tput bold)./${generated_path}/vm-shell.sh ansible-controller$(tput sgr0)"
+fi
 exit 0

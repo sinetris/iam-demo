@@ -14,8 +14,10 @@
     },
   virtualmachines_bootstrap(config)::
     self.fake_script(config, 'bootstrap'),
+  virtualmachines_setup(config)::
+    self.fake_script(config, 'setup'),
   virtualmachines_provisioning(config)::
-    self.fake_script(config, 'bootstrap'),
+    self.fake_script(config, 'provisioning'),
   virtualmachines_destroy(config)::
     self.fake_script(config, 'destroy'),
   virtualmachines_list(config)::

@@ -6,6 +6,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     assert std.objectHas(config, 'base_domain');
     assert std.isObject(vm);
     assert std.objectHas(vm, 'hostname');
+    assert std.objectHas(vm, 'architecture');
     local tags =
       if std.objectHas(vm, 'tags') then
         assert std.isArray(vm.tags);
@@ -15,6 +16,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     local is_vnc_server = std.member(tags, 'vnc-server');
     local is_rdp_server = std.member(tags, 'rdpserver');
     local is_ansible_controller = std.member(tags, 'ansible-controller');
+    local code_pkg = 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-' + vm.architecture;
     local user_mapping(user) =
       assert std.isObject(user);
       assert std.objectHas(user, 'username');
@@ -123,17 +125,28 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
             };
           };
         ||| % { install_recommends: is_desktop },
+        // In case of problems finding packages for your CPU architecture, comment out
+        // the following 'primary' and 'security' sections to use the default values.
         primary: [
           {
-            arches: ['default'],
+            arches: ['amd64', 'i386'],
             search: ['http://archive.ubuntu.com/ubuntu'],
+            search_dns: true,
+          },
+          {
+            arches: ['default'],
+            search: ['http://ports.ubuntu.com/ubuntu-ports'],
             search_dns: true,
           },
         ],
         security: [
           {
+            arches: ['amd64', 'i386'],
             uri: 'http://security.ubuntu.com/ubuntu',
+          },
+          {
             arches: ['default'],
+            uri: 'http://ports.ubuntu.com/ubuntu-ports',
           },
         ],
       },
@@ -148,7 +161,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'git',
         'curl',
         'wget',
-        'ntp',
+        // 'chrony',
         'vim',
         'apt-transport-https',
         'gnupg2',
@@ -171,7 +184,8 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'x11vnc',
       ]),
       runcmd: addArrayIf(is_desktop, [
-        ['snap', 'install', 'code', '--classic'],
+        ['wget', '-O', '/var/cache/apt/archives/vscode-stable.deb', code_pkg],
+        ['apt', 'install', '-y', '/var/cache/apt/archives/vscode-stable.deb'],
       ]) + addArrayIf(is_rdp_server, [
         ['systemctl', 'enable', 'xrdp'],
         ['service', 'xrdp', 'restart'],

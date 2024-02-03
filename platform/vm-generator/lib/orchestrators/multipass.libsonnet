@@ -4,15 +4,32 @@ local shell_lines(lines) =
     '\n'
   );
 
+local check_vm(vm) =
+  |||
+    vm_name=%(hostname)s
+    echo "Checking '${vm_name}'..."
+    vm_status=$(multipass info --format yaml ${vm_name} 2>&1) && exit_code=$? || exit_code=$?
+    if [ $exit_code -eq 0 ]; then
+      echo "✅ VM '${vm_name}' found!"
+    elif  [ $exit_code -eq 2 ] && [[ $vm_status =~ 'does not exist' ]]; then
+      echo "❌ VM '${vm_name}' not found!"
+      exit 1
+    else
+      echo "❌ VM '${vm_name}' - exit code '${exit_code}'"
+      echo ${vm_status}
+      exit 2
+    fi
+  ||| % {
+    hostname: vm.hostname,
+  };
+
 local create_vm(config, vm) =
   assert std.isObject(config);
-  assert std.objectHas(config, 'app_dir');
   assert std.isObject(vm);
   assert std.objectHas(vm, 'hostname');
   local cpus = std.get(vm, 'cpus', '1');
   local storage_space = std.get(vm, 'storage_space', '5G');
   local memory = std.get(vm, 'memory', '1G');
-
   local mount_opt(host_path, guest_path) =
     '--mount "%(host_path)s":%(guest_path)s' % {
       host_path: host_path,
@@ -29,12 +46,11 @@ local create_vm(config, vm) =
         for mount in vm.mounts
       ]
     else [];
-
   |||
     echo "Checking '%(hostname)s'..."
     vm_status=$(multipass info --format yaml %(hostname)s 2>&1) && exit_code=$? || exit_code=$?
     if [ $exit_code -eq 0 ]; then
-      echo "VM '%(hostname)s' already exist ✅"
+      echo "✅ VM '%(hostname)s' already exist!"
     elif [ $exit_code -eq 2 ] && [[ $vm_status =~ 'does not exist' ]]; then
       echo "Creating %(host_path)s/data"
       mkdir -p "%(host_path)s/data"
@@ -46,8 +62,9 @@ local create_vm(config, vm) =
         --timeout %(timeout)s \
         %(mounts)s release:jammy
     else
-      echo "VM '%(hostname)s' - exit code '${exit_code}'"
+      echo "❌ VM '%(hostname)s' - exit code '${exit_code}'"
       echo ${vm_status}
+      exit 2
     fi
   ||| % {
     hostname: vm.hostname,
@@ -57,7 +74,6 @@ local create_vm(config, vm) =
     timeout: vm.timeout,
     memory: vm.memory,
     mounts: std.join(' ', mounts),
-    app_dir: config.app_dir,
   };
 
 local destroy_vm(config, vm) =
@@ -74,7 +90,6 @@ local provision_vms(config, provisionings) =
   if std.isArray(provisionings) then
     local file_provisioning(opts) =
       assert std.objectHas(opts, 'destination');
-
       local parents =
         if std.objectHas(opts, 'create_parents_dir') then
           assert std.isBoolean(opts.create_parents_dir);
@@ -89,7 +104,6 @@ local provision_vms(config, provisionings) =
           if std.objectHas(opts, 'source_host') && opts.source_host != 'localhost' then
             '%(host)s:%(file)s' % { host: opts.source_host, file: opts.source }
           else opts.source;
-
         |||
           multipass transfer %(parents)s \
             %(source)s \
@@ -140,7 +154,6 @@ local provision_vms(config, provisionings) =
             destination_host: opts.destination_host,
           }
         else '';
-
       |||
         %(pre_command)s
         multipass exec %(destination_host)s \
@@ -170,8 +183,25 @@ local provision_vms(config, provisionings) =
     ))
   else '';
 
+// Exported functions
 {
   virtualmachines_bootstrap(config)::
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+
+      this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+
+      echo "Creating VMs"
+      %(vms_creation)s
+    ||| % {
+      vms_creation: shell_lines([
+        create_vm(config, vm)
+        for vm in config.virtual_machines
+      ]),
+    },
+  virtualmachines_setup(config)::
+    local vms = [vm.hostname for vm in config.virtual_machines];
     local provisionings =
       if std.objectHas(config, 'base_provisionings') then
         config.base_provisionings
@@ -181,20 +211,26 @@ local provision_vms(config, provisionings) =
       set -Eeuo pipefail
 
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      vms_names_json=%(vms_names_json)s
 
-      echo "Creating VMs"
-      %(vms_creation)s
+      echo "Checking VMs"
+      %(vms_check)s
       echo "Generating machines_config.json for ansible"
-      multipass list --format json > %(ansible_inventory_path)s/machines_config.json
+      multipass list --format json | \
+        jq --argjson vms_names_json "${vms_names_json}" \
+        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms}' \
+        > %(ansible_inventory_path)s/machines_config.json
       %(vms_provision)s
     ||| % {
       ansible_inventory_path: config.ansible_inventory_path,
-      app_dir: config.app_dir,
-      vms_creation: shell_lines([
-        create_vm(config, vm)
+      vms_check: shell_lines([
+        check_vm(vm)
         for vm in config.virtual_machines
       ]),
       vms_provision: provision_vms(config, provisionings),
+      vms_names_json: std.escapeStringBash(
+        std.manifestJsonMinified(vms)
+      )
     },
   virtualmachines_provisioning(config)::
     local provisionings =
@@ -221,7 +257,6 @@ local provision_vms(config, provisionings) =
 
       %(vms_destroy)s
     ||| % {
-      app_dir: config.app_dir,
       vms_destroy: shell_lines([
         destroy_vm(config, vm)
         for vm in config.virtual_machines
@@ -248,13 +283,7 @@ local provision_vms(config, provisionings) =
     ||| % {
       vms: std.join(' ', vms),
     },
-  virtualmachine_shell(config)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'virtual_machines');
-    assert std.isArray(config.virtual_machines);
-
-    local vms = [vm.hostname for vm in config.virtual_machines];
-
+  virtualmachine_shell(_config)::
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail

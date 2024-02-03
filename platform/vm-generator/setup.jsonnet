@@ -40,6 +40,7 @@ local ansible_user =
 local add_default_machine_data(vm) = {
   host_path: error 'Must override "host_path"',
   cpus: 1,
+  architecture: config.architecture,
   memory: '1G',
   timeout: 15 * 60,
   storage_space: '10G',
