@@ -1,6 +1,6 @@
 ---
 k3s_copy_cluster_config:
-  - name: 'iam-demo-tech'
+  - name: iam-demo-tech
     users:
       - ansible
       - iamadmin

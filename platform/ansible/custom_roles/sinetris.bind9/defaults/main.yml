@@ -22,10 +22,10 @@ bind9_forwarders: []
 bind9_admin_email: hostmaster
 
 # QNAME minimization: atm | bind9 | relaxed (default)
-bind9_qname_minimization: 'relaxed'
+bind9_qname_minimization: relaxed
 
 # DNSSEC validation mode: yes | no | auto
-bind9_dnssec_validation_mode: 'auto'
+bind9_dnssec_validation_mode: auto
 
 # When hidden primary limit queries to our_networks
 bind9_hidden_primary: false
@@ -98,7 +98,6 @@ bind9_zones: []
 
 # Authoritative include files
 bind9_authoritative_includes: []
-
 bind9_named_local_include_text: |
   // Change this if you want to add something
   // at the end of named.conf.local

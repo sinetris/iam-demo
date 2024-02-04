@@ -1,3 +1,4 @@
+---
 k3s_primary_control_node: true
 iam_tech_cluster_name: iam-demo-tech
 kubernetes_project_path: /kubernetes
@@ -6,10 +7,10 @@ project_kustomize_path: "{{ kubernetes_project_path }}/clusters/{{ iam_tech_clus
 project_bootstrap_kustomize_path: "{{ project_kustomize_path }}/bootstrap"
 kubernetes_cluster_config_path: "{{ kubernetes_project_path }}/clusters_config/{{ k3s_cluster_name }}"
 python_libraries:
-- dnspython
+  - dnspython
 k3s_copy_cluster_config:
-- name: 'iam-demo-tech'
-  users:
-  - ansible
-  - iamadmin
-  - ubuntu
+  - name: iam-demo-tech
+    users:
+      - ansible
+      - iamadmin
+      - ubuntu

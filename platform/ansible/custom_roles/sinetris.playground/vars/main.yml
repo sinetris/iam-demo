@@ -8,7 +8,6 @@ __playground_defaults_dict1:
     required1: sub1dict1required1_default
     required2: sub1dict1required2_default
 __playground_defaults_dict2:
-
 __playground_dict2: >-
   {{
     {

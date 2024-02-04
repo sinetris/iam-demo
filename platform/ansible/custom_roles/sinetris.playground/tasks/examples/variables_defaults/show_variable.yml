@@ -1,4 +1,4 @@
 ---
-- name: Inside task show_variable 
+- name: Inside task show_variable
   ansible.builtin.debug:
     var: variable_to_debug

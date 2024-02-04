@@ -11,7 +11,7 @@ playground_dict2:
   val1: dict2val1
   val2: dict2val2
   required1: dict2required1
-  required2 : dict2required2
+  required2: dict2required2
   sub_dict1:
     val1: sub1dict2val1
     val2: sub1dict2val1

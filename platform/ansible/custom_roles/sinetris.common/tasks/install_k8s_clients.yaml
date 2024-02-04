@@ -20,7 +20,7 @@
       ansible.builtin.apt_repository:
         repo: deb https://baltocdn.com/helm/stable/debian all main
         state: present
-        mode: "u=rw,g=r,o=r"
+        mode: u=rw,g=r,o=r
         update_cache: true
     - name: Install Helm client
       ansible.builtin.apt:
@@ -32,8 +32,8 @@
         state: present
     - name: Add the Kubernetes Repository
       ansible.builtin.apt_repository:
-        repo: "deb https://apt.kubernetes.io/ kubernetes-xenial main"
-        mode: "u=rw,g=r,o=r"
+        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        mode: u=rw,g=r,o=r
         update_cache: true
     - name: Install kubectl client
       ansible.builtin.apt:
@@ -43,7 +43,7 @@
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
         dest: /usr/local/bin/install_kustomize.sh
-        mode: "u=rwx,g=rx,o=r"
+        mode: u=rwx,g=rx,o=r
     - name: Install kustomize client
       ansible.builtin.command:
         cmd: /usr/local/bin/install_kustomize.sh

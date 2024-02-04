@@ -7,23 +7,23 @@
     dest: "{{ k3s_install_dir }}/{{ item }}"
     state: "{{ 'hard' if k3s_install_hard_links else 'link' }}"
     force: "{{ k3s_install_hard_links }}"
-    mode: "u=rwx,g=rx,o=rx"
+    mode: u=rwx,g=rx,o=rx
   loop:
     - k3s
     - kubectl
     - crictl
     - ctr
   notify:
-    - "Restart k3s systemd"
+    - Restart k3s systemd
 - name: Ensure k3s config file exists
   become: "{{ k3s_become }}"
   ansible.builtin.template:
     src: config.yaml.j2
     dest: "{{ k3s_config_file }}"
-    mode: "u=rw,g=rw,o=rw"
+    mode: u=rw,g=rw,o=rw
   notify:
-    - "Reload systemd"
-    - "Restart k3s systemd"
+    - Reload systemd
+    - Restart k3s systemd
 - name: Ensure cluster token is present when pre-defined
   when: k3s_control_token is defined
   block:
@@ -31,39 +31,39 @@
       ansible.builtin.file:
         path: "{{ k3s_token_location | dirname }}"
         state: directory
-        mode: "u=rwx,g=rx,o=rx"
+        mode: u=rwx,g=rx,o=rx
       become: "{{ k3s_become }}"
     - name: Ensure k3s cluster token file is present
       ansible.builtin.template:
         src: cluster-token.j2
         dest: "{{ k3s_token_location }}"
-        mode: "u=rw,g=,o="
+        mode: u=rw,g=,o=
       become: "{{ k3s_become }}"
       notify:
-        - "Restart k3s systemd"
+        - Restart k3s systemd
       no_log: "{{ do_not_log }}"
 - name: Ensure k3s service unit file is present
   become: "{{ k3s_become }}"
   ansible.builtin.template:
     src: k3s.service.j2
     dest: "{{ k3s_systemd_unit_dir }}/k3s.service"
-    mode: "u=rw,g=rw,o=rw"
+    mode: u=rw,g=rw,o=rw
   notify:
-    - "Reload systemd"
-    - "Restart k3s systemd"
+    - Reload systemd
+    - Restart k3s systemd
 - name: Ensure k3s killall script is present
   when:
     - k3s_runtime_config is defined
   become: "{{ k3s_become }}"
   ansible.builtin.template:
     src: k3s-killall.sh.j2
-    dest: "/usr/local/bin/k3s-killall.sh"
-    mode: "u=rwx,g=,o="
+    dest: /usr/local/bin/k3s-killall.sh
+    mode: u=rwx,g=,o=
 - name: Ensure k3s uninstall script is present
   when:
     - k3s_runtime_config is defined
   become: "{{ k3s_become }}"
   ansible.builtin.template:
     src: k3s-uninstall.sh.j2
-    dest: "/usr/local/bin/k3s-uninstall.sh"
-    mode: "u=rwx,g=,o="
+    dest: /usr/local/bin/k3s-uninstall.sh
+    mode: u=rwx,g=,o=

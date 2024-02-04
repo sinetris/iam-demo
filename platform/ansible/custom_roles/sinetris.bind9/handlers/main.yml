@@ -3,10 +3,10 @@
   ansible.builtin.service:
     name: bind9
     state: restarted
-  listen: "restart bind9"
+  listen: restart bind9
 
 - name: Reload bind9
   ansible.builtin.service:
     name: bind9
     state: reloaded
-  listen: "reload bind9"
+  listen: reload bind9

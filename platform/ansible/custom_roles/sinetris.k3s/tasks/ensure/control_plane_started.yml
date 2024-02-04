@@ -11,5 +11,5 @@
     name: k3s
     state: started
     enabled: "{{ k3s_start_on_boot }}"
-    scope: "system"
+    scope: system
   register: k3s_systemd_start_k3s

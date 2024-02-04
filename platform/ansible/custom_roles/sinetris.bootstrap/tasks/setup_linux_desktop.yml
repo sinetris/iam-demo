@@ -3,28 +3,28 @@
   ansible.builtin.file:
     path: /etc/firefox/certificates
     state: directory
-    mode: "u=rwx,g=rwx,o=rx"
+    mode: u=rwx,g=rwx,o=rx
 - name: Create CA certs hard links for Firefox
   ansible.builtin.file:
     src: "{{ system_ca_root_path }}/{{ item }}"
-    dest: '/etc/firefox/certificates/{{ item }}'
+    dest: /etc/firefox/certificates/{{ item }}
     state: hard
     mode: u=rw,g=r,o=r
   no_log: "{{ do_not_log }}"
   loop:
-      - "{{ project_name }}-root-ca.crt"
-      - "{{ project_name }}-intermediate-ca.crt"
+    - "{{ project_name }}-root-ca.crt"
+    - "{{ project_name }}-intermediate-ca.crt"
 - name: Ensures /etc/firefox/policies exists
   ansible.builtin.file:
     path: /etc/firefox/policies
     state: directory
-    mode: "u=rwx,g=rwx,o=rx"
+    mode: u=rwx,g=rwx,o=rx
 - name: Install managed policies into Firefox
   ansible.builtin.template:
     src: firefox-policies.json.j2
-    dest: "/etc/firefox/policies/policies.json"
+    dest: /etc/firefox/policies/policies.json
     mode: u=rw,g=r,o=r
   vars:
     custom_ca_paths:
-      - "/etc/firefox/certificates/{{ project_name }}-root-ca.crt"
-      - "/etc/firefox/certificates/{{ project_name }}-intermediate-ca.crt"
+      - /etc/firefox/certificates/{{ project_name }}-root-ca.crt
+      - /etc/firefox/certificates/{{ project_name }}-intermediate-ca.crt

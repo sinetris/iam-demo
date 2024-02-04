@@ -1,17 +1,18 @@
 ---
 # Handlers run only on changes and (usually) only once per play per machine
-- name: reboot machine
+- name: Reboot machine
   ansible.builtin.reboot:
     reboot_timeout: 3600
-  listen: "reboot machine"
+  listen: reboot machine
   when: >-
     is_ansible_controller is not defined
     or (is_ansible_controller is defined and not is_ansible_controller)
-- name: ansible controller need reboot
+- name: Ansible controller need reboot
   ansible.builtin.file:
     path: /var/run/reboot-required
     state: touch
-  listen: "reboot machine"
+    mode: u=rw,g=r,o=r
+  listen: reboot machine
   when:
     - is_ansible_controller is defined
     - is_ansible_controller

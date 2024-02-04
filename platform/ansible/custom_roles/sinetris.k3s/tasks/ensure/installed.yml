@@ -16,10 +16,12 @@
     - not ansible_check_mode
   ansible.builtin.include_tasks: ensure/configure_packaged_components.yml
 - name: Ensure node exist
-  when:
-    - ((k3s_control_node and k3s_controller_list | length == 1)
-        or (k3s_primary_control_node and k3s_controller_list | length > 1))
-    - not ansible_check_mode
+  when: >-
+    not ansible_check_mode
+    and (
+      (k3s_control_node and k3s_controller_list | length == 1)
+      or (k3s_primary_control_node and k3s_controller_list | length > 1)
+    )
   ansible.builtin.include_tasks: ensure/installed_node.yml
 - name: Flush Handlers
   ansible.builtin.meta: flush_handlers
@@ -28,7 +30,8 @@
     path: "{{ k3s_token_location }}"
   register: k3s_token_cluster_check
 - name: Ensure control plane started
-  when: (k3s_control_node and k3s_controller_list | length == 1)
-        or (k3s_primary_control_node and k3s_controller_list | length > 1)
-        or k3s_token_cluster_check.stat.exists
+  when: >-
+    (k3s_control_node and k3s_controller_list | length == 1)
+    or (k3s_primary_control_node and k3s_controller_list | length > 1)
+    or k3s_token_cluster_check.stat.exists
   ansible.builtin.include_tasks: ensure/control_plane_started.yml

@@ -11,4 +11,4 @@
     state: directory
     group: adm
     owner: root
-    mode: "u=rwx,g=rwx,o=rx"
+    mode: u=rwx,g=rwx,o=rx

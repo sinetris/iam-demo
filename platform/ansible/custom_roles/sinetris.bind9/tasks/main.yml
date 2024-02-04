@@ -7,7 +7,7 @@
 
 - name: Set default named options
   ansible.builtin.set_fact:
-    named_options: ["-u", "bind"]
+    named_options: [-u, bind]
 
 - name: Set IPv4 named options
   ansible.builtin.set_fact:
@@ -17,13 +17,13 @@
 
 - name: Configure bind9 default named
   ansible.builtin.template:
-    src: "etc/default_named.j2"
+    src: etc/default_named.j2
     dest: /etc/default/named
     owner: root
     group: "{{ bind9_group }}"
     mode: "0644"
   notify:
-    - "reload bind9"
+    - reload bind9
 
 - name: Create bind9 directory for primary zones
   ansible.builtin.file:
@@ -45,7 +45,7 @@
 
 - name: Configure bind9 named.conf files
   ansible.builtin.template:
-    src: "bind/{{ item }}.j2"
+    src: bind/{{ item }}.j2
     dest: /etc/bind/{{ item }}
     owner: root
     group: "{{ bind9_group }}"
@@ -54,7 +54,7 @@
     - named.conf.local
     - named.conf.options
   notify:
-    - "reload bind9"
+    - reload bind9
 
 - name: Check validity of named.conf
   ansible.builtin.command: named-checkconf
@@ -66,7 +66,7 @@
 
 - name: Create bind9 zone files
   ansible.builtin.template:
-    src: "bind/zones/db.template.j2"
+    src: bind/zones/db.template.j2
     dest: "{{ bind9_zonedir }}/db.{{ zone.name }}"
     owner: root
     group: "{{ bind9_group }}"
@@ -78,7 +78,7 @@
     - bind9_authoritative
     - zone.type | default(bind9_default_zone_type) is eq('primary')
   notify:
-    - "reload bind9"
+    - reload bind9
 
 - name: Check validity of zone files
   ansible.builtin.command: >

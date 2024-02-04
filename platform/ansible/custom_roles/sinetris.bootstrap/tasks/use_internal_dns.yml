@@ -46,10 +46,11 @@
   when:
     - updated.changed
 - name: Write back cloud-init netplan file
-  copy:
-    content: '{{ updated.cloudinit_netplan_data | to_nice_yaml }}'
+  ansible.builtin.copy:
+    content: "{{ updated.cloudinit_netplan_data | to_nice_yaml }}"
     dest: "{{ cloud_init_netplan_file_path }}"
+    mode: u=rw,g=r,o=
   when:
     - updated.changed
   notify:
-    - "reboot machine"
+    - reboot machine

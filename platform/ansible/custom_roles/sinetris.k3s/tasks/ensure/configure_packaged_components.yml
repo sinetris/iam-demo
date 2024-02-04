@@ -9,10 +9,10 @@
     src: "{{ k3s_tls_dir }}/server-ca.key"
   register: server_ca_key
   no_log: "{{ do_not_log }}"
-- name: "Setup Traefik Helm chart"
+- name: Setup Traefik Helm chart
   vars:
-    b64encoded_crt: "{{ server_ca_crt['content']|b64encode }}"
-    b64encoded_key: "{{ server_ca_key['content']|b64encode }}"
+    b64encoded_crt: "{{ server_ca_crt['content'] | b64encode }}"
+    b64encoded_key: "{{ server_ca_key['content'] | b64encode }}"
   ansible.builtin.template:
     src: traefik-config.yaml.j2
     dest: "{{ k3s_server_manifests_dir }}/traefik-config.yaml"

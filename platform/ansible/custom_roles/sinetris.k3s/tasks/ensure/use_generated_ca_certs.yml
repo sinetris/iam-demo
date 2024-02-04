@@ -10,41 +10,46 @@
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/root-ca.pem"
     dest: "{{ k3s_tls_dir }}/root-ca.pem"
-    mode: "u=rw,g=r,o="
+    mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
 - name: Copy root-ca.key
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/root-ca.key"
     dest: "{{ k3s_tls_dir }}/root-ca.key"
-    mode: "u=rw,g=r,o="
+    mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
 - name: Copy root-ca.crt
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/root-ca.crt"
     dest: "{{ k3s_tls_dir }}/root-ca.crt"
-    mode: "u=rw,g=r,o="
+    mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
 - name: Copy intermediate-ca.pem
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/intermediate-ca.pem"
     dest: "{{ k3s_tls_dir }}/intermediate-ca.pem"
-    mode: "u=rw,g=r,o="
+    mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
 - name: Copy intermediate-ca.key
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/intermediate-ca.key"
     dest: "{{ k3s_tls_dir }}/intermediate-ca.key"
-    mode: "u=rw,g=r,o="
+    mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
 - name: Copy intermediate-ca.crt
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/intermediate-ca.crt"
     dest: "{{ k3s_tls_dir }}/intermediate-ca.crt"
-    mode: "u=rw,g=r,o="
+    mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
+- name: Download k3s certs from custom CA generator
+  ansible.builtin.get_url:
+    url: https://github.com/k3s-io/k3s/raw/master/contrib/util/generate-custom-ca-certs.sh
+    dest: /usr/local/bin/generate-custom-ca-certs.sh
+    mode: u=rwx,g=rx,o=r
 - name: Generate k3s certs from custom CA
-  ansible.builtin.shell:
-    cmd: curl -sL https://github.com/k3s-io/k3s/raw/master/contrib/util/generate-custom-ca-certs.sh | bash -
+  ansible.builtin.command:
+    cmd: /usr/local/bin/generate-custom-ca-certs.sh
     chdir: "{{ k3s_tls_dir }}"
     creates: "{{ k3s_tls_dir }}/etcd/server-ca.crt"
   no_log: "{{ do_not_log }}"

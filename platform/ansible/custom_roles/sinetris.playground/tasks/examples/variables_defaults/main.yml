@@ -3,7 +3,7 @@
 - name: Add defaults (from vars/main.yml) to variables (from defaults/main.yml)
   ansible.builtin.import_tasks: set_defaults.yml
   notify:
-    - "the playground handler"
+    - the playground handler
 - name: Print playground_dict1 default
   ansible.builtin.debug:
     var: playground_dict1
@@ -14,7 +14,7 @@
 - name: Add defaults (from vars/main.yml) to variables (override defaults/main.yml)
   ansible.builtin.import_tasks: examples/variables_defaults/set_defaults.yml
   notify:
-    - "the playground handler"
+    - the playground handler
   vars:
     playground_dict1:
       val2: dict1val1_newvar

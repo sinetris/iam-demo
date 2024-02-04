@@ -19,19 +19,20 @@
   changed_when: false
   check_mode: false
   ansible.builtin.set_fact:
-    k3s_hash_sum: "{{ (k3s_hash_sum_raw.content.split('\n') |
+    k3s_hash_sum: >-
+      {{ (k3s_hash_sum_raw.content.splitlines() |
       select('search', 'k3s' + k3s_arch_suffix) |
       reject('search', 'images') |
-      first).split() | first }}"
+      first).split() | first }}
 - name: Ensure installation directory exists
   ansible.builtin.file:
     path: "{{ k3s_install_dir }}"
     state: directory
-    mode: "u=rwx,g=rx,o=rx"
+    mode: u=rwx,g=rx,o=rx
 - name: Ensure k3s binary is downloaded
   become: "{{ k3s_become }}"
   ansible.builtin.get_url:
     url: "{{ k3s_binary_url }}"
     dest: "{{ k3s_install_dir }}/k3s-{{ k3s_release_version }}"
-    checksum: "sha256:{{ k3s_hash_sum }}"
-    mode: "u=rwx,g=rx,o=rx"
+    checksum: sha256:{{ k3s_hash_sum }}
+    mode: u=rwx,g=rx,o=rx

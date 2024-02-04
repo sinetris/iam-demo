@@ -7,7 +7,7 @@ python_libraries:
   - dnspython
   - kubernetes
 k3s_copy_cluster_config:
-  - name: 'iam-demo-tech'
+  - name: iam-demo-tech
     users:
       - iamadmin
       - ubuntu
@@ -37,7 +37,7 @@ bind9_statistics:
       allow: localnets
 bind9_zones:
   - name: "{{ project_domain }}"
-    serial: '1694903878'
+    serial: "1694903878"
     default_ttl: 4h
     refresh: 1h
     retry: 1m
@@ -49,10 +49,10 @@ bind9_zones:
     ns_records:
       - content: ns
     resource_records:
-      - label: ''
+      - label: ""
         type: NS
         content: ns-ipv6
-      - label: '@'
+      - label: "@"
         type: MX
         content: mail
         priority: 10
@@ -71,15 +71,15 @@ bind9_zones:
       - label: iam-control-plane
         ttl: 10m
         type: A
-        content: "{{named_hosts['iam-control-plane'] }}"
+        content: "{{ named_hosts['iam-control-plane'] }}"
       - label: linux-desktop
         ttl: 10m
         type: A
-        content: "{{named_hosts['linux-desktop'] }}"
+        content: "{{ named_hosts['linux-desktop'] }}"
       - label: mail
         ttl: 1m
         type: A
-        content: "{{named_hosts['iam-control-plane'] }}"
+        content: "{{ named_hosts['iam-control-plane'] }}"
       - label: kubernetes
         ttl: 1m
         type: CNAME

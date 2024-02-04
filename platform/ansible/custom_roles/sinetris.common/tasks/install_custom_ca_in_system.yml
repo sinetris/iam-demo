@@ -13,13 +13,13 @@
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/root-ca.crt"
     dest: "{{ system_ca_root_path }}/{{ project_name }}-root-ca.crt"
-    mode: "u=rw,g=r,o=r"
+    mode: u=rw,g=r,o=r
   no_log: "{{ do_not_log }}"
 - name: Copy custom Intermediate CA certs
   ansible.builtin.copy:
     src: "{{ ca_root_certs_path }}/intermediate-ca.crt"
     dest: "{{ system_ca_root_path }}/{{ project_name }}-intermediate-ca.crt"
-    mode: "u=rw,g=r,o=r"
+    mode: u=rw,g=r,o=r
   no_log: "{{ do_not_log }}"
 - name: Install local CA certs
   become: true
