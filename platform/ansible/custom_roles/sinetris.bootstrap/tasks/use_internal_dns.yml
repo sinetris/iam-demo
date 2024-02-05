@@ -27,18 +27,19 @@
 - name: Update the fact
   ansible.utils.update_fact:
     updates:
-      - path: cloudinit_netplan_data.network.ethernets.ens3.dhcp4-overrides
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface }}.dhcp4-overrides
         value:
           use-dns: false
           use-domains: false
-      - path: cloudinit_netplan_data.network.ethernets.ens3.dhcp6-overrides
-        value:
-          use-dns: false
-          use-domains: false
-      - path: cloudinit_netplan_data.network.ethernets.ens3.nameservers
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface }}.dhcp6
+        value: false
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface }}.nameservers
         value:
           addresses: "{{ bootstrap_network.dns }}"
           search: "{{ bootstrap_network.domains }}"
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface }}.link-local
+        value:
+          - ipv4
   register: updated
 - name: Debug cloud-init netplan
   ansible.builtin.debug:

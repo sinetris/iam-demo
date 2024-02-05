@@ -11,6 +11,7 @@ ca_root_certs_path: "{{ base_certs_path }}/ca"
 # Set do_not_log to true to hide sensitive data
 do_not_log: false
 is_dns_server: false
+network_interface: enp0s1
 bootstrap_network:
   internal_dns: true
   domains:
