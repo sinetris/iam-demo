@@ -5,6 +5,7 @@
       - git
       - acl
       - golang-go
+      - chrony
       - ca-certificates
 - name: Install python libraries using pip
   when:
