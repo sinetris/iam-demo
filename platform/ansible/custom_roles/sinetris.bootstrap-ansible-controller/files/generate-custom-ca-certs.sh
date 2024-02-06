@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 # Custom CA certificate generation script.
-# 
+#
 # This script will generate certificates and keys for both root and intermediate
 # certificate authorities.
-# 
+#
 # By default, the script will create the files under '$HOME/.config/demo/custom-ca' and 
 # certificates CN starting with 'demo'.
 #
@@ -13,8 +13,11 @@
 #
 # The certificates CN and output path may be overridden with the PROJECT and DATA_DIR
 # environment variable respectively.
+#
+# This script used k3s custom CA certificate generator script as inspiration:
+# https://raw.githubusercontent.com/k3s-io/k3s/v1.28.5%2Bk3s1/contrib/util/generate-custom-ca-certs.sh
 
-set -e
+set -Eeuo pipefail
 umask 027
 
 TIMESTAMP=$(date +%s)
@@ -133,5 +136,5 @@ openssl verify -CAfile root-ca.pem intermediate-ca.pem
 
 echo
 echo "CA certificate generation complete. Required files are now present in: ${DATA_DIR}"
-echo "For security purposes, you should make a secure copy of the following files and remove them from cluster members:"
+echo "You should make a copy of the following files to keep in a secure place:"
 ls ${DATA_DIR}/root-ca.* ${DATA_DIR}/intermediate-ca.* | xargs -n1 echo -e "\t"
