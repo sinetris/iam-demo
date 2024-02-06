@@ -42,18 +42,23 @@
     - k3s_cfg_original_file.stat.exists
   ansible.builtin.copy:
     src: "{{ k3s_cfg_original_file.stat.path }}"
-    dest: ~{{ ansible_user }}/.kube/config
+    dest: ~{{ ansible_user }}/.kube/original-config-{{ k3s_cluster_name }}
     remote_src: true
     group: "{{ ansible_user }}"
     owner: "{{ ansible_user }}"
     mode: u=rw,g=,o=
   register: k3s_backup_file
   no_log: "{{ do_not_log }}"
+- name: Get k3s kube config before running command
+  ansible.builtin.stat:
+    path: /home/{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
+  register: k3s_cfg_file_before
 - name: Copy kube config file for remote
   when:
     - k3s_primary_control_node
+  changed_when: false
   ansible.builtin.copy:
-    src: /home/{{ ansible_user }}/.kube/config
+    src: /home/{{ ansible_user }}/.kube/original-config-{{ k3s_cluster_name }}
     dest: /home/{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
     remote_src: true
     group: "{{ ansible_user }}"
@@ -63,11 +68,21 @@
 - name: Replace cluster server host for remote
   when:
     - k3s_primary_control_node
-  changed_when: true
+  changed_when: false
   ansible.builtin.command: >-
     k3s kubectl config set-cluster default \
       --server=https://{{ k3s_registration_address }}:6443 \
       --kubeconfig=/home/{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
+- name: Get k3s kube config after running command
+  ansible.builtin.stat:
+    path: /home/{{ ansible_user }}/.kube/config-{{ k3s_cluster_name }}
+  register: k3s_cfg_file_after
+  changed_when: >-
+    not k3s_cfg_file_before.stat.exists
+    or (
+      k3s_cfg_file_before.stat.exists
+      and (k3s_cfg_file_before.stat.checksum != k3s_cfg_file_after.stat.checksum)
+    )
 - name: Save cluster config in ansible-controller
   when:
     - k3s_primary_control_node
