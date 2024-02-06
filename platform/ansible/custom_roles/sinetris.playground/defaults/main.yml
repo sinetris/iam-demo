@@ -17,3 +17,4 @@ playground_dict2:
     val2: sub1dict2val1
     required1: sub1dict2required1
     required2: sub1dict2required2
+playground_example: variables_defaults

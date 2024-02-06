@@ -1,5 +1,5 @@
 ---
-- name: Configure k3s
+- name: Playground custom role
   block:
     - name: Pre check validation
       ansible.builtin.import_tasks: pre_checks/validate.yml
