@@ -20,7 +20,9 @@
 set -Eeuo pipefail
 umask 027
 
-TIMESTAMP=$(date +%s)
+timestamp_now=$(date +%s)
+
+TIMESTAMP="${TIMESTAMP:-${timestamp_now}}"
 PROJECT="${PROJECT:-demo}"
 DATA_DIR="${DATA_DIR:-$HOME/.config/${PROJECT}/custom-ca}"
 
@@ -135,6 +137,8 @@ openssl verify -CAfile root-ca.pem intermediate-ca.pem
 # openssl verify -CAfile root-ca.pem -untrusted intermediate-ca.pem UserCert.pem
 
 echo
-echo "CA certificate generation complete. Required files are now present in: ${DATA_DIR}"
+echo "Required files are now present in: ${DATA_DIR}"
 echo "You should make a copy of the following files to keep in a secure place:"
 ls ${DATA_DIR}/root-ca.* ${DATA_DIR}/intermediate-ca.* | xargs -n1 echo -e "\t"
+echo
+echo "CA certificate generation complete."

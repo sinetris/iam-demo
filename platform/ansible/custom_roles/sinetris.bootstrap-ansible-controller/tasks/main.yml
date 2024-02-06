@@ -35,10 +35,23 @@
     - name: Run generate-custom-ca-certs.sh
       ansible.builtin.script:
         cmd: /usr/local/bin/generate-custom-ca-certs.sh
+      register: custom_ca_result
+      changed_when: false
+      failed_when:
+        - custom_ca_result.rc != 0
+        - "'CA certificate generation complete.' not in custom_ca_result.stdout_lines"
       environment:
         PROJECT: "{{ project_domain }}"
         DATA_DIR: "{{ ca_root_certs_path }}"
+        TIMESTAMP: "{{ ca_root_certs_timestamp }}"
       no_log: "{{ do_not_log }}"
+    - name: Save custom_ca_result.stdout checksum
+      ansible.builtin.copy:
+        content: "{{ custom_ca_result.stdout | ansible.builtin.checksum }}"
+        dest: /usr/local/bin/generate-custom-ca-certs.sh.checksum
+        group: "{{ ansible_user }}"
+        owner: "{{ ansible_user }}"
+        mode: u=rw,g=r,o=
     - name: Fix certs ownership
       ansible.builtin.file:
         path: "{{ base_certs_path }}"

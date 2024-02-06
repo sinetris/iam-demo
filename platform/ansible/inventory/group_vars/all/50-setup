@@ -11,6 +11,7 @@ kubernetes_version:  "{{ k3s_release_version | regex_search('^v[0-9]+\\.[0-9]+[0
 kubernetes_minor_version: "{{ kubernetes_version | regex_search('^v[0-9]+\\.[0-9]+') }}"
 base_certs_path: /usr/local/etc/certs
 ca_root_certs_path: "{{ base_certs_path }}/ca"
+ca_root_certs_timestamp: "1707244011"
 # Set do_not_log to true to hide sensitive data
 do_not_log: false
 is_dns_server: false
