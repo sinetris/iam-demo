@@ -4,10 +4,18 @@
 # Kustomize from
 # https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
 
-- name: Install Helm Client
+- name: Install Kubernetes clients CLI
   tags:
-    - install_helm_client
+    - kubernetes_client
   block:
+    - name: Test variables are set correctly
+      ansible.builtin.assert:
+        that:
+          - kubernetes_minor_version is defined
+          - kubernetes_minor_version is string
+          - kubernetes_gpg_keyring is defined
+          - kubernetes_gpg_keyring is string
+        quiet: true
     - name: Add Helm Signing Certificate
       ansible.builtin.apt_key:
         url: https://baltocdn.com/helm/signing.asc
@@ -28,11 +36,13 @@
         state: present
     - name: Add kubectl Signing Certificate
       ansible.builtin.apt_key:
-        url: https://packages.cloud.google.com/apt/doc/apt-key.gpg
+        url: https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/Release.key
+        keyring: "{{ kubernetes_gpg_keyring }}"
         state: present
     - name: Add the Kubernetes Repository
       ansible.builtin.apt_repository:
-        repo: deb https://apt.kubernetes.io/ kubernetes-xenial main
+        repo: "deb [signed-by={{ kubernetes_gpg_keyring }}] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /"
+        filename: kubernetes
         mode: u=rw,g=r,o=r
         update_cache: true
     - name: Install kubectl client
