@@ -28,3 +28,10 @@
     custom_ca_paths:
       - /etc/firefox/certificates/{{ project_name }}-root-ca.crt
       - /etc/firefox/certificates/{{ project_name }}-intermediate-ca.crt
+- name: Copy script to check vm config for desktop_user
+  ansible.builtin.copy:
+    src: check-linux-desktop-config.sh
+    dest: /home/{{ desktop_user }}/bin/check-vm-config.sh
+    owner: "{{ desktop_user }}"
+    group: "{{ desktop_user }}"
+    mode: u=rwx,g=rx,o=

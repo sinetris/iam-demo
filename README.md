@@ -56,41 +56,11 @@ The IP Address is the first entry from `ipv4` when running the following command
 The ansible scripts should have installed the self-signed root certificate
 inside the linux-desktop virtual machine.
 
-To test that the services are running and using the proper certificates,
+To test that the services are running and using the proper DNS and certificates,
 open a terminal in the `linux-desktop` VM and type:
 
 ```sh
-base_domain=iam-demo.test
-check_hostnames_on_port=( \
-  'iam-control-plane 6443' \
-  'grafana 443' \
-  'prometheus 443' \
-  'alertmanager 443' \
-  'consul 443' \
-  'keycloak 443' \
-)
-
-good_result=$(tput bold)$(tput setaf 2)+$(tput sgr0)
-bad_result=$(tput bold)$(tput setaf 3)-$(tput sgr0)
-for host_port in "${check_hostnames_on_port[@]}"; do
-  splitted_host_port=( $host_port )
-  fqdn_to_check=${splitted_host_port[0]}.${base_domain}
-  echo "Check ${fqdn_to_check}:${splitted_host_port[1]}"
-  cmd_output=$(echo | openssl s_client -showcerts -servername ${fqdn_to_check} \
-      -connect "${fqdn_to_check}:${splitted_host_port[1]}" 2>/dev/null \
-      | openssl x509 -inform pem -noout -nocert -checkhost ${fqdn_to_check} 2>/dev/null) \
-    && exit_status=$? || exit_status=$?
-  if [[ $cmd_output =~ "does match certificate" ]]; then
-    echo " $(tput bold)$(tput setaf 2)[OK]$(tput sgr0)"
-    echo "   '$(tput setaf 2)${fqdn_to_check}$(tput sgr0)'"
-  elif [ "${exit_status}" -ne "0" ]; then
-    echo " $(tput bold)$(tput setaf 3)[Error]$(tput sgr0)"
-    echo "   $(tput setaf 3)Can not check certificate for$(tput sgr0) '$(tput bold)${fqdn_to_check}$(tput sgr0)'"
-  else
-    echo " $(tput bold)$(tput setaf 3)[Error]$(tput sgr0)"
-    echo "   '$(tput setaf 3)${cmd_output}$(tput sgr0)'"
-  fi
-done
+~/bin/check-vm-config.sh
 ```
 
 ### 🧑‍💻 Access Kubernetes cluster
@@ -205,7 +175,8 @@ Distributed under the terms of the Apache License (Version 2.0).
 
 See [LICENSE](LICENSE) for details.
 
-[ansible]: <https://ansible-lint.readthedocs.io/installing/> "Ansible"
+[ansible]: <https://ansible.readthedocs.io/> "Ansible"
+[ansible-lint]: <https://ansible.readthedocs.io/projects/lint/> "Ansible Lint"
 [freerdp]: <https://www.freerdp.com/> "FreeRDP: A Remote Desktop Protocol Implementation"
 [jsonnet]: <https://jsonnet.org> "Jsonnet"
 [kubernetes]: <https://kubernetes.io> "Kubernetes CLI"
