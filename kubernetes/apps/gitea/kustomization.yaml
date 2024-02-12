@@ -1,8 +1,18 @@
 namespace: tools
+commonLabels:
+  app: gitea
+  version: "1.21.5"
+  app.kubernetes.io/part-of: gitea
+  app.kubernetes.io/functionality: git-server
+  app.kubernetes.io/version: "1.21.5"
 resources:
-- configmaps/gitea-config.yaml
-- persistentvolume/gitea-data-pv.yaml
-- persistentvolumeclaims/gitea-data-pvc.yaml
-- deployments/gitea.yaml
-- services/gitea.yaml
-- ingresses/gitea-ingress.yaml
+  - configmaps/gitea-config.yaml
+  - deployments/gitea.yaml
+  - ingresses/gitea-ingress.yaml
+  - persistentvolume/gitea-data-pv.yaml
+  - persistentvolumeclaims/gitea-data-pvc.yaml
+  - secrets/gitea-inline-config.yaml
+  - secrets/gitea-secrets.yaml
+  - servicemonitor/gitea.yaml
+  - services/gitea-http.yaml
+  - services/gitea-ssh.yaml
