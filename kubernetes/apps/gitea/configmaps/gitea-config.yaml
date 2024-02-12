@@ -1,17 +1,22 @@
+---
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gitea-app-ini-plaintext
+  name: gitea-config
   labels:
-    app.kubernetes.io/version: "9.4.0"
-    app.kubernetes.io/name: gitea
-    app.kubernetes.io/part-of: git-server
+    app.kubernetes.io/name: gitea-config
     app.kubernetes.io/component: configuration
-  namespace: tools
 data:
   DISABLE_REGISTRATION: 'true'
   DOMAIN: git.iam-demo.test
+  GITEA_APP_INI: /data/gitea/conf/app.ini
+  GITEA_CUSTOM: /data/gitea
+  GITEA_WORK_DIR: /data
+  GITEA_TEMP: /tmp/gitea
+  HOME: /data/gitea/git
   HTTP_PORT: '3000'
   ROOT_URL: https://git.iam-demo.test
   SSH_DOMAIN: git.iam-demo.test
+  SSH_LISTEN_PORT: "2222"
   SSH_PORT: '22'
+  TMPDIR: /tmp/gitea

@@ -1,47 +1,96 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: gitea
-  namespace: tools
+  labels:
+    app.kubernetes.io/name: gitea
+    app.kubernetes.io/instance: gitea
+    app.kubernetes.io/component: deployment
 spec:
-  progressDeadlineSeconds: 600
   replicas: 1
+  progressDeadlineSeconds: 600
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app: gitea
+      app.kubernetes.io/name: gitea
+      app.kubernetes.io/instance: gitea
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 100%
   template:
     metadata:
       labels:
         app: gitea
+        app.kubernetes.io/name: gitea
+        app.kubernetes.io/instance: gitea
     spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+        - name: init-directories
+          image: "gitea/gitea:1.21.5-rootless"
+          imagePullPolicy: IfNotPresent
+          command: ["/usr/local/sbin/init_directory_structure.sh"]
+          env:
+            - name: GITEA_APP_INI
+              value: /data/gitea/conf/app.ini
+            - name: GITEA_CUSTOM
+              value: /data/gitea
+            - name: GITEA_WORK_DIR
+              value: /data
+            - name: GITEA_TEMP
+              value: /tmp/gitea
+          volumeMounts:
+            - name: gitea-init-volume
+              mountPath: /usr/local/sbin
+            - name: gitea-temp-volume
+              mountPath: /tmp
+            - name: gitea-data-volume
+              mountPath: /data
+          resources:
+            limits:
+              cpu: 100m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
       containers:
-      - envFrom:
-        - configMapRef:
-            name: gitea-config
-        image: gitea/gitea:1.16.8
-        imagePullPolicy: IfNotPresent
-        name: gitea
-        ports:
-        - containerPort: 22
-          name: gitea-ssh
-          protocol: TCP
-        - containerPort: 3000
-          name: gitea-http
-          protocol: TCP
-        resources:
-          limits:
-            cpu: 250m
-            memory: 200Mi
-          requests:
-            cpu: 50m
-            memory: 64Mi
-        volumeMounts:
-        - mountPath: /data
-          name: gitea-data-volume
+        - name: gitea
+          image: gitea/gitea:1.21.5-rootless
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: gitea-config
+            - secretRef:
+                name: gitea-secrets
+          ports:
+            - containerPort: 22
+              name: gitea-ssh
+              protocol: TCP
+            - containerPort: 3000
+              name: gitea-http
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 250m
+              memory: 200Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
+          volumeMounts:
+            - name: gitea-temp-volume
+              mountPath: /tmp
+            - name: gitea-data-volume
+              mountPath: /data
       volumes:
-      - name: gitea-data-volume
-        persistentVolumeClaim:
-          claimName: gitea-data-pvc
+        - name: gitea-init-volume
+          secret:
+            secretName: gitea-init
+            defaultMode: 110
+        - name: gitea-temp-volume
+          emptyDir: {}
+        - name: gitea-data-volume
+          persistentVolumeClaim:
+            claimName: gitea-data-pvc
