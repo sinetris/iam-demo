@@ -2,53 +2,57 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
+  name: redis
   labels:
     app: redis
-    component: redis
-  name: redis
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: redis
-      component: redis
   serviceName: redis-service
   template:
     metadata:
+      name: redis
       labels:
         app: redis
-        component: redis
     spec:
       automountServiceAccountToken: false
       containers:
-      - image: redis:7.0.2
-        imagePullPolicy: IfNotPresent
-        livenessProbe:
-          initialDelaySeconds: 300
-          periodSeconds: 10
-          tcpSocket:
-            port: 6379
-        name: redis
-        readinessProbe:
-          initialDelaySeconds: 1
-          periodSeconds: 10
-          tcpSocket:
-            port: 6379
-        volumeMounts:
-        - mountPath: /var/lib/redis
-          name: data
+        - name: redis
+          image: redis:7.2.4
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: redis-port
+              containerPort: 5432
+          livenessProbe:
+            initialDelaySeconds: 300
+            periodSeconds: 10
+            tcpSocket:
+              port: 6379
+          readinessProbe:
+            initialDelaySeconds: 1
+            periodSeconds: 10
+            tcpSocket:
+              port: 6379
+          volumeMounts:
+            - name: redis-data
+              mountPath: /var/lib/redis
       securityContext:
         fsGroup: 999
         runAsUser: 999
       terminationGracePeriodSeconds: 120
   volumeClaimTemplates:
-  - metadata:
-      labels:
-        app: redis
-      name: data
-    spec:
-      accessModes:
-      - ReadWriteMany
-      resources:
-        requests:
-          storage: 1Gi
+    - metadata:
+        name: redis-data
+        labels:
+          app.kubernetes.io/name: redis-data
+      spec:
+        storageClassName: local-path
+        volumeMode: Filesystem
+        volumeName: redis-data-pv
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: "8Gi"
