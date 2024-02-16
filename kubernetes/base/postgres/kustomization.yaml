@@ -1,7 +1,18 @@
 ---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+  - includeSelectors: true
+    pairs:
+      app: postgres
+      app.kubernetes.io/component: database
+  - includeSelectors: false
+    pairs:
+      app.kubernetes.io/version: 16.1.0
 resources:
-- configmap.yaml
-- volume.yaml
-- volume-db-init.yaml
-- deployment.yaml
-- service.yaml
+  - configmap.yaml
+  - data-pv.yaml
+  - db-init-pv.yaml
+  - secret.yaml
+  - service.yaml
+  - statefulset.yaml

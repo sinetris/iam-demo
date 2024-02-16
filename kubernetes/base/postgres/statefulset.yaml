@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  replicas: 1
+  serviceName: postgres
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: postgres
+  template:
+    metadata:
+      name: postgres
+      labels:
+        app.kubernetes.io/name: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: postgres-config-map
+            - secretRef:
+                name: postgres-secrets
+          ports:
+            - name: postgres-port
+              containerPort: 5432
+          livenessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - exec pg_isready -U "${POSTGRES_USER}" -d "dbname=${POSTGRES_USER}" -h 127.0.0.1 -p 5432
+          readinessProbe:
+            failureThreshold: 6
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            successThreshold: 1
+            timeoutSeconds: 5
+            exec:
+              command:
+                - /bin/sh
+                - -c
+                - -e
+                - |
+                  exec pg_isready -U "${POSTGRES_USER}" -d "dbname=${POSTGRES_USER}" -h 127.0.0.1 -p 5432
+                  [ -f "${PGDATA}/tmp/.initialized" ] || [ -f "${PGDATA}/.initialized" ]
+          resources:
+            limits:
+              cpu: 250m
+              memory: 256Mi
+            requests:
+              cpu: 100m
+              memory: 128Mi
+          volumeMounts:
+            - name: shared-memory-volume
+              mountPath: /dev/shm
+            - name: postgres-data
+              mountPath: /var/lib/postgresql/data
+            - name: postgres-db-init
+              mountPath: /docker-entrypoint-initdb.d
+      volumes:
+        - name: shared-memory-volume
+          emptyDir:
+            medium: Memory
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: postgres-data
+      spec:
+        volumeName: postgres-data-pv
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 10Gi
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: postgres-db-init
+      spec:
+        volumeName: postgres-db-init-pv
+        accessModes:
+          - ReadWriteMany
+        resources:
+          requests:
+            storage: 10Gi
