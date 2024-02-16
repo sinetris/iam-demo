@@ -1,0 +1,15 @@
+---
+nameReference:
+  - kind: PersistentVolume
+    version: v1
+    fieldSpecs:
+      # Also change 'volumeName' for 'volumeClaimTemplates' in type 'StatefulSet'
+      - path: spec/volumeClaimTemplates/spec/volumeName
+        kind: StatefulSet
+#   - kind: Secret
+#     version: v1
+#     fieldSpecs:
+#       - path: spec/template/spec/containers/envFrom/secretRef/name
+#         kind: StatefulSet
+
+# spec/template/spec/containers/envFrom/secretRef/name
