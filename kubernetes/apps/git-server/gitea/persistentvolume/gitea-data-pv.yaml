@@ -9,7 +9,7 @@ spec:
   accessModes:
     - ReadWriteMany
   capacity:
-    storage: 500Gi
+    storage: 10Gi
   hostPath:
     path: /var/local/data/gitea
   storageClassName: local-path
