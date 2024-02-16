@@ -5,9 +5,10 @@
 #     kind: ConfigMap
 #     name: tcp-services
 #     version: v1
+
 resources:
-# - ../../apps/gitea
-- ../../apps/keycloak
-# - ../../apps/notary
-# - ../../apps/drone
-# - ../../apps/harbor
+  - ../../apps/git-server
+  - ../../apps/keycloak
+#  - ../../apps/notary
+#  - ../../apps/drone
+#  - ../../apps/harbor
