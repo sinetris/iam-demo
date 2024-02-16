@@ -5,12 +5,12 @@ metadata:
   name: redis
   labels:
     app: redis
-    component: redis
 spec:
+  type: ClusterIP
   ports:
-  - name: redis-port
-    protocol: TCP
-    port: 6379
+    - name: redis-port
+      port: 6379
+      protocol: TCP
+      targetPort: redis-port
   selector:
-    app: redis
-    component: redis
+    role: data
