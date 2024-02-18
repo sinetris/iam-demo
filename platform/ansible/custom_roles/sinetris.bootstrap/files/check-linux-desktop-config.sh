@@ -4,6 +4,7 @@ set -Eeuo pipefail
 base_domain=iam-demo.test
 check_hostnames_on_port=( \
   'iam-control-plane 6443' \
+  'git 443' \
   'grafana 443' \
   'prometheus 443' \
   'alertmanager 443' \
