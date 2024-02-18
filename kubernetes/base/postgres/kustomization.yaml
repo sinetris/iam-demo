@@ -6,13 +6,12 @@ labels:
     pairs:
       app: postgres
       app.kubernetes.io/component: database
+      role: data
   - includeSelectors: false
     pairs:
-      app.kubernetes.io/version: 16.1.0
+      app.kubernetes.io/version: "16.2"
 resources:
   - configmap.yaml
-  - data-pv.yaml
-  - db-init-pv.yaml
   - secret.yaml
   - service.yaml
   - statefulset.yaml
