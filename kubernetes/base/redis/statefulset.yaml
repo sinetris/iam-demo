@@ -3,19 +3,12 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis
-  labels:
-    app: redis
 spec:
   replicas: 1
-  selector:
-    matchLabels:
-      app: redis
   serviceName: redis-service
   template:
     metadata:
       name: redis
-      labels:
-        app: redis
     spec:
       automountServiceAccountToken: false
       containers:
@@ -24,7 +17,7 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: redis-port
-              containerPort: 5432
+              containerPort: 6379
           livenessProbe:
             initialDelaySeconds: 300
             periodSeconds: 10
@@ -48,11 +41,8 @@ spec:
         labels:
           app.kubernetes.io/name: redis-data
       spec:
-        storageClassName: local-path
-        volumeMode: Filesystem
-        volumeName: redis-data-pv
         accessModes:
-          - ReadWriteMany
+          - ReadWriteOnce
         resources:
           requests:
             storage: "8Gi"
