@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-config
+  labels:
+    app.kubernetes.io/name: gitea-config
+    app.kubernetes.io/component: configuration
+data:
+  HOME: /var/lib/gitea/git
+  GITEA_APP_INI: /etc/gitea/app.ini
+  GITEA_WORK_DIR: /var/lib/gitea
+  GITEA_CUSTOM: /var/lib/gitea/custom
+  GITEA_TEMP: /tmp/gitea
+  TMPDIR: /tmp/gitea
