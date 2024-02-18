@@ -4,11 +4,10 @@ kind: Service
 metadata:
   name: gitea-http
   labels:
-    app.kubernetes.io/name: gitea-http
-    app.kubernetes.io/component: service
+    app: gitea
 spec:
   ports:
-    - name: gitea-http
+    - name: http
       port: 3000
       protocol: TCP
       targetPort: 3000

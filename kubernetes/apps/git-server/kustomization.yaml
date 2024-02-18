@@ -10,5 +10,3 @@ resources:
   - gitea
   - redis
   - postgres
-configurations:
-  - references-override.yaml
