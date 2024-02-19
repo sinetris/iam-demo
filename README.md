@@ -9,6 +9,9 @@ Identity and Access Management (IAM) demo infrastructure.
   - [💻 Linux desktop VM](#-linux-desktop-vm)
     - [Connect using Remote Desktop](#connect-using-remote-desktop)
     - [Test self-signed certificates](#test-self-signed-certificates)
+    - [Complete Setup (required to run only once)](#complete-setup-required-to-run-only-once)
+      - [Configure environment variables and shell completion](#configure-environment-variables-and-shell-completion)
+      - [Configure Gitea ssh keys](#configure-gitea-ssh-keys)
   - [🧑‍💻 Access Kubernetes cluster](#-access-kubernetes-cluster)
     - [Connecting from the console](#connecting-from-the-console)
     - [Connect using linux-desktop browser](#connect-using-linux-desktop-browser)
@@ -63,6 +66,43 @@ open a terminal in the `linux-desktop` VM and type:
 ~/bin/check-vm-config.sh
 ```
 
+#### Complete Setup (required to run only once)
+
+##### Configure environment variables and shell completion
+
+Open a terminal and type:
+
+```sh
+# Configure iam-demo-tech k8s cluster as default 
+echo 'export KUBECONFIG=~/.kube/config-iam-demo-tech' >> ~/.bashrc
+# Add kubectl completion
+kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl
+# Add kustomize completion
+kustomize completion bash | sudo tee /etc/bash_completion.d/kustomize
+# Add helm completion
+helm completion bash | sudo tee /etc/bash_completion.d/helm
+# Open a new shell tab or start a new shell to apply the changes
+exec $SHELL
+```
+
+##### Configure Gitea ssh keys
+
+Open a terminal to generate the ssh keys.
+
+```sh
+ssh-keygen -t ed25519 -C "iamadmin@iam-demo.test"
+```
+
+Open a [Gitea](https://git.iam-demo.test) in a browser and login using the credentials from [Connect using linux-desktop browser](#connect-using-linux-desktop-browser).
+
+Open a terminal and copy your public ssh key in the clipboard.
+
+```sh
+cat ~/.ssh/id_ed25519.pub | tee >(xclip -selection clipboard); echo ''
+```
+
+Open [Manage SSH Keys in Gitea](https://git.iam-demo.test/user/settings/keys) in a browser and paste the public key.
+
 ### 🧑‍💻 Access Kubernetes cluster
 
 #### Connecting from the console
@@ -74,7 +114,7 @@ Access `ansible-controller` shell using:
 ```
 
 or connect to `linux-desktop` [using Remote Desktop](#connect-using-remote-desktop)
-and opening a terminal.
+and open a terminal.
 
 You can also access `linux-desktop` shell using:
 
@@ -85,7 +125,6 @@ You can also access `linux-desktop` shell using:
 To check the Kubernetes configuration, type:
 
 ```sh
-export KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl config view
 ```
 
@@ -125,6 +164,9 @@ Open Firefox inside the VM, and use the following URLs:
 - Grafana: <https://grafana.iam-demo.test>
   - user: admin
   - password: grafana-admin
+- Gitea: <https://git.iam-demo.test>
+  - user: gitea-admin
+  - password: giteapw123!
 - Prometheus: <https://prometheus.iam-demo.test>
 - Alertmanager: <https://alertmanager.iam-demo.test>
 - Consul: <https://consul.iam-demo.test>
@@ -137,11 +179,10 @@ To access Traefik or Kubernetes dashboards, follow the instructions in the respe
 Open a terminal and start port forwarding using:
 
 ```sh
-export KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl port-forward \
-  --namespace tools \
+  --namespace kube-system \
   $(kubectl get pods \
-    --namespace tools \
+    --namespace kube-system \
     --selector "app.kubernetes.io/name=traefik" \
     --output=name) \
   9000:9000
@@ -154,14 +195,12 @@ Open <http://127.0.0.1:9000/dashboard/> in a browser.
 Generate a token, print it and copy it to the clipboard:
 
 ```sh
-export KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl -n kubernetes-dashboard create token admin-user | tee >(xclip -selection clipboard); echo ''
 ```
 
 Start the proxy:
 
 ```sh
-export KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl proxy
 ```
 
