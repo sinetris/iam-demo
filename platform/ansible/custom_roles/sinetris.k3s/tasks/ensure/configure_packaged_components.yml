@@ -9,12 +9,17 @@
     src: "{{ k3s_tls_dir }}/server-ca.key"
   register: server_ca_key
   no_log: "{{ do_not_log }}"
-- name: Setup Traefik Helm chart
+- name: Setup Traefik Helm chart (secrets)
   vars:
     b64encoded_crt: "{{ server_ca_crt['content'] | b64encode }}"
     b64encoded_key: "{{ server_ca_key['content'] | b64encode }}"
   ansible.builtin.template:
-    src: traefik-config.yaml.j2
-    dest: "{{ k3s_server_manifests_dir }}/traefik-config.yaml"
+    src: traefik-config-secrets.yaml.j2
+    dest: "{{ k3s_server_manifests_dir }}/traefik-config-secrets.yaml"
     mode: u=rw,g=r,o=
   no_log: "{{ do_not_log }}"
+- name: Setup Traefik Helm chart (manifest)
+  ansible.builtin.template:
+    src: traefik-config-manifest.yaml.j2
+    dest: "{{ k3s_server_manifests_dir }}/traefik-config-manifest.yaml"
+    mode: u=rw,g=r,o=
