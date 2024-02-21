@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tempo-gossip-ring
+  labels:
+    app.kubernetes.io/component: gossip-ring
+spec:
+  type: ClusterIP
+  clusterIP: None
+  ports:
+    - name: gossip-ring
+      port: 7946
+      protocol: TCP
+      targetPort: http-memberlist
+  publishNotReadyAddresses: true

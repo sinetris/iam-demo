@@ -1,14 +1,8 @@
 ---
-# patchesJson6902:
-# - path: patch.yaml
-#   target:
-#     kind: ConfigMap
-#     name: tcp-services
-#     version: v1
-
 resources:
   - ../../apps/git-server
   - ../../apps/keycloak
-#  - ../../apps/notary
-#  - ../../apps/drone
-#  - ../../apps/harbor
+  - ../../apps/tempo
+  # - ../../apps/notary
+  # - ../../apps/drone
+  # - ../../apps/harbor

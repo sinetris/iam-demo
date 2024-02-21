@@ -4,8 +4,8 @@
 # or see:
 # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
 
-# nameOverride: observability-stack
-fullnameOverride: o11y-stack
+nameOverride: observability-stack
+# fullnameOverride: o11y-stack
 
 namespaceOverride: observability
 
@@ -36,13 +36,24 @@ alertmanager:
 grafana:
   enabled: true
   adminPassword: grafana-admin
+  grafana.ini:
+    server:
+      domain: grafana.iam-demo.test
+      root_url: "https://%(domain)s"
   additionalDataSources:
   - name: Loki
     type: loki
-    url: http://loki-gateway
+    url: http://loki-gateway.observability:80
     editable: true
+    orgId: 1
     jsonData:
       maxLines: 1000
+  - name: Tempo
+    type: tempo
+    access: proxy
+    orgId: 1
+    url: http://tempo-query-frontend.observability:3100
+    editable: true
   # # Send logs to file
   # env:
   #   GF_LOG_MODE: console file
