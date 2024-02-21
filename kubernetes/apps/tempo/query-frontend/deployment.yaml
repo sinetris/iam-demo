@@ -1,0 +1,95 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tempo-query-frontend
+  labels:
+    app.kubernetes.io/component: query-frontend
+spec:
+  minReadySeconds: 10
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: query-frontend
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: query-frontend
+    spec:
+      serviceAccountName: tempo
+      securityContext:
+        fsGroup: 1000
+      enableServiceLinks: false
+      containers:
+        - args:
+            - -target=query-frontend
+            - -config.file=/conf/tempo.yaml
+            - -mem-ballast-size-mbs=1024
+          image: docker.io/grafana/tempo:2.3.1
+          imagePullPolicy: IfNotPresent
+          name: query-frontend
+          ports:
+            - containerPort: 3100
+              name: http-metrics
+            - containerPort: 9095
+              name: grpc
+          resources:
+            {}
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+          volumeMounts:
+            - mountPath: /conf
+              name: config
+            - mountPath: /runtime-config
+              name: runtime-config
+            - mountPath: /var/tempo
+              name: tempo-queryfrontend-store
+      terminationGracePeriodSeconds: 30
+      topologySpreadConstraints:
+        - maxSkew: 1
+          topologyKey: topology.kubernetes.io/zone
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app.kubernetes.io/component: query-frontend
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchLabels:
+                  app.kubernetes.io/component: query-frontend
+              topologyKey: kubernetes.io/hostname
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchLabels:
+                    app.kubernetes.io/component: query-frontend
+                topologyKey: topology.kubernetes.io/zone
+      volumes:
+        - name: config
+          configMap:
+            name: tempo-config
+            items:
+              - key: "tempo.yaml"
+                path: "tempo.yaml"
+        - name: runtime-config
+          configMap:
+            name: tempo-runtime
+            items:
+              - key: "overrides.yaml"
+                path: "overrides.yaml"
+        - name: tempo-queryfrontend-store
+          emptyDir: {}

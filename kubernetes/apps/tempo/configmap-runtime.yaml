@@ -1,0 +1,9 @@
+---
+# Source: tempo-distributed/templates/configmap-runtime.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tempo-runtime
+data:
+  overrides.yaml: |
+    overrides: {}
