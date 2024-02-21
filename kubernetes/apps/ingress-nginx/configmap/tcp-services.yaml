@@ -1,7 +1,0 @@
-apiVersion: v1
-data:
-  '22': tools/gitea:22
-kind: ConfigMap
-metadata:
-  name: tcp-services
-  namespace: ingress-nginx
