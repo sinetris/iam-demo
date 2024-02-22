@@ -40,9 +40,11 @@ spec:
         - name: filebeat-certs
           secret:
             secretName: indexer-certs
+      securityContext:
+        fsGroup: 101
       containers:
         - name: wazuh-manager
-          image: 'wazuh/wazuh-manager:4.5.0'
+          image: 'wazuh/wazuh-manager:5.0.0'
           resources:
             limits:
               cpu: 400m
@@ -137,7 +139,7 @@ spec:
         namespace: wazuh
       spec:
         accessModes:
-          - ReadWriteMany
+          - ReadWriteOnce
         storageClassName: wazuh-storage
         resources:
           requests:
