@@ -76,5 +76,12 @@ repos:
       - id: yamlfmt
         name: YAML format for kubernetes files
         alias: yamlfmt-k8s
-        args: [-conf, kubernetes/.yamlfmt, "-dstar", "kubernetes/**/*.{yaml,yml}"]
+        args: [-conf, kubernetes/.yamlfmt]
         files: ^kubernetes\/.*\.ya?ml$
+      # Ansible
+      - id: yamlfmt
+        name: YAML format for ansible files
+        alias: yamlfmt-ansible
+        args: [-conf, platform/ansible/.yamlfmt]
+        files: ^platform\/ansible\/.*\.ya?ml$
+        exclude: ^platform\/ansible\/installed\/.*
