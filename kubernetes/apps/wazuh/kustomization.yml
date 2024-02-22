@@ -1,15 +1,11 @@
-# Copyright (C) 2019, Wazuh Inc.
-#
-# This program is a free software; you can redistribute it
-# and/or modify it under the terms of the GNU General Public
-# License (version 2) as published by the FSF - Free Software
-# Foundation.
-
+---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-
-# Adds wazuh namespace to all resources.
-namespace: wazuh
+namespace: tools
+labels:
+  - includeSelectors: true
+    pairs:
+      app.kubernetes.io/part-of: gitea
 
 secretGenerator:
   - name: indexer-certs
@@ -43,7 +39,6 @@ configMapGenerator:
       - indexer_stack/wazuh-dashboard/dashboard_conf/opensearch_dashboards.yml
 
 resources:
-  - base/wazuh-ns.yaml
   - base/storage-class.yaml
 
   - secrets/wazuh-api-cred-secret.yaml
