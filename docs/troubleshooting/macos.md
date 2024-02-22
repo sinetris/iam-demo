@@ -1,24 +1,83 @@
-# Troubleshoot Multipass on macOS
+# Troubleshooting on macOS
 
 [Back to README](README.md)
 
-Apple tends to change the behavior of macOS internal systems (firewalls,
-networking, security permissions, and essentially all systems that manage
-the underlying virtualization infrastructure) in every update, without
-documenting the changes made and without taking into account applications
-developed by third parties that rely on these internal systems.
+- [General considerations](#general-considerations)
+  - [Networking](#networking)
+  - [Remote Desktop](#remote-desktop)
+- [Troubleshoot Multipass on macOS](#troubleshoot-multipass-on-macos)
+  - [Files locations](#files-locations)
+  - [Networking](#networking-1)
+  - [Instances](#instances)
+    - [QEMU](#qemu)
+      - [Apple Silicon CPUs (aarch64)](#apple-silicon-cpus-aarch64)
+      - [Intel CPUs (x86\_64)](#intel-cpus-x86_64)
 
-This inevitably leads to compromised operation of many applications,
-especially those related to virtualization.
+## General considerations
 
-## Files location
+### Networking
 
-`/Library/Application\ Support/com.canonical.multipass`
-`/Library/Application\ Support/com.canonical.multipass/bin/`
-`/Library/Application\ Support/com.canonical.multipass/Resources/`
+Apple tends to change the behaviour of macOS internal systems (firewalls,
+other network systems, security authorisations and, essentially, all systems
+that manage the underlying virtualisation infrastructure) in every update,
+often without documenting the changes made and without taking into account
+applications developed by third parties that rely on these internal systems.
+
+This inevitably leads to unannounced interruptions in the operation of many
+applications, especially those related to virtualisation, and delays in
+identifying and resolving related problems.
 
 
-### qemu aarch64
+### Remote Desktop
+
+When connecting using RDP to the Linux Desktop virtual machine, it can happen
+that scrolling in Firefox is too fast. To change the scrolling speed, follow
+the instructions in [Mouse scrolling in Firefox](virtualmachines.md#mouse-scrolling-in-firefox).
+
+## Troubleshoot Multipass on macOS
+
+### Files locations
+
+- Multipass CLI and configuration files: `/Library/Application\ Support/com.canonical.multipass/`
+- Generated virtual machines and ssh keys: `/var/root/Library/Application\ Support/multipassd/`
+- Logs: `/Library/Logs/Multipass/multipassd.log`
+
+### Networking
+
+The first place to check is the Multipass official documentation page on
+[troubleshoot networking][multipass-troubleshoot-networking].
+
+When configured to use QEMU on macOS, Multipass will make use of
+`Hypervisor.framework` and will provide DHCP and DNS resolution using the
+services `bootpd` and `mDNSResponder`. \
+The auto-genereted configuration can be found in `/etc/bootpd.plist`.
+
+Make sure that the `/var/db/dhcpd_leases` file does not contain duplicate
+entries otherwise you may experience strange behaviors.
+
+To check for duplicate entries in `/var/db/dhcpd_leases`, run:
+
+```shell
+cat /var/db/dhcpd_leases | grep -E -o 'name=.+' | sort | uniq -c
+```
+
+### Instances
+
+#### QEMU
+
+To list all running instances:
+
+```shell
+ps -ef | grep -i multipass | grep qemu
+```
+
+To terminate all running instances:
+
+```shell
+ps -ef | grep -i multipass | grep qemu | awk '{print "sudo kill -9 "$2}' | sh
+```
+
+##### Apple Silicon CPUs (aarch64)
 
 ```shell
 sudo /Library/Application\ Support/com.canonical.multipass/bin/qemu-system-aarch64 \
@@ -36,7 +95,7 @@ sudo /Library/Application\ Support/com.canonical.multipass/bin/qemu-system-aarch
   -cdrom /var/root/Library/Application\ Support/multipassd/qemu/vault/instances/nrmdev/cloud-init-config.iso
 ```
 
-### qemu x86_64
+##### Intel CPUs (x86_64)
 
 ```shell
 /Library/Application Support/com.canonical.multipass/bin/qemu-system-x86_64 \
@@ -57,49 +116,4 @@ sudo /Library/Application\ Support/com.canonical.multipass/bin/qemu-system-aarch
 
 ```
 
-```shell
-/Library/Application\ Support/com.canonical.multipass/Resources/com.canonical.multipassd.plist
-/Library/Application\ Support/com.canonical.multipass/Resources/com.canonical.multipass.gui.autostart.plist
-```
-
-## Logs
-
-The first place to look in case Multipass starts misbehaving is in the
-logs found in `/Library/Logs/Multipass/multipassd.log`.
-
-## Networking
-
-The first place to check is the Multipass official documentation page on
-[troubleshoot networking][multipass-troubleshoot-networking].
-
-When configured to use QEMU on macOS, Multipass will make use of
-`Hypervisor.framework` and will provide DHCP and DNS resolution using the
-services `bootpd` and `mDNSResponder`. \
-The auto-genereted configuration can be found in `/etc/bootpd.plist`.
-
-Make sure that the `/var/db/dhcpd_leases` file does not contain duplicate
-entries otherwise you may experience strange behavior.
-
-To check for duplicate entries in `/var/db/dhcpd_leases`, run:
-
-```shell
-cat /var/db/dhcpd_leases | grep -E -o 'name=.+' | sort | uniq -c
-```
-
 [multipass-troubleshoot-networking]: <https://multipass.run/docs/troubleshoot-networking> "How to troubleshoot networking in Multipass"
-
-## Instances
-
-### QEMU
-
-To list all running instances:
-
-```shell
-ps -ef | grep -i multipass | grep qemu
-```
-
-To terminate all running instances:
-
-```shell
-ps -ef | grep -i multipass | grep qemu | awk '{print "sudo kill -9 "$2}' | sh
-```

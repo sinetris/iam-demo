@@ -17,6 +17,8 @@ Identity and Access Management (IAM) demo infrastructure.
     - [Connect using linux-desktop browser](#connect-using-linux-desktop-browser)
       - [Traefik Dashboard](#traefik-dashboard)
       - [Kubernetes Dashboard](#kubernetes-dashboard)
+- [Troubleshooting](#troubleshooting)
+- [TODO](#todo)
 - [📄 License](#-license)
 
 ## 📜 Introduction
@@ -207,6 +209,14 @@ kubectl proxy
 Access the board in a web broser opening:
 
 <http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/>
+
+## Troubleshooting
+
+- [Troubleshooting](docs/troubleshooting/README.md)
+
+## TODO
+
+- [TODO](docs/TODO.md)
 
 ## 📄 License
 
