@@ -33,7 +33,6 @@ $ORIGIN {{ zone.name }}.
 {% endfor %}
 {% for rr in zone.resource_records %}
 {% set rr_priority = (rr.type|upper is eq('MX'))|ternary(rr.priority|default(10)|string, '') %}
-{% set rr_priority = (rr.type|upper is eq('MX'))|ternary(rr.priority|default(10)|string, '') %}
 {{ rr.label.ljust(20) }} IN {{ (rr.ttl|default()|string).ljust(6) }} {{ rr.type.ljust(8) }} {{ rr_priority.ljust(3) }} {{ rr.content }}
 {% endfor %}
 {% if zone.extended_text is defined %}
