@@ -6,91 +6,122 @@ This role installs and configures the Bind9 nameserver on Ubuntu.
 
 ### Primary server
 
-* set vars for your primary server, for instance in `host_vars/primary_name/vars/XX_bind.yml`,
-here with an example.com static zones and forwarder:
+Set vars for your primary server, for instance in `host_vars/primary_name/vars/XX_bind.yml`.
+
+An example: using `example.test` static zones and forwarder:
 
 ```yaml
 bind9_authoritative: true
-bind9_admin_email: hostmaster@example.org
+bind9_admin_email: hostmaster@example2.test
 bind9_forwarder: true
 bind9_forwarders:
   - 1.1.1.1
   - 8.8.8.8
 bind9_zones:
-  - name: example.org
+  - name: example.test
+    serial: "1694903878"
     ttl: 1d
     refresh: 3h
     retry: 15m
     expire: 1d
-    minimum: 2h
+    minimum: 5m
     ns_records:
-      - ns1.dns-server.test.
-      - ns2.other-dns-server.test.
-    a_records:
-      - 192.168.0.1
-    aaaa_records:
-      - fc00::
-    mx_records:
-      - priority: 10
-        name: mx1.example.org.
-    caa_records:
-      - 0 issue "example-ca.org"
+      # The first NS record will be used in the SOA
+      - ns1
+      - ns2.example2.test.
     resource_records:
-      - label: www
+      - label: "@"
+        type: MX
+        content: mail1
+        priority: 10
+      - label: ns1
         ttl: 1h
         type: A
         content: 192.168.0.1
-      - label: ftp
+      - label: mail1
+        ttl: 1h
+        type: A
+        content: 192.168.254.4
+      - label: www
+        ttl: 10m
+        type: A
+        content: 192.168.254.7
+      - label: ftp1
         ttl: 2h
         type: CNAME
         content: www
+      - label: ftp2
+        ttl: 1h
+        type: CNAME
+        content: ftp.example2.test.
       - label: something
         ttl: 2h
         type: CNAME
-        content: external.example.com.
-      - label: subdomain
-        ttl: 30m # see TTL section for examples
-        type: A|CNAME|TXT|...
-        content: IP|other-subdomain|fqdn-ending-with-dot|etc
+        content: www.example.test.
+      # - label: subdomain
+      #   ttl: 30m # see TTL section for examples
+      #   type: A|CNAME|TXT|...
+      #   content: IP|other-subdomain|fqdn-ending-with-dot|etc
 ```
 
 ### Zone file
 
 #### Zone file example
 
-```zone
-; base zone file for example.com
-$TTL 2d    ; default TTL for zone
-$ORIGIN example.com.
+The file `/etc/bind/named.conf.local` will contain:
 
-; Start of Authority Resource Record (RR) defining the key characteristics of
-; the zone (domain)
-@         IN      SOA   ns1.example.com. hostmaster.example.com. (
-                                1694626163 ; serial number (must be between 1 and 4294967295)
-                                12h        ; refresh
-                                15m        ; update retry
-                                3w         ; expiry
-                                2h         ; minimum
-                                )
-; name server RR for the domain
-           IN      NS      ns1.example.com.
-; the second name server is external to this zone (domain)
-           IN      NS      ns2.example.net.
-; mail server RRs for the zone (domain)
-        3w IN      MX  10  mail.example.com.
-; the second  mail servers is external to the zone (domain)
-           IN      MX  20  mail.example.net.
-; domain hosts includes NS and MX records defined above
-; plus any others resource record we require
-; for instance a user query for the A RR of joe.example.com will
-; return the IPv4 address 192.168.254.6 from this zone file
-ns1        IN      A       192.168.254.2
-mail       IN      A       192.168.254.4
-joe        IN      A       192.168.254.6
-www        IN      A       192.168.254.7
-; aliases ftp (ftp server) to an external domain
-ftp        IN      CNAME   ftp.example.net.
+```zone
+zone "example.test" {
+  type primary;
+  file "/etc/bind/zones/db.example.test";
+  notify yes;
+};
 ```
+
+The file `/etc/bind/zones/db.example.test` will contain:
+
+```zone
+;; Ansible managed
+
+; zone file for example.test
+
+$TTL 1d    ; default TTL for zone
+$ORIGIN example.test.
+; Start of Authority
+@         IN      SOA   ns1 hostmaster.example2.test. (
+                  ; Serial number
+                  1694903878
+                  ; Refresh
+                  3h
+                  ; Retry
+                  15m
+                  ; Expire
+                  1d
+                  ; Minimum
+                  5m
+)
+
+                     IN        NS           ns1
+                     IN        NS           ns2.example2.test2.
+@                    IN        MX       10  mail1
+ns1                  IN 1h     A            192.168.0.1
+mail1                IN 10m    A            192.168.254.4
+www                  IN 10m    A            192.168.254.7
+ftp1                 IN 2h     CNAME        www
+ftp2                 IN 1h     CNAME        ftp.example2.test.
+something            IN 1m     CNAME        www.example.test.
+```
+
+**Notes:**
+
+- FQDNs (fully qualified domain names) needs to end with a `.` (dot).\
+  e.g. using `www.example2.test` (without `.` at the end) in a CNAME would be
+  interpreted as a subdomain, resulting in `www.example2.test.example.test`.\
+  You can use a FQDN also for locally managed record (like we used `www.example.test.`
+  for the CNAME `something`), but I don't see any valid reason to do it
+- The DNS administrator email in the SOA uses a `.` (dot) instead of `@` (at).\
+  Strange as it may seem, `hostmaster.example2.test.` is an email address and
+  not a subdomain.
 
 #### TTL format
 
@@ -121,11 +152,3 @@ You can find some examples for valid TTL values in the following table.
 |     2d4h |                2 days and 4 hours |      187200      |
 
 **Note:** The maximum TTL value is usually capped at 7 days.
-
-## TODO
-
-```sh
-sudo resolvectl dns ens3 192.168.105.62
-sudo resolvectl domain ens3 iam-demo.test
-
-```
