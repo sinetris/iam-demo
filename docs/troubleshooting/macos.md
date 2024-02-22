@@ -27,7 +27,6 @@ This inevitably leads to unannounced interruptions in the operation of many
 applications, especially those related to virtualisation, and delays in
 identifying and resolving related problems.
 
-
 ### Remote Desktop
 
 When connecting using RDP to the Linux Desktop virtual machine, it can happen

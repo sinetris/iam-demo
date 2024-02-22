@@ -5,6 +5,7 @@ Identity and Access Management (IAM) demo infrastructure.
 - [📜 Introduction](#-introduction)
 - [🐣 Getting started](#-getting-started)
   - [🔩 Dependencies](#-dependencies)
+    - [Development](#development)
   - [🔧 Setup](#-setup)
   - [💻 Linux desktop VM](#-linux-desktop-vm)
     - [Connect using Remote Desktop](#connect-using-remote-desktop)
@@ -33,6 +34,11 @@ instance, a [Kubernetes][kubernetes] cluster, and a linux desktop with
 
 - [Jsonnet][jsonnet]
 - [Multipass][multipass]
+
+#### Development
+
+- pre-commit
+- shfmt
 
 ### 🔧 Setup
 
@@ -95,7 +101,8 @@ Open a terminal to generate the ssh keys.
 ssh-keygen -t ed25519 -C "iamadmin@iam-demo.test"
 ```
 
-Open a [Gitea](https://git.iam-demo.test) in a browser and login using the credentials from [Connect using linux-desktop browser](#connect-using-linux-desktop-browser).
+Open a [Gitea](https://git.iam-demo.test) in a browser and login using the
+credentials from [Connect using linux-desktop browser](#connect-using-linux-desktop-browser).
 
 Open a terminal and copy your public ssh key in the clipboard.
 
@@ -103,7 +110,8 @@ Open a terminal and copy your public ssh key in the clipboard.
 cat ~/.ssh/id_ed25519.pub | tee >(xclip -selection clipboard); echo ''
 ```
 
-Open [Manage SSH Keys in Gitea](https://git.iam-demo.test/user/settings/keys) in a browser and paste the public key.
+Open [Manage SSH Keys in Gitea](https://git.iam-demo.test/user/settings/keys)
+in a browser and paste the public key.
 
 ### 🧑‍💻 Access Kubernetes cluster
 
@@ -154,7 +162,8 @@ users:
     client-key-data: DATA+OMITTED
 ```
 
-The [kubernetes](kubernetes/) folder is mounted inside the `ansible-controller` under `/kubernetes`.
+The [kubernetes](kubernetes/) folder is mounted inside the `ansible-controller`
+under `/kubernetes`.
 
 #### Connect using linux-desktop browser
 
@@ -174,7 +183,8 @@ Open Firefox inside the VM, and use the following URLs:
 - Consul: <https://consul.iam-demo.test>
 - Keycloak: <https://keycloak.iam-demo.test>
 
-To access Traefik or Kubernetes dashboards, follow the instructions in the respective subsections.
+To access Traefik or Kubernetes dashboards, follow the instructions in the
+respective subsections.
 
 ##### Traefik Dashboard
 
@@ -225,7 +235,6 @@ Distributed under the terms of the Apache License (Version 2.0).
 See [LICENSE](LICENSE) for details.
 
 [ansible]: <https://ansible.readthedocs.io/> "Ansible"
-[ansible-lint]: <https://ansible.readthedocs.io/projects/lint/> "Ansible Lint"
 [freerdp]: <https://www.freerdp.com/> "FreeRDP: A Remote Desktop Protocol Implementation"
 [jsonnet]: <https://jsonnet.org> "Jsonnet"
 [kubernetes]: <https://kubernetes.io> "Kubernetes CLI"

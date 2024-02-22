@@ -21,11 +21,14 @@
 
 ### Better define project scope
 
-This project is an implementation example of what is defined in [sinetris/iam-introduction](https://github.com/sinetris/iam-introduction).
+This project is an implementation example of what is defined in
+[sinetris/iam-introduction](https://github.com/sinetris/iam-introduction).
 
-Clarify that the tools selected are only used for the sake of semplicity (and in some cases not the best tools for the job) to cover certain topics.
+Clarify that the tools selected are only used for the sake of semplicity (and
+in some cases not the best tools for the job) to cover certain topics.
 
-Add an higher level of abstraction overview and place the tools in the appropriate sub-set.
+Add an higher level of abstraction overview and place the tools in the
+appropriate sub-set.
 
 ### Add Infrastructure overview
 
@@ -84,7 +87,6 @@ Add an higher level of abstraction overview and place the tools in the appropria
 - [PacBot][pacbot]: Policy as Code Bot (by T-Mobile)
 - [MagTape][magtape]: Policy-as-Code for Kubernetes (by T-Mobile)
 
-
 ## Setup and configurations
 
 - [x] move postgres to [base](../kubernetes/base/)
@@ -101,17 +103,22 @@ Add an higher level of abstraction overview and place the tools in the appropria
 - [x] use a separate DNS server resolver for external domains (Bind9)
 - [ ] generate Certificate in a proper way
   - [ ] check [Vault PKI documentation][vault-pki]
-  - [ ] use [Build Certificate Authority (CA) in Vault with an offline Root][vault-external-ca] based on [Build your own certificate authority (CA)][vault-pki-engine]
+  - [ ] use [Build Certificate Authority (CA) in Vault with an offline Root][vault-external-ca]
+        based on [Build your own certificate authority (CA)][vault-pki-engine]
   - [ ] check [CFSSL][cfssl]
   - [ ] apply instructions for Kubernetes certificates
     - [ ] [Manage TLS Certificates in a Cluster][kubernetes-managing-tls]
     - [ ] [PKI certificates and requirements][kubernetes-pki-best-practices]
-  - [x] ~~use in combination with [mkcert][mkcert] to install the root ca certs in client machines trust stores~~
+  - [x] ~~use in combination with [mkcert][mkcert] to install the root ca
+        certs in client machines trust stores~~
       > not flexible enough for our usecase
-  - [x] useful code to generate [CA + intermediate certificate][k3s-custom-ca] can be found in k3s
-  - [ ] generate [Wazuh](../kubernetes/apps/wazuh/) certs using previously generated root CA certs
+  - [x] useful code to generate [CA + intermediate certificate][k3s-custom-ca]
+        can be found in k3s
+  - [ ] generate [Wazuh](../kubernetes/apps/wazuh/) certs using previously
+        generated root CA certs
   - [x] install CA certificates chain in VMs
-  - [x] test generated CA certificates for installed applications domains from the `linux-desktop` VM
+  - [x] test generated CA certificates for installed applications domains from
+        the `linux-desktop` VM
 - [ ] setup [pre-commit][pre-commit] for this project repository
 - [ ] configure [Wazuh][wazuh]
   - [ ] generate amd64 and arm64 containers
@@ -132,15 +139,17 @@ Add an higher level of abstraction overview and place the tools in the appropria
   - [ ] configure dashboards in Grafana
 - [ ] better configuration for [MinIO][minio]
   - [ ] save MinIO credentials in Kubernetes Secret
-  - [ ] use `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` environment variables in services
+  - [ ] use `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` environment variables in
+        services
 - [ ] save secrets in [Vault][vault] (see [Kubernetes Secrets in Vault][vault-kubernetes-use-case])
-- [ ] restructure [Ansible](../platform/ansible/) code
+- [ ] restructure [Ansible code](../platform/ansible/)
   - [ ] [ansible directory layout](#ansible-directory-layout)
   - [ ] create a dinamic Ansible inventory
   - [ ] follow [Good Practices for Ansible][ansible-good-practices]
 - [ ] use [MetalLB][metallb] as load-balancer
 - [ ] add [tfsec][tfsec] (terrafrom security scanners) in CI pipelines
-- [ ] change Cluster Domain in [k3s server][k3s-server-doc] from `cluster.local` to `iam-demo.local`
+- [ ] change Cluster Domain in [k3s server][k3s-server-doc] from `cluster.local`
+      to `iam-demo.local`
 
 ### Kubernetes resources labels and annotations
 
@@ -163,9 +172,12 @@ metadata:
 
 For more for annotations examples, check [Annotating Kubernetes Services for Humans][ambassador-k8s-annotations].
 
-Note that you can query `labels` to select resources, but you cannot query `annotations`, which are just arbitrary key/value information and are not intended to be used to filter resources.
+Note that you can query `labels` to select resources, but you cannot query|
+`annotations`, which are just arbitrary key/value information and are not
+intended to be used to filter resources.
 
-It is still possible to query annotations using [JSONPath][k8s-jsonpath], but it will be slower and less practical.
+It is still possible to query annotations using [JSONPath][k8s-jsonpath], but
+it will be slower and less practical.
 
 ```sh
 # Return the name metadata for services that have the annotation 'prometheus.io/scrape' set to 'true'
@@ -176,6 +188,11 @@ kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum
 ```
 
 ### Restructure Ansible
+
+The project use [Ansible][ansible] to manage VMs.
+The [Ansible code](../platform/ansible/) for the custom_roles and playbooks
+needs to be restructured (add label, move tasks in the proper place, etc)
+and would be better to use a [dinamic Ansible inventory][ansible-dev-dynamic-inventory].
 
 #### ansible directory layout
 
@@ -234,16 +251,14 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [age]: <https://github.com/FiloSottile/age> "age"
 [alertmanager]: <https://github.com/prometheus/alertmanager> "Alertmanager"
 [ambassador-k8s-annotations]: <https://ambassadorlabs.github.io/k8s-for-humans/> "Annotating Kubernetes"
+[ansible-dev-dynamic-inventory]: <https://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html> "Developing dynamic inventory for Ansible"
 [ansible-good-practices]: <https://redhat-cop.github.io/automation-good-practices/> "Good Practices for Ansible"
-[ansible-lint]: <https://ansible.readthedocs.io/projects/lint/> "Ansible Lint"
-[ansible-lxd]: <https://docs.ansible.com/ansible/latest/collections/community/general/lxd_container_module.html> "Ansible lxd module"
 [ansible]: <https://ansible.readthedocs.io/> "Ansible"
 [aws-internal-tld]: <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html> "AWS: DNS attributes for your VPC"
 [backstage]: <https://github.com/backstage/backstage> "Backstage"
 [boundary]: <https://www.boundaryproject.io/> "HashiCorp Boundary"
 [cert-manager-vault]: <https://cert-manager.io/docs/configuration/vault/> "cert-manager Vault"
 [cfssl]: <https://github.com/cloudflare/cfssl> "Cloudflare's PKI and TLS toolkit (CFSSL)"
-[cloud-init-lxd-tests]: <https://github.com/canonical/cloud-init/blob/main/tests/integration_tests/modules/test_lxd.py> "cloud-init lxd tests"
 [community]: <https://github.com/documize/community> "Community"
 [conftest]: <https://github.com/open-policy-agent/conftest> "Conftest"
 [consul-api-gateway]: <https://www.consul.io/docs/api-gateway> "Consul API Gateway"
@@ -254,13 +269,10 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [envoy-proxy]: <https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy> "Envoy proxy"
 [erpnext]: <https://erpnext.com/> "ERPNext"
 [excalidraw]: <https://github.com/excalidraw/excalidraw> "Excalidraw"
-[external-dns-coredns]: <https://github.com/kubernetes-sigs/external-dns/blob/master/docs/tutorials/coredns.md> "Using ExternalDNS with CoreDNS"
-[external-dns]: <https://github.com/kubernetes-sigs/external-dns> "ExternalDNS"
 [falco]: <https://falco.org/> "Falco"
 [fleet]: <https://github.com/fleetdm/fleet> "Fleet"
 [gitea]: <https://gitea.io/> "Gitea"
 [gitness]: <https://gitness.com/> "Gitness"
-[go-task]: <https://taskfile.dev/> "Task"
 [google-cloud-internal-tld]: <https://cloud.google.com/compute/docs/internal-dns> "Google Cloud internal tld"
 [grafana-k6]: <https://github.com/grafana/k6> "Grafana k6"
 [grafana-loki]: <https://grafana.com/oss/loki/> "Grafana Loki"
@@ -272,10 +284,8 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [k3s-server-doc]: <https://docs.k3s.io/cli/server> "k3s server documentation"
 [k8s-jsonpath]: <https://kubernetes.io/docs/reference/kubectl/jsonpath/> "Kubernetes JSONPath documentation"
 [keycloak]: <https://www.keycloak.org/> "Keycloak"
-[kubectl]: <https://kubernetes.io/docs/reference/kubectl/> "Kubernetes CLI"
 [kubernetes-managing-tls]: <https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/> "Kubernetes Manage TLS Certificates in a Cluster"
 [kubernetes-pki-best-practices]: <https://kubernetes.io/docs/setup/best-practices/certificates/> "kubernetes PKI best practices"
-[lxd]: <https://linuxcontainers.org/lxd/introduction/> "lxd"
 [magtape]: <https://github.com/tmobile/magtape> "MagTape"
 [mailhog]: <https://github.com/mailhog/MailHog> "MailHog"
 [mattermost]: <https://mattermost.com/> "Mattermost"
@@ -299,13 +309,11 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [tfsec]: <https://github.com/liamg/tfsec> "tfsec"
 [trestle]: <https://github.com/IBM/compliance-trestle> "Trestle"
 [trivy]: <https://github.com/aquasecurity/trivy> "Trivy"
-[vagrant]: <https://www.vagrantup.com/> "Vagrant"
 [vault-external-ca]: <https://developer.hashicorp.com/vault/tutorials/secrets-management/pki-engine-external-ca> "Vault external CA"
 [vault-kubernetes-use-case]: <https://www.vaultproject.io/use-cases/kubernetes> "Kubernetes Secrets in Vault"
 [vault-pki-engine]: <https://developer.hashicorp.com/vault/tutorials/secrets-management/pki-engine> "Vault PKI engine"
 [vault-pki]: <https://www.vaultproject.io/docs/secrets/pki> "Vault PKI"
 [vault]: <https://www.vaultproject.io/> "HashiCorp Vault"
 [velero]: <https://velero.io/> "Velero"
-[virtualbox]: <https://www.virtualbox.org/> "VirtualBox"
 [waypoint]: <https://www.waypointproject.io/> "Waypoint"
 [wazuh]: <https://wazuh.com/> "Wazuh"
