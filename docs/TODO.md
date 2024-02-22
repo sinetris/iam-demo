@@ -90,7 +90,7 @@ Add an higher level of abstraction overview and place the tools in the appropria
 - [x] move postgres to [base](../kubernetes/base/)
   - [x] use `StatefulSet`
 - [x] move redis to [base](../kubernetes/base/)
-  - [x] use `StatefulSet` 
+  - [x] use `StatefulSet`
 - [ ] Setup **Gitea**
   - [x] certificate for [git.iam-demo.test](https://git.iam-demo.test)
   - [x] use [base/postgres](../kubernetes/base/postgres)
@@ -102,7 +102,7 @@ Add an higher level of abstraction overview and place the tools in the appropria
 - [ ] generate Certificate in a proper way
   - [ ] check [Vault PKI documentation][vault-pki]
   - [ ] use [Build Certificate Authority (CA) in Vault with an offline Root][vault-external-ca] based on [Build your own certificate authority (CA)][vault-pki-engine]
-  - [ ] check [CFSSL][cfssl] 
+  - [ ] check [CFSSL][cfssl]
   - [ ] apply instructions for Kubernetes certificates
     - [ ] [Manage TLS Certificates in a Cluster][kubernetes-managing-tls]
     - [ ] [PKI certificates and requirements][kubernetes-pki-best-practices]
@@ -131,7 +131,7 @@ Add an higher level of abstraction overview and place the tools in the appropria
   - [ ] [Promtail][promtail]: agent to ships logs to Loki
   - [ ] configure dashboards in Grafana
 - [ ] better configuration for [MinIO][minio]
-  - [ ] save MinIO credentials in Kubernetes Secret 
+  - [ ] save MinIO credentials in Kubernetes Secret
   - [ ] use `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` environment variables in services
 - [ ] save secrets in [Vault][vault] (see [Kubernetes Secrets in Vault][vault-kubernetes-use-case])
 - [ ] restructure [Ansible](../platform/ansible/) code

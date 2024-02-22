@@ -230,7 +230,7 @@ local provision_vms(config, provisionings) =
       vms_provision: provision_vms(config, provisionings),
       vms_names_json: std.escapeStringBash(
         std.manifestJsonMinified(vms)
-      )
+      ),
     },
   virtualmachines_provisioning(config)::
     local provisionings =

@@ -1,7 +1,7 @@
 ---
 # To generate reference values, run:
 #   helm show values grafana/loki
-# 
+#
 # NOTE: the hard anti-affinity was removed because this demo uses only one node
 #   Changes:
 # - requiredDuringSchedulingIgnoredDuringExecution

@@ -32,7 +32,7 @@ bind9_zones:
     mx_records:
       - priority: 10
         name: mx1.example.org.
-    caa_records: 
+    caa_records:
       - 0 issue "example-ca.org"
     resource_records:
       - label: www

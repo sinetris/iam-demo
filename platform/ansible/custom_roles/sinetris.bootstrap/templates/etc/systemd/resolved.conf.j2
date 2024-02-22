@@ -1,5 +1,5 @@
 # file: /etc/systemd/resolved.conf
-# 
+#
 #  This file is part of systemd.
 #
 #  systemd is free software; you can redistribute it and/or modify it under the
@@ -36,5 +36,5 @@ UseDomains={{ bootstrap_network.dhcpv4.usedomains|default('true') }}
 UseDNS={{ bootstrap_network.dhcpv6.usedns|default('true') }}
 UseDomains={{ bootstrap_network.dhcpv6.usedomains|default('true') }}
 
-[IPv6AcceptRA] 
+[IPv6AcceptRA]
 UseDNS={{ bootstrap_network.ipv6acceptra.usedns|default('true') }}

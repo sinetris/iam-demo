@@ -5,7 +5,7 @@
 # This script will generate certificates and keys for both root and intermediate
 # certificate authorities.
 #
-# By default, the script will create the files under '$HOME/.config/demo/custom-ca' and 
+# By default, the script will create the files under '$HOME/.config/demo/custom-ca' and
 # certificates CN starting with 'demo'.
 #
 # PROJECT:  "demo"

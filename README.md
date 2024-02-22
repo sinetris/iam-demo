@@ -75,7 +75,7 @@ open a terminal in the `linux-desktop` VM and type:
 Open a terminal and type:
 
 ```sh
-# Configure iam-demo-tech k8s cluster as default 
+# Configure iam-demo-tech k8s cluster as default
 echo 'export KUBECONFIG=~/.kube/config-iam-demo-tech' >> ~/.bashrc
 # Add kubectl completion
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl
