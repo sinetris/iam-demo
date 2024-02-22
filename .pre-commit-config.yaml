@@ -85,3 +85,15 @@ repos:
         args: [-conf, platform/ansible/.yamlfmt]
         files: ^platform\/ansible\/.*\.ya?ml$
         exclude: ^platform\/ansible\/installed\/.*
+  - repo: https://github.com/ansible/ansible-lint
+    rev: v24.2.0
+    hooks:
+      - id: ansible-lint
+        args:
+          - --project-dir
+          - platform/ansible
+          - --config-file
+          - platform/ansible/.ansible-lint
+          - platform/ansible
+        pass_filenames: false
+        files: ^platform\/ansible\/
