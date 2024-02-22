@@ -24,7 +24,7 @@ rules:
     indent-sequences: true
   key-duplicates: enable
   line-length:
-    max: 110
+    max: 140
   new-line-at-end-of-file: disable
   new-lines:
     type: unix
