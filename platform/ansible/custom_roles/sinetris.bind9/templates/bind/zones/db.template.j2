@@ -1,7 +1,7 @@
 {# Start code to ensure the email used in SOA is in the right format #}
 {% set tmp_zone_admin_email = zone.admin_email|default(bind9_admin_email) %}
 {% set zone_admin_splitted = tmp_zone_admin_email|split('@') %}
-{%- set zone_admin_email = (zone_admin_splitted|length > 1) 
+{%- set zone_admin_email = (zone_admin_splitted|length > 1)
    |ternary(
       (zone_admin_splitted|first|regex_escape()) ~ '.' ~ (zone_admin_splitted|last) ~ '.',
       tmp_zone_admin_email|regex_escape()
@@ -25,7 +25,7 @@ $ORIGIN {{ zone.name }}.
                   ; Expire
                   {{ zone.expire|default('1d') }}
                   ; Minimum
-                  {{ zone.minimum|default('2h') }} 
+                  {{ zone.minimum|default('2h') }}
 )
 
 {% for ns in zone.ns_records %}

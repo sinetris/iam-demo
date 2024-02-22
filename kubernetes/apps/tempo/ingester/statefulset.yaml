@@ -25,7 +25,7 @@ spec:
       securityContext:
         fsGroup: 1000
       enableServiceLinks: false
-      
+
       containers:
         - args:
             - -target=ingester

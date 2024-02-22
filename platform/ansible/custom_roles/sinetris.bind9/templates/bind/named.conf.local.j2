@@ -50,9 +50,9 @@ zone "{{ zone.name }}" {
 {%     if zone_type == 'forward' %}
     forwarders {
 {%       for fwd in zone.forwarders %}
-    {{ fwd }}; 
+    {{ fwd }};
 {%       endfor %}
-  }; 
+  };
 {%     endif %}
 {%   endif %}
 };
