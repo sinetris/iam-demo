@@ -1,3 +1,4 @@
+---
 # Copyright (C) 2019, Wazuh Inc.
 #
 # This program is a free software; you can redistribute it
@@ -24,6 +25,6 @@ spec:
     app: wazuh-manager
     node-type: worker
   ports:
-    - name: agents-events
-      port: 1514
-      targetPort: 1514
+  - name: agents-events
+    port: 1514
+    targetPort: 1514

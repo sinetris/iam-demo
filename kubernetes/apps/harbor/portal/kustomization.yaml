@@ -1,3 +1,4 @@
+---
 resources:
 - portal-cm.yaml
 - portal-dpl.yaml

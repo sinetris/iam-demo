@@ -1,3 +1,4 @@
+---
 namespace: tools
 resources:
 - vault-data-pv.yaml

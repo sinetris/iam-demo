@@ -3,10 +3,10 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: tools
 labels:
-  - includeSelectors: true
-    pairs:
-      app.kubernetes.io/part-of: gitea
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/part-of: gitea
 resources:
-  - gitea
-  - redis
-  - postgres
+- gitea
+- redis
+- postgres

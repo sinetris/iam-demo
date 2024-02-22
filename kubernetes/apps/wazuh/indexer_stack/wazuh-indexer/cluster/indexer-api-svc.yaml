@@ -1,3 +1,4 @@
+---
 # Copyright (C) 2019, Wazuh Inc.
 #
 # This program is a free software; you can redistribute it
@@ -19,6 +20,6 @@ spec:
   selector:
     app: wazuh-indexer
   ports:
-    - name: indexer-rest
-      port: 9200
-      targetPort: 9200
+  - name: indexer-rest
+    port: 9200
+    targetPort: 9200

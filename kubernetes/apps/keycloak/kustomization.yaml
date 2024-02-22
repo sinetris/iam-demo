@@ -1,3 +1,4 @@
+---
 resources:
 - configmaps/keycloak-config.yaml
 - deployments/keycloak.yaml

@@ -1,3 +1,4 @@
+---
 resources:
 - dashboard.yaml
 - serviceaccount.yaml

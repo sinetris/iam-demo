@@ -1,3 +1,4 @@
+---
 resources:
 - clusterrolebinding.yaml
 - config-configmap.yaml

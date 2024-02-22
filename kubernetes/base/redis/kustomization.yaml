@@ -2,12 +2,12 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 labels:
-  - includeSelectors: true
-    pairs:
-      app: redis
-      app.kubernetes.io/name: redis
-      app.kubernetes.io/component: cache
-      role: data
+- includeSelectors: true
+  pairs:
+    app: redis
+    app.kubernetes.io/name: redis
+    app.kubernetes.io/component: cache
+    role: data
 resources:
-  - service.yaml
-  - statefulset.yaml
+- service.yaml
+- statefulset.yaml

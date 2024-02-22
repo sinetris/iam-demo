@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 data:
   CHART_CACHE_DRIVER: redis

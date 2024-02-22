@@ -8,13 +8,13 @@ metadata:
     app.kubernetes.io/component: ingester
 spec:
   ports:
-    - name: http-metrics
-      port: 3100
-      protocol: TCP
-      targetPort: 3100
-    - name: grpc
-      port: 9095
-      protocol: TCP
-      targetPort: 9095
+  - name: http-metrics
+    port: 3100
+    protocol: TCP
+    targetPort: 3100
+  - name: grpc
+    port: 9095
+    protocol: TCP
+    targetPort: 9095
   selector:
     app.kubernetes.io/component: ingester

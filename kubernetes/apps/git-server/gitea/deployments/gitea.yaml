@@ -29,139 +29,139 @@ spec:
     spec:
       terminationGracePeriodSeconds: 60
       initContainers:
-        - name: init-directories
-          image: "gitea/gitea:1.21.5-rootless"
-          imagePullPolicy: IfNotPresent
-          command: ["/usr/local/sbin/init_directory_structure.sh"]
-          envFrom:
-            - configMapRef:
-                name: gitea-config
-            - secretRef:
-                name: gitea-config-override
-          volumeMounts:
-            - name: gitea-init-volume
-              mountPath: /usr/local/sbin
-            - name: gitea-temp-volume
-              mountPath: /tmp/gitea
-            - name: gitea-config-volume
-              mountPath: /etc/gitea
-            - name: gitea-data-volume
-              mountPath: /var/lib/gitea
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
-        - name: init-app-ini
-          image: "gitea/gitea:1.21.5-rootless"
-          imagePullPolicy: IfNotPresent
-          command: ["/usr/local/sbin/config_environment.sh"]
-          envFrom:
-            - configMapRef:
-                name: gitea-config
-            - secretRef:
-                name: gitea-config-override
-          volumeMounts:
-            - name: gitea-config-scripts-volume
-              mountPath: /usr/local/sbin
-            - name: gitea-temp-volume
-              mountPath: /tmp/gitea
-            - name: gitea-config-volume
-              mountPath: /etc/gitea
-            - name: gitea-data-volume
-              mountPath: /var/lib/gitea
-            - name: gitea-inline-config-volume
-              mountPath: /env-to-ini-mounts/inlines/
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
-        - name: configure-gitea
-          image: "gitea/gitea:1.21.5-rootless"
-          command: ["/usr/local/sbin/configure_gitea.sh"]
-          imagePullPolicy: IfNotPresent
-          envFrom:
-            - configMapRef:
-                name: gitea-config
-            - secretRef:
-                name: gitea-config-override
-          volumeMounts:
-            - name: gitea-init-volume
-              mountPath: /usr/local/sbin
-            - name: gitea-temp-volume
-              mountPath: /tmp/gitea
-            - name: gitea-config-volume
-              mountPath: /etc/gitea
-            - name: gitea-data-volume
-              mountPath: /var/lib/gitea
-          resources:
-            limits:
-              cpu: 100m
-              memory: 128Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
-      containers:
-        - name: gitea
-          image: gitea/gitea:1.21.5-rootless
-          imagePullPolicy: IfNotPresent
-          envFrom:
-            - configMapRef:
-                name: gitea-config
-            - secretRef:
-                name: gitea-config-override
-          ports:
-            - containerPort: 2222
-              name: ssh
-              protocol: TCP
-            - containerPort: 3000
-              name: http
-              protocol: TCP
-          resources:
-            limits:
-              cpu: 250m
-              memory: 200Mi
-            requests:
-              cpu: 50m
-              memory: 64Mi
-          livenessProbe:
-            httpGet:
-              path: /api/healthz
-              port: http
-            initialDelaySeconds: 200
-            timeoutSeconds: 5
-            periodSeconds: 10
-            successThreshold: 1
-            failureThreshold: 10
-          volumeMounts:
-            - name: gitea-temp-volume
-              mountPath: /tmp/gitea
-            - name: gitea-config-volume
-              mountPath: /etc/gitea
-            - name: gitea-data-volume
-              mountPath: /var/lib/gitea
-      volumes:
+      - name: init-directories
+        image: "gitea/gitea:1.21.5-rootless"
+        imagePullPolicy: IfNotPresent
+        command: ["/usr/local/sbin/init_directory_structure.sh"]
+        envFrom:
+        - configMapRef:
+            name: gitea-config
+        - secretRef:
+            name: gitea-config-override
+        volumeMounts:
         - name: gitea-init-volume
-          secret:
-            secretName: gitea-init
-            defaultMode: 110
-        - name: gitea-config-scripts-volume
-          secret:
-            secretName: gitea-config-scripts
-            defaultMode: 110
-        - name: gitea-inline-config-volume
-          secret:
-            secretName: gitea-inline-config
+          mountPath: /usr/local/sbin
         - name: gitea-temp-volume
-          emptyDir: {}
+          mountPath: /tmp/gitea
         - name: gitea-config-volume
-          persistentVolumeClaim:
-            claimName: gitea-config-pvc
+          mountPath: /etc/gitea
         - name: gitea-data-volume
-          persistentVolumeClaim:
-            claimName: gitea-data-pvc
+          mountPath: /var/lib/gitea
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+      - name: init-app-ini
+        image: "gitea/gitea:1.21.5-rootless"
+        imagePullPolicy: IfNotPresent
+        command: ["/usr/local/sbin/config_environment.sh"]
+        envFrom:
+        - configMapRef:
+            name: gitea-config
+        - secretRef:
+            name: gitea-config-override
+        volumeMounts:
+        - name: gitea-config-scripts-volume
+          mountPath: /usr/local/sbin
+        - name: gitea-temp-volume
+          mountPath: /tmp/gitea
+        - name: gitea-config-volume
+          mountPath: /etc/gitea
+        - name: gitea-data-volume
+          mountPath: /var/lib/gitea
+        - name: gitea-inline-config-volume
+          mountPath: /env-to-ini-mounts/inlines/
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+      - name: configure-gitea
+        image: "gitea/gitea:1.21.5-rootless"
+        command: ["/usr/local/sbin/configure_gitea.sh"]
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: gitea-config
+        - secretRef:
+            name: gitea-config-override
+        volumeMounts:
+        - name: gitea-init-volume
+          mountPath: /usr/local/sbin
+        - name: gitea-temp-volume
+          mountPath: /tmp/gitea
+        - name: gitea-config-volume
+          mountPath: /etc/gitea
+        - name: gitea-data-volume
+          mountPath: /var/lib/gitea
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+      containers:
+      - name: gitea
+        image: gitea/gitea:1.21.5-rootless
+        imagePullPolicy: IfNotPresent
+        envFrom:
+        - configMapRef:
+            name: gitea-config
+        - secretRef:
+            name: gitea-config-override
+        ports:
+        - containerPort: 2222
+          name: ssh
+          protocol: TCP
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 250m
+            memory: 200Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi
+        livenessProbe:
+          httpGet:
+            path: /api/healthz
+            port: http
+          initialDelaySeconds: 200
+          timeoutSeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          failureThreshold: 10
+        volumeMounts:
+        - name: gitea-temp-volume
+          mountPath: /tmp/gitea
+        - name: gitea-config-volume
+          mountPath: /etc/gitea
+        - name: gitea-data-volume
+          mountPath: /var/lib/gitea
+      volumes:
+      - name: gitea-init-volume
+        secret:
+          secretName: gitea-init
+          defaultMode: 110
+      - name: gitea-config-scripts-volume
+        secret:
+          secretName: gitea-config-scripts
+          defaultMode: 110
+      - name: gitea-inline-config-volume
+        secret:
+          secretName: gitea-inline-config
+      - name: gitea-temp-volume
+        emptyDir: {}
+      - name: gitea-config-volume
+        persistentVolumeClaim:
+          claimName: gitea-config-pvc
+      - name: gitea-data-volume
+        persistentVolumeClaim:
+          claimName: gitea-data-pvc

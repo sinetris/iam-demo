@@ -1,3 +1,4 @@
+---
 commonLabels:
   app: notary
 configMapGenerator:

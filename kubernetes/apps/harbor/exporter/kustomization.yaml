@@ -1,3 +1,4 @@
+---
 resources:
 - exporter-cm-env.yaml
 - exporter-dpl.yaml

@@ -6,21 +6,21 @@ metadata:
   name: drone
   labels:
     app: drone
-  # annotations:
-  #   cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    # annotations:
+    #   cert-manager.io/cluster-issuer: iam-demo-certs-issuer
 spec:
   # tls:
   #   - hosts:
   #       - "drone.iam-demo.test"
   #     secretName: iam-demo-drone-tls
   rules:
-    - host: "drone.iam-demo.test"
-      http:
-        paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              name: drone
-              port:
-                number: 8080
+  - host: "drone.iam-demo.test"
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: drone
+            port:
+              number: 8080

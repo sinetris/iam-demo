@@ -22,8 +22,8 @@ opa:
 # Setup the webhook using cert-manager
 certManager:
   enabled: false
-  rootCACertificateDuration: 43800h  # 5y
-  servingCertificateDuration: 8760h  # 1y
+  rootCACertificateDuration: 43800h # 5y
+  servingCertificateDuration: 8760h # 1y
 
 # Expose the prometheus scraping endpoint
 prometheus:
@@ -77,7 +77,7 @@ admissionController:
   # Adds a namespace selector to the admission controller webhook
   namespaceSelector:
     matchExpressions:
-    - {key: openpolicyagent.org/webhook, operator: NotIn, values: [ignore]}
+    - {key: openpolicyagent.org/webhook, operator: NotIn, values: [ignore],}
 
   # SideEffectClass for the webhook, setting to NoneOnDryRun enables dry-run.
   # Only None and NoneOnDryRun are permitted for admissionregistration.k8s.io/v1
@@ -148,7 +148,7 @@ mgmt:
   enabled: true
   image:
     repository: openpolicyagent/kube-mgmt
-    tag:  # appVersion is used by default, set to desired value to override
+    tag: # appVersion is used by default, set to desired value to override
     pullPolicy: IfNotPresent
   extraArgs: []
   extraEnv: []

@@ -1,3 +1,4 @@
+---
 resources:
 - database-secret.yaml
 - database-ss.yaml

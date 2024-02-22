@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 data:
   CORE_URL: https://harbor-core:443
