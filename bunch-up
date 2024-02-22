@@ -52,12 +52,12 @@ generate_ansible_ssh_keys() {
 
 generate_bootstrap_scripts() {
   check_dependency 'jsonnet'
-  if [ -f "${project_generator_path}/config.jsonnet" ]; then
-    echo "Using existing $(tput bold)config.jsonnet$(tput sgr0) ✅"
+  if [ -f "${project_generator_path}/config.libsonnet" ]; then
+    echo "Using existing $(tput bold)config.libsonnet$(tput sgr0) ✅"
   else
-    echo "Missing config.jsonnet"
-    echo "Copying config.jsonnet.example to config.jsonnet"
-    cp "${project_generator_path}/config.jsonnet.example" "${project_generator_path}/config.jsonnet"
+    echo "Missing config.libsonnet"
+    echo "Copying config.libsonnet.example to config.libsonnet"
+    cp "${project_generator_path}/config.libsonnet.example" "${project_generator_path}/config.libsonnet"
   fi
   cd "${project_generator_path}"
   jsonnet --create-output-dirs \

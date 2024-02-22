@@ -3,7 +3,7 @@
 //   --multi ./generated \
 //   --tla-str orchestrator_name="multipass" \
 //   --string virtual-machines.jsonnet
-local setup = import 'setup.jsonnet';
+local setup = import 'setup.libsonnet';
 
 local orchestrator = import 'lib/orchestrator.libsonnet';
 
