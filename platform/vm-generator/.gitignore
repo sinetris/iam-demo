@@ -1,2 +1,2 @@
 /generated/*
-/config.jsonnet
+/config.libsonnet

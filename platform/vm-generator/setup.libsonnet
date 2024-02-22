@@ -1,4 +1,4 @@
-local config = import 'config.jsonnet';
+local config = import 'config.libsonnet';
 assert std.isObject(config);
 
 local admin_user =
