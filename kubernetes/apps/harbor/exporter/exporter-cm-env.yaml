@@ -1,3 +1,4 @@
+---
 apiVersion: v1
 data:
   HARBOR_DATABASE_DBNAME: registry

@@ -6,9 +6,9 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: pg-port
-      port: 5432
-      protocol: TCP
-      targetPort: postgres-port
+  - name: pg-port
+    port: 5432
+    protocol: TCP
+    targetPort: postgres-port
   selector:
     app.kubernetes.io/name: postgres

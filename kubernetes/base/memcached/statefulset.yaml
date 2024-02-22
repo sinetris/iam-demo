@@ -16,33 +16,33 @@ spec:
     spec:
       terminationGracePeriodSeconds: 180
       containers:
-        - name: memcached
-          image: memcached:1.6.23-alpine
-          imagePullPolicy: IfNotPresent
-          ports:
-            - name: memcached-port
-              containerPort: 11211
-          resources:
-            requests:
-              cpu: 100m
-              memory: 100Mi
-          livenessProbe:
-            tcpSocket:
-              port: memcached-port
-            initialDelaySeconds: 10
-            timeoutSeconds: 5
-          readinessProbe:
-            tcpSocket:
-              port: memcached-port
-            initialDelaySeconds: 5
-            timeoutSeconds: 2
-        - name: metrics
-          image: quay.io/prometheus/memcached-exporter:v0.14.2
-          imagePullPolicy: IfNotPresent
-          ports:
-            - name: http-metrics
-              containerPort: 9150
-          resources:
-            requests:
-              cpu: 50m
-              memory: 100Mi
+      - name: memcached
+        image: memcached:1.6.23-alpine
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: memcached-port
+          containerPort: 11211
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        livenessProbe:
+          tcpSocket:
+            port: memcached-port
+          initialDelaySeconds: 10
+          timeoutSeconds: 5
+        readinessProbe:
+          tcpSocket:
+            port: memcached-port
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+      - name: metrics
+        image: quay.io/prometheus/memcached-exporter:v0.14.2
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: http-metrics
+          containerPort: 9150
+        resources:
+          requests:
+            cpu: 50m
+            memory: 100Mi

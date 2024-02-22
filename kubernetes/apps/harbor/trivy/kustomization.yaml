@@ -1,3 +1,4 @@
+---
 resources:
 - trivy-secret.yaml
 - trivy-sts.yaml

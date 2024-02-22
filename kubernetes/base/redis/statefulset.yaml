@@ -12,37 +12,37 @@ spec:
     spec:
       automountServiceAccountToken: false
       containers:
-        - name: redis
-          image: redis:7.2.4
-          imagePullPolicy: IfNotPresent
-          ports:
-            - name: redis-port
-              containerPort: 6379
-          livenessProbe:
-            initialDelaySeconds: 300
-            periodSeconds: 10
-            tcpSocket:
-              port: 6379
-          readinessProbe:
-            initialDelaySeconds: 1
-            periodSeconds: 10
-            tcpSocket:
-              port: 6379
-          volumeMounts:
-            - name: redis-data
-              mountPath: /var/lib/redis
+      - name: redis
+        image: redis:7.2.4
+        imagePullPolicy: IfNotPresent
+        ports:
+        - name: redis-port
+          containerPort: 6379
+        livenessProbe:
+          initialDelaySeconds: 300
+          periodSeconds: 10
+          tcpSocket:
+            port: 6379
+        readinessProbe:
+          initialDelaySeconds: 1
+          periodSeconds: 10
+          tcpSocket:
+            port: 6379
+        volumeMounts:
+        - name: redis-data
+          mountPath: /var/lib/redis
       securityContext:
         fsGroup: 999
         runAsUser: 999
       terminationGracePeriodSeconds: 120
   volumeClaimTemplates:
-    - metadata:
-        name: redis-data
-        labels:
-          app.kubernetes.io/name: redis-data
-      spec:
-        accessModes:
-          - ReadWriteOnce
-        resources:
-          requests:
-            storage: "8Gi"
+  - metadata:
+      name: redis-data
+      labels:
+        app.kubernetes.io/name: redis-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: "8Gi"

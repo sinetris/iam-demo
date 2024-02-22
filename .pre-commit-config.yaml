@@ -63,13 +63,14 @@ repos:
       ]
       pass_filenames: false
 # # YAML Formatter
-# - repo: https://github.com/google/yamlfmt
-#   rev: v0.11.0
-#   hooks:
-#   # Kubernetes
-#   - id: yamlfmt
-#     alias: yamlfmt-k8s
-#     args: [-conf, kubernetes/.yamlfmt, "-dstar", "kubernetes/**/*.{yaml,yml}"]
+- repo: https://github.com/google/yamlfmt
+  rev: v0.11.0
+  hooks:
+  # Kubernetes
+  - id: yamlfmt
+    alias: yamlfmt-k8s
+    args: [-conf, kubernetes/.yamlfmt, "-dstar", "kubernetes/**/*.{yaml,yml}"]
+    files: ^kubernetes\/.*\.ya?ml$
 #     #  Ansible
 #     - id: yamlfmt
 #       alias: yamlfmt-ansible

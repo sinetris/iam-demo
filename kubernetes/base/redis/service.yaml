@@ -6,7 +6,7 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: redis-port
-      port: 6379
-      protocol: TCP
-      targetPort: redis-port
+  - name: redis-port
+    port: 6379
+    protocol: TCP
+    targetPort: redis-port

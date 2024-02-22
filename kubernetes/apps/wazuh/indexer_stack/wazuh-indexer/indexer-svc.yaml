@@ -1,3 +1,4 @@
+---
 # Copyright (C) 2019, Wazuh Inc.
 #
 # This program is a free software; you can redistribute it
@@ -18,7 +19,7 @@ spec:
   selector:
     app: wazuh-indexer
   ports:
-    - name: indexer-nodes
-      port: 9300
-      targetPort: 9300
+  - name: indexer-nodes
+    port: 9300
+    targetPort: 9300
   clusterIP: None

@@ -1,3 +1,4 @@
+---
 resources:
 - registry-cm.yaml
 - registry-dpl.yaml

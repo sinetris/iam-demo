@@ -3,27 +3,27 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: observability
 labels:
-  - includeSelectors: true
-    pairs:
-      app.kubernetes.io/name: tempo
-      app.kubernetes.io/part-of: tempo
-  - includeSelectors: false
-    pairs:
-      app.kubernetes.io/version: "2.3.1"
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/name: tempo
+    app.kubernetes.io/part-of: tempo
+- includeSelectors: false
+  pairs:
+    app.kubernetes.io/version: "2.3.1"
 resources:
-  - compactor/deployment.yaml
-  - compactor/service.yaml
-  - distributor/deployment.yaml
-  - distributor/service.yaml
-  - gossip-ring/service.yaml
-  - ingester/poddisruptionbudget.yaml
-  - ingester/service.yaml
-  - ingester/statefulset.yaml
-  - memcached
-  - querier/deployment.yaml
-  - querier/service.yaml
-  - query-frontend/deployment.yaml
-  - query-frontend/service.yaml
-  - configmap-runtime.yaml
-  - configmap-tempo.yaml
-  - serviceaccount.yaml
+- compactor/deployment.yaml
+- compactor/service.yaml
+- distributor/deployment.yaml
+- distributor/service.yaml
+- gossip-ring/service.yaml
+- ingester/poddisruptionbudget.yaml
+- ingester/service.yaml
+- ingester/statefulset.yaml
+- memcached
+- querier/deployment.yaml
+- querier/service.yaml
+- query-frontend/deployment.yaml
+- query-frontend/service.yaml
+- configmap-runtime.yaml
+- configmap-tempo.yaml
+- serviceaccount.yaml

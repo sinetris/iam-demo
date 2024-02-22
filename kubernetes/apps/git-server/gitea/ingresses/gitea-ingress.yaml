@@ -7,17 +7,17 @@ metadata:
     cert-manager.io/cluster-issuer: iam-demo-certs-issuer
 spec:
   rules:
-    - host: git.iam-demo.test
-      http:
-        paths:
-          - pathType: Prefix
-            path: /
-            backend:
-              service:
-                name: gitea-http
-                port:
-                  number: 3000
+  - host: git.iam-demo.test
+    http:
+      paths:
+      - pathType: Prefix
+        path: /
+        backend:
+          service:
+            name: gitea-http
+            port:
+              number: 3000
   tls:
-    - hosts:
-        - git.iam-demo.test
-      secretName: iam-demo-gitea-tls
+  - hosts:
+    - git.iam-demo.test
+    secretName: iam-demo-gitea-tls
