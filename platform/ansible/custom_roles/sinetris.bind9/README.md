@@ -6,7 +6,8 @@ This role installs and configures the Bind9 nameserver on Ubuntu.
 
 ### Primary server
 
-* set vars for your primary server, for instance in `host_vars/primary_name/vars/XX_bind.yml`, here with an example.com static zones and forwarder:
+* set vars for your primary server, for instance in `host_vars/primary_name/vars/XX_bind.yml`,
+here with an example.com static zones and forwarder:
 
 ```yaml
 bind9_authoritative: true
