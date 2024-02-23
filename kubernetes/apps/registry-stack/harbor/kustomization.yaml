@@ -1,0 +1,19 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+labels:
+- includeSelectors: true
+  pairs:
+    app: harbor
+- includeSelectors: false
+  pairs:
+    app.kubernetes.io/version: v2.10.0
+    version: v2.10.0
+resources:
+- core
+- exporter
+- ingress
+- jobservice
+- metrics/servicemonitor.yaml
+- portal
+- registry

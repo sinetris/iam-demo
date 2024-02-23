@@ -1,7 +1,0 @@
----
-resources:
-- core-cm.yaml
-- core-dpl.yaml
-- core-secret.yaml
-- core-svc.yaml
-- core-tls.yaml
