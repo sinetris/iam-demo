@@ -1,6 +1,0 @@
----
-resources:
-- trivy-secret.yaml
-- trivy-sts.yaml
-- trivy-svc.yaml
-- trivy-tls.yaml
