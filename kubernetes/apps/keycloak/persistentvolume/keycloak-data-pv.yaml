@@ -2,11 +2,9 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  labels:
-    app: keycloak
-    type: local
   name: keycloak-data-pv
-  namespace: tools
+  labels:
+    type: local
 spec:
   accessModes:
   - ReadWriteMany
