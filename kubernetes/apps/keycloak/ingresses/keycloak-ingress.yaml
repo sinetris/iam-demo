@@ -4,8 +4,7 @@ kind: Ingress
 metadata:
   annotations:
     cert-manager.io/cluster-issuer: iam-demo-certs-issuer
-  name: keycloak-ingress
-  namespace: tools
+  name: keycloak
 spec:
   rules:
   - host: keycloak.iam-demo.test

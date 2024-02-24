@@ -13,4 +13,3 @@ metadata:
   labels:
     app: keycloak
   name: keycloak-config
-  namespace: tools

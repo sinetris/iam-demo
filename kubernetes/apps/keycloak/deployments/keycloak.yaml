@@ -2,19 +2,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  labels:
-    app: keycloak
   name: keycloak
-  namespace: tools
 spec:
   replicas: 1
   selector:
-    matchLabels:
-      app: keycloak
   template:
-    metadata:
-      labels:
-        app: keycloak
     spec:
       containers:
       - args:
