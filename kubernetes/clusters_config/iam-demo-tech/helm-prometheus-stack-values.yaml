@@ -5,19 +5,16 @@
 # https://github.com/prometheus-community/helm-charts/blob/main/charts/kube-prometheus-stack/values.yaml
 
 nameOverride: observability-stack
-# fullnameOverride: o11y-stack
 
 namespaceOverride: observability
 
 commonLabels:
-  app.kubernetes.io/component: monitoring
   app.kubernetes.io/part-of: observability
 
 alertmanager:
   enabled: true
   ingress:
     enabled: true
-    ingressClassName: traefik
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -60,7 +57,6 @@ grafana:
   #   GF_PATHS_LOGS: /var/log/grafana/
   ingress:
     enabled: true
-    ingressClassName: traefik
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
@@ -91,7 +87,6 @@ prometheus:
   enabled: true
   ingress:
     enabled: true
-    ingressClassName: traefik
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
       traefik.ingress.kubernetes.io/router.entrypoints: websecure
