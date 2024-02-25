@@ -3,6 +3,3 @@ resources:
 - ../../apps/git-server
 - ../../apps/keycloak
 - ../../apps/tempo
-# - ../../apps/notary
-# - ../../apps/drone
-# - ../../apps/harbor
