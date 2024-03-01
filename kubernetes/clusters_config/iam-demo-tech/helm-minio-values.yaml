@@ -1,0 +1,132 @@
+---
+image:
+  repository: quay.io/minio/minio
+  tag: RELEASE.2024-01-11T07-46-16Z
+  pullPolicy: IfNotPresent
+
+mcImage:
+  repository: quay.io/minio/mc
+  tag: RELEASE.2024-01-11T05-49-32Z
+  pullPolicy: IfNotPresent
+
+mode: distributed
+
+additionalLabels:
+  app.kubernetes.io/part-of: minio
+
+# Default policies: [readonly|readwrite|writeonly|consoleAdmin|diagnostics]
+policies:
+- name: loki-services
+  statements:
+  - effect: Allow
+    resources:
+    - 'arn:aws:s3:::loki-chunks/*'
+    - 'arn:aws:s3:::loki-ruler/*'
+    - 'arn:aws:s3:::loki-admin/*'
+    actions:
+    - "s3:*"
+- name: tempo-services
+  statements:
+  - effect: Allow
+    resources:
+    - 'arn:aws:s3:::tempo-traces/*'
+    actions:
+    - "s3:*"
+
+users:
+- accessKey: console-admin
+  existingSecret: minio-console-admin-credentials
+  existingSecretKey: password
+  policy: consoleAdmin
+- accessKey: loki-admin
+  existingSecret: loki-s3-credentials
+  existingSecretKey: password
+  policy: loki-services
+- accessKey: tempo-admin
+  existingSecret: tempo-s3-credentials
+  existingSecretKey: password
+  policy: tempo-services
+
+# svcaccts:
+#   - accessKey: my-service
+#     existingSecret: my-secret-credentials
+#     existingSecretKey: password
+#     user: console-admin
+
+buckets:
+# Loki
+- name: loki-chunks
+  policy: none
+  purge: false
+- name: loki-ruler
+  policy: none
+  purge: false
+- name: loki-admin
+  policy: none
+  purge: false
+# Default Tempo storage bucket.
+- name: tempo-traces
+  policy: none
+  purge: false
+
+# Internal S3 API port
+minioAPIPort: "9000"
+
+# Internal Web Console port
+minioConsolePort: "9001"
+
+existingSecret: minio-admin-secret
+
+drivesPerNode: 2
+
+replicas: 1
+
+persistence:
+  size: 5Gi
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+ingress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+  hosts:
+  - s3.iam-demo.test
+  tls:
+  - hosts:
+    - s3.iam-demo.test
+    secretName: iam-demo-minio-api-tls
+
+consoleIngress:
+  enabled: true
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+  hosts:
+  - minio.iam-demo.test
+  tls:
+  - hosts:
+    - minio.iam-demo.test
+    secretName: iam-demo-minio-console-tls
+
+# # To configure for Keycloak
+# oidc:
+#   enabled: false
+#   configUrl: "https://keycloak.iam-demo.test/.well-known/openid-configuration"
+#   clientId: "minio"
+#   clientSecret: ""
+#   # Provide existing client secret from the Kubernetes Secret resource, existing secret will have priority over `clientSecret`
+#   existingClientSecretName: ""
+#   existingClientSecretKey: ""
+#   claimName: "policy"
+#   scopes: "openid,profile,email"
+#   redirectUri: "https://minio.iam-demo.test/oauth_callback"
+#   # Can leave empty
+#   claimPrefix: ""
+#   comment: ""
+
+metrics:
+  serviceMonitor:
+    enabled: false

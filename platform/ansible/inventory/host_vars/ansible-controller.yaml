@@ -94,7 +94,15 @@ bind9_zones:
         ttl: 1m
         type: CNAME
         content: iam-control-plane
+      - label: minio
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
       - label: prometheus
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: s3
         ttl: 1m
         type: CNAME
         content: iam-control-plane
