@@ -17,22 +17,6 @@
         kustomize_files_path: "{{ project_bootstrap_kustomize_path }}/namespaces"
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"
-    - name: Install helm repos
-      when:
-        - k3s_primary_control_node
-        - k3s_state is defined
-        - k3s_state == 'installed'
-      delegate_to: localhost
-      ansible.builtin.import_tasks: tasks/k3s_install_helm_repos.yaml
-    - name: Install helm releases
-      when:
-        - k3s_primary_control_node
-        - k3s_state is defined
-        - k3s_state == 'installed'
-      delegate_to: localhost
-      ansible.builtin.import_tasks: tasks/k3s_install_helm_releases.yaml
-      environment:
-        KUBECONFIG: "{{ k3s_kubeconfig }}"
     - name: Run kustomize for kubernetes-dashboard
       delegate_to: localhost
       when:
@@ -63,16 +47,20 @@
         - k3s_state is defined
         - k3s_state == 'installed'
       no_log: "{{ do_not_log }}"
-    - name: Run kustomize project bootstrap
-      delegate_to: localhost
+    - name: Install helm repos
       when:
         - k3s_primary_control_node
         - k3s_state is defined
         - k3s_state == 'installed'
-      kubernetes.core.k8s:
-        definition: "{{
-            lookup('kubernetes.core.kustomize', dir=project_bootstrap_kustomize_path)
-          }}"
+      delegate_to: localhost
+      ansible.builtin.import_tasks: tasks/k3s_install_helm_repos.yaml
+    - name: Install helm releases
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      delegate_to: localhost
+      ansible.builtin.import_tasks: tasks/k3s_install_helm_releases.yaml
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"
     - name: Run kustomize for the project
