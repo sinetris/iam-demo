@@ -16,16 +16,6 @@
     definition: "{{ lookup('kubernetes.core.kustomize', dir=cluster_issuer_app_path) }}"
   vars:
     cluster_issuer_app_path: "{{ kubernetes_project_path }}/apps/certificates"
-# - name: Install trust-manager
-#   kubernetes.core.helm:
-#     name: trust-manager
-#     chart_ref: jetstack/trust-manager
-#     namespace: security
-#     create_namespace: true
-#     update_repo_cache: true
-#     timeout: 10m
-#     state: present
-#     wait: true
 - name: Install Consul
   kubernetes.core.helm:
     name: consul
@@ -59,12 +49,3 @@
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
-# - name: Install Open Policy Agent
-#   kubernetes.core.helm:
-#     name: opa
-#     chart_ref: opa/opa-kube-mgmt
-#     namespace: tools
-#     create_namespace: true
-#     timeout: 10m
-#     state: present
-#     wait: true
