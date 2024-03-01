@@ -1,0 +1,5 @@
+---
+resources:
+- observability.yaml
+- security.yaml
+- tools.yaml
