@@ -24,13 +24,13 @@
         - k3s_state == 'installed'
       delegate_to: localhost
       ansible.builtin.import_tasks: tasks/k3s_install_helm_repos.yaml
-    - name: Basic apps configuration
+    - name: Install helm releases
       when:
         - k3s_primary_control_node
         - k3s_state is defined
         - k3s_state == 'installed'
       delegate_to: localhost
-      ansible.builtin.import_tasks: tasks/k3s_install_apps.yaml
+      ansible.builtin.import_tasks: tasks/k3s_install_helm_releases.yaml
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"
     - name: Run kustomize for kubernetes-dashboard
