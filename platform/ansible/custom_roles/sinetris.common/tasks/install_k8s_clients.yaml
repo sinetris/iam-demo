@@ -15,6 +15,8 @@
           - kubernetes_minor_version is string
           - kubernetes_gpg_keyring is defined
           - kubernetes_gpg_keyring is string
+          - kustomize_version is defined
+          - kustomize_version is string
         quiet: true
     - name: Add Helm Signing Certificate
       ansible.builtin.apt_key:
@@ -56,6 +58,8 @@
         mode: u=rwx,g=rx,o=r
     - name: Install kustomize client
       ansible.builtin.command:
-        cmd: /usr/local/bin/install_kustomize.sh
+        argv:
+          - /usr/local/bin/install_kustomize.sh
+          - "{{ kustomize_version }}"
         chdir: /usr/local/bin
         creates: /usr/local/bin/kustomize
