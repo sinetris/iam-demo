@@ -13,9 +13,9 @@
       - "{{ kubernetes_cluster_config_path }}/helm-cert-manager-values.yaml"
 - name: Configure cert-manager cluster issuer
   kubernetes.core.k8s:
-    definition: "{{ lookup('kubernetes.core.kustomize', dir=cluster_issuer_app_path) }}"
+    definition: "{{ lookup('kubernetes.core.kustomize', dir=kustomize_files_path) }}"
   vars:
-    cluster_issuer_app_path: "{{ kubernetes_project_path }}/apps/certificates"
+    kustomize_files_path: "{{ project_bootstrap_kustomize_path }}/clusterissuers"
 - name: Install Consul
   kubernetes.core.helm:
     name: consul
