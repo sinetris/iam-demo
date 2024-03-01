@@ -78,7 +78,7 @@
         - k3s_state == 'installed'
       kubernetes.core.k8s:
         definition: "{{
-            lookup('kubernetes.core.kustomize', dir=project_kustomize_path)
+            lookup('kubernetes.core.kustomize', dir=project_apps_kustomize_path)
           }}"
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"

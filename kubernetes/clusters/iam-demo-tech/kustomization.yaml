@@ -1,5 +1,0 @@
----
-resources:
-- ../../apps/git-server
-- ../../apps/keycloak
-- ../../apps/tempo
