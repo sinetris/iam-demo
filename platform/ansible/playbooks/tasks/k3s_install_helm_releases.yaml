@@ -38,6 +38,17 @@
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-prometheus-stack-values.yaml"
+- name: Install MinIO
+  kubernetes.core.helm:
+    name: minio
+    state: present
+    chart_ref: minio/minio
+    namespace: tools
+    create_namespace: true
+    timeout: 10m
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-minio-values.yaml"
 - name: Install Loki
   kubernetes.core.helm:
     name: loki
