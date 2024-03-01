@@ -49,3 +49,14 @@
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
+- name: Install Trivy
+  kubernetes.core.helm:
+    name: trivy
+    chart_ref: aqua/trivy-operator
+    namespace: tools
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-trivy-values.yaml"
