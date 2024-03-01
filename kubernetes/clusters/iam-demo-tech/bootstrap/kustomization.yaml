@@ -1,5 +1,0 @@
----
-resources:
-- namespaces/observability.yaml
-- namespaces/tools.yaml
-- ../../../apps/certificates
