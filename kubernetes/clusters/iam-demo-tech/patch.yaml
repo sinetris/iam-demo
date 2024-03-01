@@ -1,4 +1,0 @@
----
-- op: replace
-  path: /data/22
-  value: tools/gitea:22
