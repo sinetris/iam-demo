@@ -23,3 +23,7 @@
   kubernetes.core.helm_repository:
     name: opa
     repo_url: https://open-policy-agent.github.io/kube-mgmt/charts
+- name: Add aqua chart repo (for Trivy operator)
+  kubernetes.core.helm_repository:
+    name: aqua
+    repo_url: https://aquasecurity.github.io/helm-charts/

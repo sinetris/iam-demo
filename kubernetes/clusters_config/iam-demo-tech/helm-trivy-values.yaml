@@ -1,0 +1,12 @@
+---
+serviceMonitor:
+  enabled: true
+
+volumeMounts:
+- mountPath: /tmp
+  name: tmp-data
+  readOnly: false
+
+volumes:
+- name: tmp-data
+  emptyDir: {}
