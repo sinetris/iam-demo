@@ -60,6 +60,17 @@
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
+- name: Install Vault
+  kubernetes.core.helm:
+    name: vault
+    chart_ref: hashicorp/vault
+    namespace: tools
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-vault-values.yaml"
 - name: Install Trivy
   kubernetes.core.helm:
     name: trivy

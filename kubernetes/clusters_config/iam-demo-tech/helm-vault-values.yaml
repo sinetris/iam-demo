@@ -1,27 +1,88 @@
 ---
+global:
+  enabled: true
+  logFormat: json
+  # certs:
+  #   secretName: vault-certs
+  #   certName: tls.crt
+  #   keyName: tls.key
+
 server:
+  enabled: "-"
+  logFormat: json
   ingress:
     enabled: true
+    labels:
+      traffic: external
     annotations:
       cert-manager.io/cluster-issuer: iam-demo-certs-issuer
-    labels:
-      app: vault
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
     hosts:
     - host: vault.iam-demo.test
     tls:
     - secretName: iam-demo-vault-tls
       hosts:
       - vault.iam-demo.test
-  resources:
-    requests:
-      memory: 128Mi
-      cpu: 100m
-    limits:
-      memory: 256Mi
-      cpu: 250m
+  volumes:
+  - name: plugins
+    emptyDir: {}
+  volumeMounts:
+  - mountPath: /usr/local/libexec/vault
+    name: plugins
+    readOnly: true
+  service:
+    enabled: true
+  dataStorage:
+    enabled: true
+    mountPath: "/vault/data"
+  auditStorage:
+    enabled: false
+    mountPath: "/vault/audit"
 
-prometheus:
-  enabled: true
+  # Do not use dev mode for anything other than experimenting.
+  dev:
+    enabled: true
+    # Set VAULT_DEV_ROOT_TOKEN_ID value
+    devRootToken: "root-token"
+
+  standalone:
+    enabled: "-"
 
 ui:
   enabled: true
+  publishNotReadyAddresses: true
+  externalPort: 8200
+  targetPort: 8200
+
+csi:
+  enabled: true
+  # volumes:
+  #   - name: tls
+  #     secret:
+  #       secretName: vault-tls
+  # volumeMounts:
+  #   - name: tls
+  #     mountPath: "/vault/tls"
+  #     readOnly: true
+
+serverTelemetry:
+  serviceMonitor:
+    enabled: true
+
+  prometheusRules:
+    enabled: true
+    rules:
+    - alert: vault-HighResponseTime
+      annotations:
+        message: The response time of Vault is over 500ms on average over the last 5 minutes.
+      expr: vault_core_handle_request{quantile="0.5", namespace="mynamespace"} > 500
+      for: 5m
+      labels:
+        severity: warning
+    - alert: vault-HighResponseTime
+      annotations:
+        message: The response time of Vault is over 1s on average over the last 5 minutes.
+      expr: vault_core_handle_request{quantile="0.5", namespace="mynamespace"} > 1000
+      for: 5m
+      labels:
+        severity: critical

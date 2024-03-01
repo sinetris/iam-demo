@@ -1,9 +1,0 @@
----
-resources:
-- clusterrolebinding.yaml
-- config-configmap.yaml
-- headless-service.yaml
-- ingress.yaml
-- service.yaml
-- serviceaccount.yaml
-- statefulset.yaml
