@@ -1,5 +1,4 @@
 ---
-# Source: tempo-distributed/templates/ingester/service-ingester.yaml
 apiVersion: v1
 kind: Service
 metadata:

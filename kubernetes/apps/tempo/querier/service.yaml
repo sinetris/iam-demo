@@ -1,5 +1,4 @@
 ---
-# Source: tempo-distributed/templates/querier/service-querier.yaml
 apiVersion: v1
 kind: Service
 metadata:
