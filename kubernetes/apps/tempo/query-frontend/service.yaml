@@ -1,5 +1,4 @@
 ---
-# Source: tempo-distributed/templates/query-frontend/service-query-frontend.yaml
 apiVersion: v1
 kind: Service
 metadata:
