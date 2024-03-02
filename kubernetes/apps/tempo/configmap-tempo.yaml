@@ -115,11 +115,12 @@ data:
           max_workers: 400
           queue_depth: 20000
         s3:
-          access_key: enterprise-logs
-          bucket: tempo-traces
-          endpoint: loki-minio.observability:9000
+          bucket: 'tempo-traces'
           insecure: true
-          secret_key: supersecret
+          forcepathstyle: true
+          endpoint: "${MINIO_S3_ENDPOINT}"
+          access_key: "${MINIO_S3_ACCESKEYID}"
+          secret_key: "${MINIO_S3_SECRETACCESSKEY}"
         wal:
           path: /var/tempo/wal
     usage_report:

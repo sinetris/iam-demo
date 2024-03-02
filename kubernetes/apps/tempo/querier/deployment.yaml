@@ -30,6 +30,7 @@ spec:
         - -target=querier
         - -config.file=/conf/tempo.yaml
         - -mem-ballast-size-mbs=1024
+        - -config.expand-env=true
         image: docker.io/grafana/tempo:2.3.1
         imagePullPolicy: IfNotPresent
         name: querier
@@ -39,6 +40,22 @@ spec:
           protocol: TCP
         - containerPort: 3100
           name: http-metrics
+        env:
+        - name: MINIO_S3_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              name: minio-url
+              key: internalEndpoint
+        - name: MINIO_S3_ACCESKEYID
+          valueFrom:
+            secretKeyRef:
+              name: tempo-s3-credentials
+              key: user
+        - name: MINIO_S3_SECRETACCESSKEY
+          valueFrom:
+            secretKeyRef:
+              name: tempo-s3-credentials
+              key: password
         resources: {}
         securityContext:
           allowPrivilegeEscalation: false
