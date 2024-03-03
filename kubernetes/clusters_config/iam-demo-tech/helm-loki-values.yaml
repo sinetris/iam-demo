@@ -2,13 +2,42 @@
 # To generate reference values, run:
 #   helm show values grafana/loki
 #
-# NOTE: the hard anti-affinity was removed because this demo uses only one node
+# NOTE: changed anti-affinity because this demo uses only one node
 #   Changes:
 # - requiredDuringSchedulingIgnoredDuringExecution
 # + preferredDuringSchedulingIgnoredDuringExecution
 
 loki:
   auth_enabled: false
+  storage:
+    type: s3
+    bucketNames:
+      chunks: loki-chunks
+      ruler: loki-ruler
+      admin: loki-admin
+    s3:
+      endpoint: "${MINIO_S3_ENDPOINT}"
+      accessKeyId: "${MINIO_S3_ACCESKEYID}"
+      secretAccessKey: "${MINIO_S3_SECRETACCESSKEY}"
+
+# We sill use an external MinIO
+minio:
+  enabled: false
+
+monitoring:
+  dashboards:
+    namespace: observability
+  rules:
+    namespace: observability
+    additionalGroups:
+    - name: loki-rules
+      rules:
+      - record: job:loki_request_duration_seconds_bucket:sum_rate
+        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
+      - record: job_route:loki_request_duration_seconds_bucket:sum_rate
+        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
+      - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
+        expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
 
 gateway:
   affinity: |
@@ -17,38 +46,6 @@ gateway:
         - weight: 100
           podAffinityTerm:
             topologyKey: kubernetes.io/hostname
-
-minio:
-  enabled: true
-  buckets:
-  - name: chunks
-    policy: none
-    purge: false
-  - name: ruler
-    policy: none
-    purge: false
-  - name: admin
-    policy: none
-    purge: false
-  # Default Tempo storage bucket.
-  - name: tempo-traces
-    policy: none
-    purge: false
-
-monitoring:
-  dashboards:
-    namespace: observability
-  rules:
-    namespace: observability
-    additionalGroups:
-    - name: additional-loki-rules
-      rules:
-      - record: job:loki_request_duration_seconds_bucket:sum_rate
-        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
-      - record: job_route:loki_request_duration_seconds_bucket:sum_rate
-        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
-      - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
-        expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
 
 write:
   affinity: |
@@ -73,3 +70,39 @@ backend:
         - weight: 100
           podAffinityTerm:
             topologyKey: kubernetes.io/hostname
+  extraArgs:
+  - '-config.expand-env=true'
+  extraEnv:
+  - name: MINIO_S3_ENDPOINT
+    valueFrom:
+      configMapKeyRef:
+        name: minio-url
+        key: internalEndpoint
+  - name: MINIO_S3_ACCESKEYID
+    valueFrom:
+      secretKeyRef:
+        name: loki-s3-credentials
+        key: user
+  - name: MINIO_S3_SECRETACCESSKEY
+    valueFrom:
+      secretKeyRef:
+        name: loki-s3-credentials
+        key: password
+
+ingress:
+  enabled: true
+  labels:
+    traffic: external
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+  hosts:
+  - loki.iam-demo.test
+  tls:
+  - secretName: iam-demo-vault-tls
+    hosts:
+    - loki.iam-demo.test
+
+sidecar:
+  rules:
+    logLevel: DEBUG
