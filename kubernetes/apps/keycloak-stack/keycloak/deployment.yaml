@@ -9,18 +9,18 @@ spec:
   template:
     spec:
       containers:
-      - args:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:23.0.7
+        args:
         - start-dev
         envFrom:
         - configMapRef:
-            name: keycloak-config
+            name: keycloak-env-cm
         - secretRef:
-            name: keycloak-secret
-        image: quay.io/keycloak/keycloak:18.0.2
-        name: keycloak
+            name: keycloak-env-secret
         ports:
-        - containerPort: 8080
-          name: http
+        - name: http
+          containerPort: 8080
         readinessProbe:
           httpGet:
             path: /realms/master
@@ -30,11 +30,11 @@ spec:
             cpu: 500m
             memory: 512Mi
           requests:
-            cpu: 200m
-            memory: 128Mi
+            cpu: 250m
+            memory: 256Mi
         volumeMounts:
-        - mountPath: /opt/keycloak/data
-          name: keycloak-data-volume
+        - name: keycloak-data-volume
+          mountPath: /opt/keycloak/data
       volumes:
       - name: keycloak-data-volume
         persistentVolumeClaim:

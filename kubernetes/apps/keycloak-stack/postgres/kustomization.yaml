@@ -1,0 +1,14 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: keycloak-
+
+resources:
+- ../../../base/postgres
+
+patches:
+- path: patch-cm.yaml
+  target:
+    kind: ConfigMap
+    labelSelector: app.kubernetes.io/component=database

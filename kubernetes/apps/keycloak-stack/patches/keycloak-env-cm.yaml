@@ -1,0 +1,10 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-env-cm
+data:
+  KC_DB: postgres
+  KC_DB_SCHEMA: public
+  KC_DB_URL_HOST: keycloak-postgres-svc-headless.tools
+  KC_DB_URL_PORT: "5432"
