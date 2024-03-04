@@ -1,0 +1,13 @@
+---
+source:
+  kind: ConfigMap
+  name: gitea-postgres-env-cm
+  fieldPath: data.POSTGRES_DB
+targets:
+- select:
+    kind: ConfigMap
+    name: gitea-env-cm
+  fieldPaths:
+  - data.GITEA__DATABASE__NAME
+  options:
+    create: true
