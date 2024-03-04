@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: keycloak
+  name: keycloak-svc
 spec:
   ports:
   - name: http

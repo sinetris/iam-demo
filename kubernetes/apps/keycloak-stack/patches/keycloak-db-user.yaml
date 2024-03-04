@@ -1,0 +1,13 @@
+---
+source:
+  kind: ConfigMap
+  name: keycloak-postgres-env-cm
+  fieldPath: data.POSTGRES_USER
+targets:
+- select:
+    kind: ConfigMap
+    name: keycloak-env-cm
+  fieldPaths:
+  - data.KC_DB_USERNAME
+  options:
+    create: true

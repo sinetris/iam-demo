@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-env-cm
+data:
+  POSTGRES_DB: keycloack
+  POSTGRES_USER: keycloack
