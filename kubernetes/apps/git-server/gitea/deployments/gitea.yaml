@@ -35,9 +35,9 @@ spec:
         command: ["/usr/local/sbin/init_directory_structure.sh"]
         envFrom:
         - configMapRef:
-            name: gitea-config
+            name: gitea-env-cm
         - secretRef:
-            name: gitea-config-override
+            name: gitea-env-secrets
         volumeMounts:
         - name: gitea-init-volume
           mountPath: /usr/local/sbin
@@ -60,9 +60,9 @@ spec:
         command: ["/usr/local/sbin/config_environment.sh"]
         envFrom:
         - configMapRef:
-            name: gitea-config
+            name: gitea-env-cm
         - secretRef:
-            name: gitea-config-override
+            name: gitea-env-secrets
         volumeMounts:
         - name: gitea-config-scripts-volume
           mountPath: /usr/local/sbin
@@ -87,9 +87,9 @@ spec:
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
-            name: gitea-config
+            name: gitea-env-cm
         - secretRef:
-            name: gitea-config-override
+            name: gitea-env-secrets
         volumeMounts:
         - name: gitea-init-volume
           mountPath: /usr/local/sbin
@@ -112,9 +112,9 @@ spec:
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
-            name: gitea-config
+            name: gitea-env-cm
         - secretRef:
-            name: gitea-config-override
+            name: gitea-env-secrets
         ports:
         - containerPort: 2222
           name: ssh
