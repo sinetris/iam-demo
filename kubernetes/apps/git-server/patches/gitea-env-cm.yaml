@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea-env-cm
+data:
+  GITEA__DATABASE__DB_TYPE: postgres
+  GITEA__DATABASE__HOST: gitea-postgres-svc-headless.tools:5432
+  GITEA__DATABASE__SSL_MODE: disable
