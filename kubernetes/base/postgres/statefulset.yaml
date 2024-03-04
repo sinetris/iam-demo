@@ -5,7 +5,7 @@ metadata:
   name: postgres
 spec:
   replicas: 1
-  serviceName: postgres
+  serviceName: postgres-svc-headless
   selector:
     matchLabels:
       app.kubernetes.io/name: postgres
@@ -15,15 +15,16 @@ spec:
       labels:
         app.kubernetes.io/name: postgres
     spec:
+      serviceAccountName: postgres
       containers:
       - name: postgres
         image: postgres:16.2
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
-            name: postgres-config-map
+            name: postgres-env-cm
         - secretRef:
-            name: postgres-secrets
+            name: postgres-env-secrets
         ports:
         - name: postgres-port
           containerPort: 5432
@@ -37,7 +38,7 @@ spec:
             command:
             - /bin/sh
             - -c
-            - exec pg_isready -U "${POSTGRES_USER}" -d "dbname=${POSTGRES_USER}" -h 127.0.0.1 -p 5432
+            - exec pg_isready -U "${POSTGRES_USER}" -d "dbname=${POSTGRES_DB}" -h 127.0.0.1 -p 5432
         readinessProbe:
           failureThreshold: 6
           initialDelaySeconds: 5
@@ -50,7 +51,7 @@ spec:
             - -c
             - -e
             - |
-              exec pg_isready -U "${POSTGRES_USER}" -d "dbname=${POSTGRES_USER}" -h 127.0.0.1 -p 5432
+              exec pg_isready -U "${POSTGRES_USER}" -d "dbname=${POSTGRES_DB}" -h 127.0.0.1 -p 5432
               [ -f "${PGDATA}/tmp/.initialized" ] || [ -f "${PGDATA}/.initialized" ]
         resources:
           limits:
@@ -62,11 +63,33 @@ spec:
         volumeMounts:
         - name: shared-memory-volume
           mountPath: /dev/shm
+        - name: socket-directory
+          mountPath: /var/run/postgresql
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
         - name: postgres-db-init
           mountPath: /docker-entrypoint-initdb.d
+      - name: postgres-exporter
+        image: "quay.io/prometheuscommunity/postgres-exporter:v0.11.1"
+        imagePullPolicy: IfNotPresent
+        securityContext:
+          allowPrivilegeEscalation: false
+        envFrom:
+        - configMapRef:
+            name: postgres-env-cm
+        env:
+        - name: DATA_SOURCE_NAME
+          value: "host=/var/run/postgresql user=${POSTGRES_USER} application_name=postgres_exporter sslmode=disable"
+        ports:
+        - containerPort: 9187
+          name: pg-exporter
+        volumeMounts:
+        - name: socket-directory
+          mountPath: /var/run/postgresql
+          readOnly: true
       volumes:
+      - name: socket-directory
+        emptyDir: {}
       - name: shared-memory-volume
         emptyDir:
           medium: Memory
