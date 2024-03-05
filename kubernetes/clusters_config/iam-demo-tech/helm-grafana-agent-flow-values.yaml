@@ -1,0 +1,12 @@
+---
+agent:
+  mode: 'flow'
+  enableReporting: false
+  configMap:
+    name: grafana-agent-flow-config
+    key: config.river
+  envFrom:
+  - configMapRef:
+      name: grafana-agent-flow-env
+  # - secretRef:
+  #     name: grafana-agent-flow-env-secrets
