@@ -60,6 +60,17 @@
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
+- name: Install Grafana Agent Flow
+  kubernetes.core.helm:
+    name: grafana-agent-flow
+    chart_ref: grafana/grafana-agent
+    namespace: observability
+    create_namespace: true
+    timeout: 10m
+    state: present
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-grafana-agent-flow-values.yaml"
 - name: Install Vault
   kubernetes.core.helm:
     name: vault
