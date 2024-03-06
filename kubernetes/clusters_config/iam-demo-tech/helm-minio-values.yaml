@@ -20,8 +20,11 @@ policies:
   statements:
   - effect: Allow
     resources:
+    - 'arn:aws:s3:::loki-chunks'
     - 'arn:aws:s3:::loki-chunks/*'
+    - 'arn:aws:s3:::loki-ruler'
     - 'arn:aws:s3:::loki-ruler/*'
+    - 'arn:aws:s3:::loki-admin'
     - 'arn:aws:s3:::loki-admin/*'
     actions:
     - "s3:*"
@@ -29,6 +32,7 @@ policies:
   statements:
   - effect: Allow
     resources:
+    - 'arn:aws:s3:::tempo-traces'
     - 'arn:aws:s3:::tempo-traces/*'
     actions:
     - "s3:*"
@@ -54,20 +58,20 @@ users:
 #     user: console-admin
 
 buckets:
-# Loki
-- name: loki-chunks
-  policy: none
-  purge: false
-- name: loki-ruler
-  policy: none
-  purge: false
-- name: loki-admin
-  policy: none
-  purge: false
 # Default Tempo storage bucket.
 - name: tempo-traces
   policy: none
   purge: false
+# # Loki
+# - name: loki-chunks
+#   policy: none
+#   purge: false
+# - name: loki-ruler
+#   policy: none
+#   purge: false
+# - name: loki-admin
+#   policy: none
+#   purge: false
 
 # Internal S3 API port
 minioAPIPort: "9000"
@@ -104,6 +108,7 @@ consoleIngress:
   enabled: true
   annotations:
     cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+    cert-manager.io/common-name: minio.iam-demo.test
   hosts:
   - minio.iam-demo.test
   tls:
