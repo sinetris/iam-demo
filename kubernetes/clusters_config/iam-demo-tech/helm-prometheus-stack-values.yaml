@@ -8,9 +8,6 @@ nameOverride: observability-stack
 
 namespaceOverride: observability
 
-commonLabels:
-  app.kubernetes.io/part-of: observability
-
 alertmanager:
   enabled: true
   ingress:
@@ -42,15 +39,18 @@ grafana:
     type: loki
     url: http://loki-gateway.observability:80
     editable: true
+    access: proxy
     orgId: 1
-    jsonData:
-      maxLines: 1000
+    # jsonData:
+    #   maxLines: 1000
+    isDefault: false
   - name: Tempo
     type: tempo
     access: proxy
     orgId: 1
     url: http://tempo-query-frontend.observability:3100
     editable: true
+    isDefault: false
   # # Send logs to file
   # env:
   #   GF_LOG_MODE: console file
