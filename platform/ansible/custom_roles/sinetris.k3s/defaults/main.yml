@@ -5,7 +5,7 @@
 
 k3s_cluster_domain: cluster.local
 
-# k3s state, options: installed, uninstalled
+# k3s state (see k3s_valid_states)
 k3s_state: installed
 
 k3s_release_version: v1.28.6+k3s1
@@ -88,3 +88,5 @@ k3s_become: false
 
 # If true, copy root CA certs from ansible-controller
 k3s_copy_ca_certs: true
+# Path where to find CA certs
+ca_root_certs_path: /usr/local/etc/certs/ca
