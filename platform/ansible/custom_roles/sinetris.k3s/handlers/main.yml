@@ -33,7 +33,3 @@
     state: restarted
     enabled: "{{ k3s_start_on_boot }}"
   register: k3s_service_restart_k3s
-- name: Uncomment the lines below to use 'listen' again
-  listen: Copied kube config file to home on remote
-  ansible.builtin.debug:
-    msg: Copied kube config file
