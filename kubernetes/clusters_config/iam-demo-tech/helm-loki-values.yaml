@@ -19,6 +19,8 @@ loki:
       endpoint: "${MINIO_S3_ENDPOINT}"
       accessKeyId: "${MINIO_S3_ACCESKEYID}"
       secretAccessKey: "${MINIO_S3_SECRETACCESSKEY}"
+      insecure: true
+      s3forcepathstyle: true
 
 # We sill use an external MinIO
 minio:
@@ -46,6 +48,22 @@ gateway:
         - weight: 100
           podAffinityTerm:
             topologyKey: kubernetes.io/hostname
+  ingress:
+    enabled: true
+    labels:
+      traffic: external
+    annotations:
+      cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+      traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    hosts:
+    - host: loki.iam-demo.test
+      paths:
+      - pathType: Prefix
+        path: /
+    tls:
+    - secretName: iam-demo-vault-tls
+      hosts:
+      - loki.iam-demo.test
 
 write:
   affinity: |
@@ -54,6 +72,24 @@ write:
         - weight: 100
           podAffinityTerm:
             topologyKey: kubernetes.io/hostname
+  extraArgs:
+  - '-config.expand-env=true'
+  extraEnv:
+  - name: MINIO_S3_ENDPOINT
+    valueFrom:
+      configMapKeyRef:
+        name: minio-url
+        key: internalEndpoint
+  - name: MINIO_S3_ACCESKEYID
+    valueFrom:
+      secretKeyRef:
+        name: loki-s3-credentials
+        key: user
+  - name: MINIO_S3_SECRETACCESSKEY
+    valueFrom:
+      secretKeyRef:
+        name: loki-s3-credentials
+        key: password
 
 read:
   affinity: |
@@ -62,6 +98,24 @@ read:
         - weight: 100
           podAffinityTerm:
             topologyKey: kubernetes.io/hostname
+  extraArgs:
+  - '-config.expand-env=true'
+  extraEnv:
+  - name: MINIO_S3_ENDPOINT
+    valueFrom:
+      configMapKeyRef:
+        name: minio-url
+        key: internalEndpoint
+  - name: MINIO_S3_ACCESKEYID
+    valueFrom:
+      secretKeyRef:
+        name: loki-s3-credentials
+        key: user
+  - name: MINIO_S3_SECRETACCESSKEY
+    valueFrom:
+      secretKeyRef:
+        name: loki-s3-credentials
+        key: password
 
 backend:
   affinity: |
@@ -88,20 +142,6 @@ backend:
       secretKeyRef:
         name: loki-s3-credentials
         key: password
-
-ingress:
-  enabled: true
-  labels:
-    traffic: external
-  annotations:
-    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
-    traefik.ingress.kubernetes.io/router.entrypoints: websecure
-  hosts:
-  - loki.iam-demo.test
-  tls:
-  - secretName: iam-demo-vault-tls
-    hosts:
-    - loki.iam-demo.test
 
 sidecar:
   rules:
