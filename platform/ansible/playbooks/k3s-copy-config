@@ -56,4 +56,4 @@
       loop: "{{ k3s_clusters_cfg_composed }}"
       loop_control:
         loop_var: k3s_cluster_cfg
-        label: "{{ k3s_cluster_cfg.name }}"
+        label: "{cluster: '{{ k3s_cluster_cfg.name }}', user: '{{ k3s_cluster_cfg.user }}'}"
