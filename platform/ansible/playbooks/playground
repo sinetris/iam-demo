@@ -18,6 +18,10 @@
     - name: Simple A record (IPV4 address) lookup
       ansible.builtin.debug:
         msg: 'google.com lookup: {{ lookup(''community.general.dig'', ''google.com'')}}'
+    - name: A record (IPV4 address) lookup for internal hosts
+      ansible.builtin.debug:
+        msg: "{{ item.key }} lookup: {{ lookup('community.general.dig', item.key)}}"
+      loop: "{{ named_hosts | dict2items }}"
 - name: Playground examples
   hosts: ansible-controller
   gather_facts: true

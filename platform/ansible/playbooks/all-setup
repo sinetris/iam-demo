@@ -2,6 +2,4 @@
 - import_playbook: bootstrap-ansible-controller
 - import_playbook: bootstrap-bind
 - import_playbook: basic-bootstrap
-- import_playbook: k3s-bootstrap
-- import_playbook: k3s-provisioning
-- import_playbook: k3s-copy-config
+- import_playbook: k3s-all-setup

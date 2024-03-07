@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: coredns-custom
+  namespace: kube-system
+data:
+  {{project_domain}}.server: |
+    {{project_domain}}:53 {
+      errors
+      cache 30
+      forward . {{dns_server_ip}}
+    }
+  empty.override: ""

@@ -17,18 +17,6 @@
         kustomize_files_path: "{{ project_bootstrap_kustomize_path }}/namespaces"
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"
-    - name: Run kustomize for kubernetes-dashboard
-      delegate_to: localhost
-      when:
-        - k3s_primary_control_node
-        - k3s_state is defined
-        - k3s_state == 'installed'
-      kubernetes.core.k8s:
-        definition: "{{
-            lookup('kubernetes.core.kustomize', dir=kubernetes_dashboard_path)
-          }}"
-      environment:
-        KUBECONFIG: "{{ k3s_kubeconfig }}"
     - name: Run kustomize project bootstrap for config-maps and secrets
       delegate_to: localhost
       when:
