@@ -94,6 +94,10 @@ bind9_zones:
         ttl: 1m
         type: CNAME
         content: iam-control-plane
+      - label: loki
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
       - label: minio
         ttl: 1m
         type: CNAME
