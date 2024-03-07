@@ -21,21 +21,28 @@ Examples of useful commands:
 ```bash
 # you can use `--limit <group>` or `--limit <host>`
 ansible-playbook playbooks/distro-update --limit linux-desktop
+
 # list hosts we will interact with using `--list-hosts`
-ansible-playbook playbooks/k3s-bootstrap --list-hosts
-# you can also check if there are changes needed (dry run) using `--check`
-# (note: can fail if a step depends on previous steps)
+ansible-playbook playbooks/k3s-all-setup --list-hosts
+
+# dry run (do not make changes) using `--check`
 ansible-playbook playbooks/playground --check
+
 # run in vervose mode using `-v` (more "v" -> more verbosity)
 ansible-playbook -vv playbooks/playground
+
 # check yaml syntax using `--syntax-check <playbook>`
 ansible-playbook --syntax-check <playbook>
+
 # List facts for an host
 ansible <host> -m setup
+
 # Run step by step
 ansible-playbook --step <playbook>
+
 # Create an ansible vault string secret
 ansible-vault encrypt_string
+
 # list hosts with defined variables
 ansible-inventory --list --yaml
 ```
