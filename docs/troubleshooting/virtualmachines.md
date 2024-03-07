@@ -2,8 +2,32 @@
 
 [Back to README](README.md)
 
+- [Refresh SHH hosts heys](#refresh-shh-hosts-heys)
 - [Time sync](#time-sync)
 - [Mouse scrolling in Firefox](#mouse-scrolling-in-firefox)
+
+## Refresh SHH hosts heys
+
+If you re-create virtual machines, it will also re-create the host keys.
+
+When connecting to the new machine, you should get an error starting with:
+
+```txt
+WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!
+```
+
+You need to remove the old keys and add the new ones.
+
+```sh
+# Select the problematic target
+target_host=iam-control-plane
+
+# Remove old keys
+ssh-keygen -R ${target_host}
+
+# Add the new keys
+ssh-keyscan ${target_host} >> ~/.ssh/known_hosts
+```
 
 ## Time sync
 

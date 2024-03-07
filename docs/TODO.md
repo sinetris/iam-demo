@@ -5,103 +5,142 @@
 > Table of content
 
 - [Documentation](#documentation)
-  - [Better define project scope](#better-define-project-scope)
-  - [Add Infrastructure overview](#add-infrastructure-overview)
+  - [Describe better the project scope](#describe-better-the-project-scope)
+  - [Warning](#warning)
+  - [Add an Infrastructure overview](#add-an-infrastructure-overview)
+  - [Add Development instructions](#add-development-instructions)
   - [Add screenshots](#add-screenshots)
 - [Install Applications](#install-applications)
-  - [Compliance As Code](#compliance-as-code)
-    - [Interesting projects](#interesting-projects)
 - [Setup and configurations](#setup-and-configurations)
+  - [Compliance As Code](#compliance-as-code)
   - [Kubernetes resources labels and annotations](#kubernetes-resources-labels-and-annotations)
-  - [Restructure Ansible](#restructure-ansible)
-    - [ansible directory layout](#ansible-directory-layout)
+- [Excluded Applications](#excluded-applications)
 - [Future changes](#future-changes)
+  - [Change configuration](#change-configuration)
+    - [Restructure Ansible code](#restructure-ansible-code)
+      - [ansible directory layout](#ansible-directory-layout)
+    - [Restructure Kubernetes code](#restructure-kubernetes-code)
+      - [kubernetes directory layout](#kubernetes-directory-layout)
+  - [Optional applications](#optional-applications)
+    - [Interesting projects](#interesting-projects)
+  - [Alternative to linux-desktop](#alternative-to-linux-desktop)
 
 ## Documentation
 
-### Better define project scope
+The README should:
 
-This project is an implementation example of what is defined in
+- [ ] be concise
+- [ ] include a [warning](#warning)
+- [ ] [describe better the project scope](#describe-better-the-project-scope)
+- [ ] include a link to this document
+- [ ] contain links to the main topics covered in the project documentation folder
+- [ ] include [FOSSA badge on GitHub][fossa-github-badge-pr]
+
+The documentation folder should:
+
+- [ ] have an [infrastructure overview](#add-an-infrastructure-overview)
+- [ ] include [development instructions](#add-development-instructions)
+- [ ] include [screenshots](#add-screenshots)
+
+### Describe better the project scope
+
+This project is an implementation example of what will be defined in
 [sinetris/iam-introduction](https://github.com/sinetris/iam-introduction).
+
+Add an overview and place the tools used in the appropriate sub-set.
 
 Clarify that the tools selected are only used for the sake of semplicity (and
 in some cases not the best tools for the job) to cover certain topics.
 
-Add an higher level of abstraction overview and place the tools in the
-appropriate sub-set.
+### Warning
 
-### Add Infrastructure overview
+Add a warning like the folowing in the [README](../README.md):
+
+> **Warnings**
+>
+> This project, for the time being, is not intended to have any backward
+> compatibility.
+>
+> Virtual machines are often destroyed and recreated.\
+> Kubernetes resources are renamed, removed, modified, in ways that could
+> compromise previous deployments.
+
+### Add an Infrastructure overview
+
+### Add Development instructions
+
+- [ ] Hardware Requirements
+- [ ] Dependencies
+  - [Jsonnet][jsonnet]
+  - [Microsoft Remote Desktop][microsoft-remote-desktop]
+  - [Multipass][multipass]
+  - [pre-commit][pre-commit]
 
 ### Add screenshots
+
+- [ ] Linux Desktop
+  - [ ] Firefox bookmarks
+  - [ ] Consul
+  - [ ] Grafana
+  - [ ] Gitea
+  - [ ] Keycloak
+  - [ ] Traefik Dashboard
+  - [ ] Kubernetes Dashboard
+  - [ ] Terminal execute `~/bin/check-vm-config.sh`
+- [ ] Ansible Controller
 
 ## Install Applications
 
 - [x] [Gitea][gitea]: a painless self-hosted Git service
 - [x] [Keycloak][keycloak]: IAM, IdP and SSO
+- [x] [Hashicorp Vault][vault]: secrets management
 - [x] [Consul][consul]: zero trust networking
-- [ ] [Harbor][harbor]: artifacts registry (for Docker images and OPA policies)
-  - [ ] [Notary][notary]: trust over arbitrary collections of data
-  - [ ] [Trivy][trivy]: vulnerability scanners
+  - [ ] configure [Vault as the Secrets Backend for Consul][consul-vault]
+- [x] [Trivy][trivy]: vulnerability scanners
 - [x] [Grafana][grafana]: dashboards for metrics, logs, tracing
 - [x] [Prometheus][prometheus]: monitoring system (metrics)
 - [x] [Alertmanager][alertmanager]: alerts handling
 - [x] [Grafana Loki][grafana-loki]: multi-tenant log aggregation system
-- [ ] [Grafana Tempo][grafana-tempo]: distributed tracing backend
-- [ ] [Grafana OnCall][grafana-oncall]: on-call management system
-- [ ] [Grafana k6][grafana-k6]: load testing tool
-- [ ] [midPoint][midpoint]: Identity Governance and Administration
-- [ ] [Drone][drone]: CI/CD pipelines as code
+- [x] [Grafana Tempo][grafana-tempo]: distributed tracing backend
+- [ ] [woodpecker-ci]: CI/CD pipelines as code
   - [ ] [Renovate][renovate]: automate dependency update
   - [ ] [Conftest][conftest]: use OPA policies to test configurations
+- [ ] [midPoint][midpoint]: Identity Governance and Administration
+- [ ] [Grafana OnCall][grafana-oncall]: on-call management system
+- [ ] [Grafana k6][grafana-k6]: load testing tool
 - [ ] [Wazuh][wazuh]: unified XDR and SIEM protection for endpoints and cloud workloads
-- [ ] [Hashicorp Vault][vault]: secrets management
 - [ ] [HashiCorp Boundary][boundary]: simple and secure remote access
 - [ ] [Waypoint][waypoint]: lower cognitive load for applications deployment
 - [ ] [MailHog][mailhog]: Web and API based SMTP testing
 - [ ] [Backstage][backstage]: open platform for building developer portals
 - [ ] [Fleet][fleet]: device management (MDM)
-- [ ] [Falco][falco]: threat detection
-- [ ] [plantuml-server][plantuml-server]: diagrams as code
-- [ ] [Restic][restic]: operating systems backup solution
-- [ ] [Velero][velero]: Kubernetes resources and volumes backup solution
 - [ ] [ERPNext][erpnext]: Enterprise Resource Planning
-- [ ] [Community][community]: wiki and knowledge-base
-- [ ] [Mattermost][mattermost]: Channels, Playbooks, Project & Task Management
-- [ ] [Excalidraw][excalidraw]: An open source virtual hand-drawn style whiteboard.
 
-**Note:** A missing tick means that the application has yet to be added.
-
-### Compliance As Code
-
-- [SCAP][scap]: Security Content Automation Protocol
-- [OpenSCAP][open-scap]: Open-source Security Compliance Solution
-  > NIST certified SCAP toolkit
-- [OSCAL][oscal]: Open Security Controls Assessment Language
-- [Trestle][trestle]: Manage compliance as code using NIST's OSCAL standard
-- [Open Policy Agent (OPA)][opa]: Declarative Policy
-  > Context-aware, Expressive, Fast, Portable
-- [OPAL][opal]: Open Policy Administration Layer
-
-#### Interesting projects
-
-- [PacBot][pacbot]: Policy as Code Bot (by T-Mobile)
-- [MagTape][magtape]: Policy-as-Code for Kubernetes (by T-Mobile)
+> **Note:**
+>
+> - a missing tick means that the application has yet to be added
+> - many applications still need to be [configured](#setup-and-configurations)
+> - some applications have been moved to [Excluded Applications](#excluded-applications)
 
 ## Setup and configurations
 
-- [x] move postgres to [base](../kubernetes/base/)
+- [x] move Postgres to [base](../kubernetes/base/)
   - [x] use `StatefulSet`
-- [x] move redis to [base](../kubernetes/base/)
+  - [x] use [Postgres base](../kubernetes/base/postgres/) in services
+- [x] move Redis to [base](../kubernetes/base/)
   - [x] use `StatefulSet`
-- [ ] Setup **Gitea**
+  - [x] use [Redis base](../kubernetes/base/redis/) in services
+- [ ] setup **Gitea**
   - [x] certificate for [git.iam-demo.test](https://git.iam-demo.test)
   - [x] use [base/postgres](../kubernetes/base/postgres)
   - [x] use [base/redis](../kubernetes/base//redis)
   - [x] setup ssh-git loadbalancer
   - [x] initialize database and create admin credentials
+  - [ ] ensure [Gitea OCI registry][gitea-oci-registry] is working properly
+  - [ ] setup Keycloak as IdP
 - [x] use `.test` tld for external domains
 - [x] use a separate DNS server resolver for external domains (Bind9)
-- [ ] generate Certificate in a proper way
+- [ ] generate certificates in a proper way
   - [ ] check [Vault PKI documentation][vault-pki]
   - [ ] use [Build Certificate Authority (CA) in Vault with an offline Root][vault-external-ca]
         based on [Build your own certificate authority (CA)][vault-pki-engine]
@@ -119,37 +158,45 @@ appropriate sub-set.
   - [x] install CA certificates chain in VMs
   - [x] test generated CA certificates for installed applications domains from
         the `linux-desktop` VM
-- [ ] setup [pre-commit][pre-commit] for this project repository
+- [x] setup [pre-commit][pre-commit] for this project repository
+- [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
+      [Grafana][grafana], [Tempo][grafana-tempo]
+  - [ ] install [Grafana Agent Flow[grafana-agent-flow]]
+  - [ ] configure Grafana Agent flot use
+        [loki.source.kubernetes][grafana-agent-loki-source-k8s] component
+  - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
+  - [ ] configure dashboards in Grafana
+  - [x] use MinIO credentials and endpoint from Secret in Loki
+  - [x] use MinIO credentials and endpoint from Secret in Tempo
 - [ ] configure [Wazuh][wazuh]
-  - [ ] generate amd64 and arm64 containers
-  - [ ] push containers to registry
+  - [ ] generate arm64 and amd64 containers
+  - [ ] push containers to internal registry
   - [ ] use new containers in Wazuh deployment
 - [ ] configure [Consul][consul]
   - [ ] configure [Consul Service Mesh][consul-service-mesh]
   - [ ] configure [Consul API Gateway][consul-api-gateway]
   - [ ] check [Consul tutorials][consul-tutorials]
-- [ ] create a `.internal` DNS zone (like in [AWS][aws-internal-tld] or [Google Cloud][google-cloud-internal-tld])
+- [ ] configure [Trivy][trivy]
+  - [ ] configure [Trivy Policy Reporter Integration][trivy-policy-reporter] to
+        send vulnerability and audit reports to [Loki as target in Policy Report][policy-reporter-loki]
 - [ ] separate generation of external (loadbalancer) and internal certificates
 - [ ] [setup cert-manager to use Vault][cert-manager-vault]
-- [ ] introduce [Envoy][envoy-proxy]
 - [ ] use [age][age] (good and simple encryption tool) for secrets
 - [ ] add proper [labels and annotations for Kubernetes resources](#kubernetes-resources-labels-and-annotations)
-- [ ] configure [Loki][grafana-loki]
-  - [ ] [Promtail][promtail]: agent to ships logs to Loki
-  - [ ] configure dashboards in Grafana
-- [ ] better configuration for [MinIO][minio]
-  - [ ] save MinIO credentials in Kubernetes Secret
-  - [ ] use `MINIO_ACCESS_KEY` and `MINIO_SECRET_KEY` environment variables in
-        services
-- [ ] save secrets in [Vault][vault] (see [Kubernetes Secrets in Vault][vault-kubernetes-use-case])
-- [ ] restructure [Ansible code](../platform/ansible/)
-  - [ ] [ansible directory layout](#ansible-directory-layout)
-  - [ ] create a dinamic Ansible inventory
-  - [ ] follow [Good Practices for Ansible][ansible-good-practices]
-- [ ] use [MetalLB][metallb] as load-balancer
-- [ ] add [tfsec][tfsec] (terrafrom security scanners) in CI pipelines
-- [ ] change Cluster Domain in [k3s server][k3s-server-doc] from `cluster.local`
-      to `iam-demo.local`
+- [ ] use separate [MinIO][minio] deployment
+  - [x] move endpoints from to ConfigMap
+  - [x] save MinIO credentials in Kubernetes Secret
+- [ ] setup [FOSSA][fossa] and [.fossa.yml][fossa-yml] for the project repo
+
+### Compliance As Code
+
+- [ ] [OpenSCAP][open-scap]: Open-source Security Compliance Solution
+  > NIST certified [SCAP][scap] toolkit
+- [ ] [OSCAL][oscal]: Open Security Controls Assessment Language
+- [ ] [Trestle][trestle]: Manage compliance as code using NIST's OSCAL standard
+- [ ] [Open Policy Agent (OPA)][opa]: Declarative Policy
+  > Context-aware, Expressive, Fast, Portable
+- [ ] [OPAL][opal]: Open Policy Administration Layer
 
 ### Kubernetes resources labels and annotations
 
@@ -187,14 +234,56 @@ kubectl get service -A -o jsonpath='{.items[?(@.metadata.annotations.prometheus\
 kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum/config)]}{.metadata.namespace}{"/"}{.metadata.name}{"\t"}{.metadata.creationTimestamp}{"\n"}{end}'
 ```
 
-### Restructure Ansible
+## Excluded Applications
 
-The project use [Ansible][ansible] to manage VMs.
+- ~~[Harbor][harbor]: artifacts registry (for Docker images and OPA policies)~~\
+  Harbor require too much work to deploy on ARM64 and we can use the already
+  deployed [Gitea OCI registry][gitea-oci-registry]
+- ~~[Notary][notary]: trust over arbitrary collections of data~~
+- ~~[Drone][drone]: CI/CD pipelines as code~~\
+  Given the license change and the creation of [Gitness][gitness] (to be
+  evalued), we will use [Gitea][gitea] and [Woodpecker CI][woodpecker-ci]
+
+## Future changes
+
+### Change configuration
+
+- [ ] configure Vault for production
+  - [ ] set `server.dev.enabled` to `false`
+  - [ ] Vault `unseal`
+  - [ ] Vault PKI
+  - [ ] save secrets in [Vault][vault] (see [Kubernetes Secrets in Vault][vault-kubernetes-use-case])
+- [ ] enable [Grafana Loki authentication][grafana-loki-auth]
+- [ ] [restructure Ansible code](#restructure-ansible-code)
+  - [ ] [ansible directory layout](#ansible-directory-layout)
+  - [ ] create a dinamic Ansible inventory
+  - [ ] follow [Good Practices for Ansible][ansible-good-practices]
+- [ ] [restructure Kubernetes code](../kubernetes/)
+  - [ ] [kubernetes directory layout](#kubernetes-directory-layout)
+  - [ ] create a dinamic Ansible inventory
+- [ ] restructure Networking
+  - [ ] use [MetalLB][metallb] as load-balancer
+  - [ ] evaluate the introduction of [Open vSwitch][open-vswitch]
+  - [ ] evaluate the introduction of [Cilium][cilium]
+  - [ ] evaluate the introduction of [Envoy][envoy-proxy]
+  - [ ] create a `.internal` DNS zone (like in [AWS][aws-internal-tld] or
+        [Google Cloud][google-cloud-internal-tld]) for domain accessible only
+        from the internal network
+  - [ ] use [ExternalDNS][external-dns] for [Traefik Proxy source][external-dns-traefik]
+        to dynamically configure Bind9 using the [RFC 2136 provider][external-dns-rfc2136]
+- [ ] add [tfsec][tfsec] (terrafrom security scanners) in CI pipelines
+- [ ] change Cluster Domain in [k3s server][k3s-server-doc] from `cluster.local`
+      to `iam-demo.local`
+- [ ] evaluate [Artifact Hub][artifact-hub] as an artifacts registry
+
+#### Restructure Ansible code
+
+The project use [Ansible][ansible] to manage VMs and [bootsrap kubernetes](../kubernetes/).
 The [Ansible code](../platform/ansible/) for the custom_roles and playbooks
 needs to be restructured (add label, move tasks in the proper place, etc)
 and would be better to use a [dinamic Ansible inventory][ansible-dev-dynamic-inventory].
 
-#### ansible directory layout
+##### ansible directory layout
 
 ```yaml
 ansible.cfg
@@ -244,9 +333,101 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
   requirements.yaml
 ```
 
-## Future changes
+#### Restructure Kubernetes code
 
-- [ ] use [Gitness][gitness] instead of [Gitea][gitea] and [Drone][drone]
+The project use [Kustomize][kustomize] to customize kubernetes application
+configuration.
+
+The code under [kubernetes](../kubernetes/) need to be restructured
+(manage helm charts in kustomize, make components more flexible, etc).
+
+Allow [multi-tenancy][kubernetes-multi-tenancy].
+
+##### kubernetes directory layout
+
+Make it easier to compose applications and deploy on multiple clusters and
+different platforms.
+
+```tree
+├── base-resources
+│   ├── postgres
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   ├── redis
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   └── ...
+│       ├── ...
+│       └── kustomization.yaml
+├── components
+│   ├── keycloak
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   ├── git-server
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   ├── tempo
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   └── ...
+│       ├── ...
+│       └── kustomization.yaml
+├── platform-overrides
+│   ├── aws
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   ├── nginx
+│   │   ├── ...
+│   │   └── kustomization.yaml
+│   └── ...
+│       ├── ...
+│       └── kustomization.yaml
+└── overlays
+    ├── dev-minimal
+    │   └── single-cluster
+    │       └── kustomization.yaml
+    └── dev-ha
+        ├── tools-cluster
+        │   └── kustomization.yaml
+        └── biz-cluster
+            └── kustomization.yaml
+```
+
+### Optional applications
+
+- [ ] [Falco][falco]: threat detection
+- [ ] [plantuml-server][plantuml-server]: diagrams as code
+- [ ] [Restic][restic]: operating systems backup solution
+- [ ] [Velero][velero]: Kubernetes resources and volumes backup solution
+- [ ] [Community][community]: wiki and knowledge-base
+- [ ] [Mattermost][mattermost]: Channels, Playbooks, Project & Task Management
+- [ ] [Excalidraw][excalidraw]: open source virtual hand-drawn style whiteboard.
+
+#### Interesting projects
+
+- [ ] [PacBot][pacbot]: Policy as Code Bot (by T-Mobile)
+- [ ] [MagTape][magtape]: Policy-as-Code for Kubernetes (by T-Mobile)
+
+### Alternative to linux-desktop
+
+You can use the host machine (e.g. your laptop) instead of the `linux-desktop`
+virtual machine.
+
+**Pros:**
+
+- Less resources used
+- Probably faster
+
+**Cons:**
+
+- virtual machine IPs must be reachable from the host machine
+- internal DNS server must be used for DNS resolution on the host machine
+- self-signed CA root certificate must be installed on the host machine
+- VPNs are likely to interfere with the previous steps
+- most of the previous steps require administrative privileges, which are usually
+  not allowed (whether it is an enforced policy or not) on the work laptop
+- you must take into account that the configuration of the users' host machines
+  will likely be very different (OS, network configuration, etc.)
 
 [age]: <https://github.com/FiloSottile/age> "age"
 [alertmanager]: <https://github.com/prometheus/alertmanager> "Alertmanager"
@@ -254,52 +435,72 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [ansible-dev-dynamic-inventory]: <https://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html> "Developing dynamic inventory for Ansible"
 [ansible-good-practices]: <https://redhat-cop.github.io/automation-good-practices/> "Good Practices for Ansible"
 [ansible]: <https://ansible.readthedocs.io/> "Ansible"
+[artifact-hub]: <https://github.com/artifacthub/hub> "Artifact Hub"
 [aws-internal-tld]: <https://docs.aws.amazon.com/vpc/latest/userguide/vpc-dns.html> "AWS: DNS attributes for your VPC"
 [backstage]: <https://github.com/backstage/backstage> "Backstage"
 [boundary]: <https://www.boundaryproject.io/> "HashiCorp Boundary"
 [cert-manager-vault]: <https://cert-manager.io/docs/configuration/vault/> "cert-manager Vault"
 [cfssl]: <https://github.com/cloudflare/cfssl> "Cloudflare's PKI and TLS toolkit (CFSSL)"
+[cilium]: <https://cilium.io/> "cilium"
 [community]: <https://github.com/documize/community> "Community"
 [conftest]: <https://github.com/open-policy-agent/conftest> "Conftest"
 [consul-api-gateway]: <https://www.consul.io/docs/api-gateway> "Consul API Gateway"
 [consul-service-mesh]: <https://developer.hashicorp.com/consul/docs/connect> "Consul Service Mesh"
 [consul-tutorials]: <https://developer.hashicorp.com/consul/tutorials> "Consul tutorials"
+[consul-vault]: <https://developer.hashicorp.com/consul/docs/k8s/deployment-configurations/vault> "Vault as the Secrets Backend for Consul"
 [consul]: <https://www.consul.io/> "Consul"
 [drone]: <https://www.drone.io/> "Drone"
 [envoy-proxy]: <https://www.envoyproxy.io/docs/envoy/latest/intro/what_is_envoy> "Envoy proxy"
 [erpnext]: <https://erpnext.com/> "ERPNext"
 [excalidraw]: <https://github.com/excalidraw/excalidraw> "Excalidraw"
+[external-dns-rfc2136]: <https://github.com/kubernetes-sigs/external-dns/blob/v0.14.0/docs/tutorials/traefik-proxy.md> "ExternalDNS with RFC 2136"
+[external-dns-traefik]: <https://github.com/kubernetes-sigs/external-dns/blob/v0.14.0/docs/tutorials/traefik-proxy.md> "ExternalDNS with Traefik"
+[external-dns]: <https://github.com/kubernetes-sigs/external-dns> "ExternalDNS"
 [falco]: <https://falco.org/> "Falco"
 [fleet]: <https://github.com/fleetdm/fleet> "Fleet"
+[fossa-github-badge-pr]: <https://docs.fossa.com/docs/quick-import#getting-a-badge-pull-request-githubcom-only> "FOSSA on GitHub.com - Getting a Badge Pull Request"
+[fossa-yml]: <https://github.com/fossas/fossa-cli/blob/master/docs/references/files/fossa-yml.md> "FOSSA yaml configuration"
+[fossa]: <https://fossa.com/> "Free Open Source Software Analysis"
+[gitea-oci-registry]: <https://docs.gitea.com/usage/packages/container> "Gitea OCI Registry"
 [gitea]: <https://gitea.io/> "Gitea"
 [gitness]: <https://gitness.com/> "Gitness"
 [google-cloud-internal-tld]: <https://cloud.google.com/compute/docs/internal-dns> "Google Cloud internal tld"
+[grafana-agent-flow]: <https://grafana.com/docs/agent/next/flow/> "Grafana Agent Flow"
+[grafana-agent-loki-source-k8s]: <https://grafana.com/docs/agent/next/flow/reference/components/loki.source.kubernetes/> "Grafana Agent Flow - loki.source.kubernetes"
 [grafana-k6]: <https://github.com/grafana/k6> "Grafana k6"
+[grafana-loki-auth]: <https://grafana.com/docs/loki/latest/operations/authentication/?pg=blog&plcmt=body-txt> "Grafana Loki authentication"
 [grafana-loki]: <https://grafana.com/oss/loki/> "Grafana Loki"
 [grafana-oncall]: <https://grafana.com/oss/oncall/> "Grafana OnCall"
 [grafana-tempo]: <https://github.com/grafana/tempo> "Grafana Tempo"
 [grafana]: <https://grafana.com/> "Grafana"
 [harbor]: <https://goharbor.io/> "Harbor"
+[jsonnet]: <https://jsonnet.org> "Jsonnet"
 [k3s-custom-ca]: <https://raw.githubusercontent.com/k3s-io/k3s/master/contrib/util/generate-custom-ca-certs.sh> "k3s custom CA certs"
 [k3s-server-doc]: <https://docs.k3s.io/cli/server> "k3s server documentation"
 [k8s-jsonpath]: <https://kubernetes.io/docs/reference/kubectl/jsonpath/> "Kubernetes JSONPath documentation"
 [keycloak]: <https://www.keycloak.org/> "Keycloak"
 [kubernetes-managing-tls]: <https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/> "Kubernetes Manage TLS Certificates in a Cluster"
+[kubernetes-multi-tenancy]: <https://kubernetes.io/docs/concepts/security/multi-tenancy/> "Kubernetes multi-tenancy"
 [kubernetes-pki-best-practices]: <https://kubernetes.io/docs/setup/best-practices/certificates/> "kubernetes PKI best practices"
+[kustomize]: <https://kustomize.io/> "Kustomize"
 [magtape]: <https://github.com/tmobile/magtape> "MagTape"
 [mailhog]: <https://github.com/mailhog/MailHog> "MailHog"
 [mattermost]: <https://mattermost.com/> "Mattermost"
 [metallb]: <https://github.com/metallb/metallb> "MetalLB"
+[microsoft-remote-desktop]: <https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/remote-desktop-clients> "Microsoft Remote Desktop"
 [midpoint]: <https://evolveum.com/midpoint/> "midPoint"
 [minio]: <https://min.io/> "MinIO"
 [mkcert]: <https://github.com/FiloSottile/mkcert> "mkcert"
+[multipass]: <https://multipass.run/> "Canonical Multipass"
 [notary]: <https://github.com/notaryproject/notary> "Notary"
 [opa]: <https://www.openpolicyagent.org/> "Open Policy Agent (OPA)"
 [opal]: <https://github.com/permitio/opal> "Open Policy Administration Layer (OPAL)"
 [open-scap]: <https://www.open-scap.org/> "OpenSCAP: NIST Certified SCAP 1.2 toolkit"
+[open-vswitch]: https://www.openvswitch.org/ "Open vSwitch"
 [oscal]: <https://pages.nist.gov/OSCAL/> "OSCAL"
 [pacbot]: <https://github.com/tmobile/pacbot> "PacBot"
 [plantuml-server]: <https://github.com/plantuml/plantuml-server> "plantuml-server"
+[policy-reporter-loki]: <https://kyverno.github.io/policy-reporter/core/targets/#grafana-loki> "Policy Reporter - Loki"
 [pre-commit]: <https://pre-commit.com> "pre-commit hooks"
 [prometheus]: <https://grafana.com/oss/prometheus/> "Prometheus"
 [promtail]: <https://grafana.com/docs/loki/latest/clients/promtail/> "Promtail"
@@ -308,6 +509,7 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [scap]: <http://scap.nist.gov/> "Security Content Automation Protocol"
 [tfsec]: <https://github.com/liamg/tfsec> "tfsec"
 [trestle]: <https://github.com/IBM/compliance-trestle> "Trestle"
+[trivy-policy-reporter]: <https://aquasecurity.github.io/trivy-operator/latest/tutorials/integrations/policy-reporter/> "Trivy Policy Reporter Integration"
 [trivy]: <https://github.com/aquasecurity/trivy> "Trivy"
 [vault-external-ca]: <https://developer.hashicorp.com/vault/tutorials/secrets-management/pki-engine-external-ca> "Vault external CA"
 [vault-kubernetes-use-case]: <https://www.vaultproject.io/use-cases/kubernetes> "Kubernetes Secrets in Vault"
@@ -317,3 +519,4 @@ roles/                      # -- downloaded roles defined in 'requirements.yaml'
 [velero]: <https://velero.io/> "Velero"
 [waypoint]: <https://www.waypointproject.io/> "Waypoint"
 [wazuh]: <https://wazuh.com/> "Wazuh"
+[woodpecker-ci]: <https://woodpecker-ci.org/> "Woodpecker CI"

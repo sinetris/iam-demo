@@ -4,9 +4,10 @@ Identity and Access Management (IAM) demo infrastructure.
 
 - [📜 Introduction](#-introduction)
 - [🐣 Getting started](#-getting-started)
-  - [🔩 Dependencies](#-dependencies)
-    - [Development](#development)
-  - [🔧 Setup](#-setup)
+  - [⚙️ Setup](#️-setup)
+    - [Dependencies](#dependencies)
+    - [Run](#run)
+  - [🔧 Development](#-development)
   - [💻 Linux desktop VM](#-linux-desktop-vm)
     - [Connect using Remote Desktop](#connect-using-remote-desktop)
     - [Test self-signed certificates](#test-self-signed-certificates)
@@ -30,21 +31,22 @@ instance, a [Kubernetes][kubernetes] cluster, and a linux desktop with
 
 ## 🐣 Getting started
 
-### 🔩 Dependencies
+### ⚙️ Setup
+
+#### Dependencies
 
 - [Jsonnet][jsonnet]
 - [Multipass][multipass]
 
-#### Development
-
-- pre-commit
-- shfmt
-
-### 🔧 Setup
+#### Run
 
 ```sh
 ./bunch-up -a
 ```
+
+### 🔧 Development
+
+See [development](docs/development/) documentation.
 
 ### 💻 Linux desktop VM
 
