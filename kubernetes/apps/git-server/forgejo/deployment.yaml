@@ -30,7 +30,7 @@ spec:
       initContainers:
       - name: init-directories
         image: codeberg.org/forgejo/forgejo:1.21-rootless
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["/usr/local/sbin/init_directory_structure.sh"]
         envFrom:
         - configMapRef:
@@ -72,7 +72,7 @@ spec:
             memory: 64Mi
       - name: init-app-ini
         image: codeberg.org/forgejo/forgejo:1.21-rootless
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         command: ["/usr/local/sbin/config_environment.sh"]
         envFrom:
         - configMapRef:
@@ -117,7 +117,7 @@ spec:
       - name: configure-forgejo
         image: codeberg.org/forgejo/forgejo:1.21-rootless
         command: ["/usr/local/sbin/configure_forgejo.sh"]
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         envFrom:
         - configMapRef:
             name: forgejo-env-cm
@@ -159,7 +159,7 @@ spec:
       containers:
       - name: forgejo
         image: codeberg.org/forgejo/forgejo:1.21-rootless
-        imagePullPolicy: IfNotPresent
+        imagePullPolicy: Always
         envFrom:
         - configMapRef:
             name: forgejo-env-cm
