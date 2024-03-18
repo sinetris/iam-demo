@@ -1,13 +1,13 @@
 ---
 source:
   kind: ConfigMap
-  name: gitea-postgres-env-cm
+  name: forgejo-postgres-env-cm
   fieldPath: data.POSTGRES_USER
 targets:
 - select:
     kind: ConfigMap
-    name: gitea-env-cm
+    name: forgejo-env-cm
   fieldPaths:
-  - data.GITEA__DATABASE__USER
+  - data.FORGEJO__DATABASE__USER
   options:
     create: true

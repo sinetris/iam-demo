@@ -2,8 +2,63 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gitea-env-cm
+  name: forgejo-env-cm
 data:
-  GITEA__DATABASE__DB_TYPE: postgres
-  GITEA__DATABASE__HOST: gitea-postgres-svc-headless.tools:5432
-  GITEA__DATABASE__SSL_MODE: disable
+  # general
+  FORGEJO__APP_NAME: "IAM Demo GIT Server"
+  FORGEJO__RUN_MODE: prod
+  # [actions]
+  FORGEJO__ACTIONS__ENABLED: "true"
+  # [cache]
+  FORGEJO__CACHE__ADAPTER: redis
+  FORGEJO__CACHE__HOST: redis://:@forgejo-redis.tools:6379/0?pool_size=100&idle_timeout=180s&
+  # [database]
+  FORGEJO__DATABASE__DB_TYPE: postgres
+  FORGEJO__DATABASE__HOST: forgejo-postgres-svc-headless.tools:5432
+  FORGEJO__DATABASE__SSL_MODE: disable
+  # [indexer]
+  FORGEJO__INDEXER__ISSUE_INDEXER_TYPE: db
+  # [lfs]
+  FORGEJO__LFS__PATH: /var/lib/forgejo/data/lfs
+  # [mailer]
+  FORGEJO__MAILER__ENABLED: "true"
+  FORGEJO__MAILER__FROM: noreply@example.com
+  FORGEJO__MAILER__SUBJECT_PREFIX: "[FORGEJO]"
+  FORGEJO__MAILER__PROTOCOL: smtp
+  FORGEJO__MAILER__SMTP_ADDR: mailpit-smtp-svc.tools
+  FORGEJO__MAILER__SMTP_PORT: "1025"
+  # [metrics]
+  FORGEJO__METRICS__ENABLED: "true"
+  # [queue]
+  FORGEJO__QUEUE__CONN_STR: redis://:@forgejo-redis.tools:6379/1?pool_size=100&idle_timeout=180s&
+  FORGEJO__QUEUE__TYPE: redis
+  # [repository]
+  FORGEJO__REPOSITORY__DEFAULT_REPO_UNITS: repo.code,repo.releases,repo.issues,repo.pulls,repo.wiki,repo.projects,repo.packages,repo.actions
+  FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_ORG: "false"
+  FORGEJO__REPOSITORY__ENABLE_PUSH_CREATE_USER: "false"
+  FORGEJO__REPOSITORY__ROOT: /var/lib/forgejo/git/forgejo-repositories
+  # [security]
+  FORGEJO__SECURITY__INSTALL_LOCK: "true"
+  # [server]
+  FORGEJO__SERVER__APP_DATA_PATH: /var/lib/forgejo
+  FORGEJO__SERVER__DOMAIN: git.iam-demo.test
+  FORGEJO__SERVER__ENABLE_PPROF: "false"
+  FORGEJO__SERVER__HTTP_PORT: "3000"
+  FORGEJO__SERVER__LFS_START_SERVER: "true"
+  FORGEJO__SERVER__PROTOCOL: http
+  FORGEJO__SERVER__ROOT_URL: https://git.iam-demo.test
+  FORGEJO__SERVER__SSH_DOMAIN: git.iam-demo.test
+  FORGEJO__SERVER__SSH_LISTEN_PORT: "2222"
+  FORGEJO__SERVER__SSH_PORT: "2222"
+  FORGEJO__SERVER__START_SSH_SERVER: "true"
+  # [service]
+  FORGEJO__SERVICE__DEFAULT_ALLOW_CREATE_ORGANIZATION: "false"
+  FORGEJO__SERVICE__DEFAULT_KEEP_EMAIL_PRIVATE: "true"
+  FORGEJO__SERVICE__DISABLE_REGISTRATION: "true"
+  FORGEJO__SERVICE__ENABLE_NOTIFY_MAIL: "true"
+  FORGEJO__SERVICE__REGISTER_EMAIL_CONFIRM: "true"
+  FORGEJO__SERVICE__REQUIRE_SIGNIN_VIEW: "true"
+  FORGEJO__SERVICE__SHOW_REGISTRATION_BUTTON: "false"
+  # [session]
+  FORGEJO__SESSION__PROVIDER_CONFIG: redis://:@forgejo-redis.tools:6379/2?pool_size=100&idle_timeout=180s&
+  FORGEJO__SESSION__PROVIDER: redis

@@ -2,7 +2,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gitea
+  name: forgejo
   annotations:
     cert-manager.io/cluster-issuer: iam-demo-certs-issuer
 spec:
@@ -14,10 +14,10 @@ spec:
         path: /
         backend:
           service:
-            name: gitea-http
+            name: forgejo-web
             port:
-              number: 3000
+              number: 80
   tls:
   - hosts:
     - git.iam-demo.test
-    secretName: iam-demo-gitea-tls
+    secretName: iam-demo-forgejo-tls

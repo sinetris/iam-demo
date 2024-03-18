@@ -2,10 +2,10 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: gitea
+  name: forgejo
   labels:
-    app.kubernetes.io/name: gitea
-    app.kubernetes.io/instance: gitea
+    app.kubernetes.io/name: forgejo
+    app.kubernetes.io/instance: forgejo
     app.kubernetes.io/component: deployment
 spec:
   replicas: 1
@@ -13,8 +13,8 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: gitea
-      app.kubernetes.io/instance: gitea
+      app.kubernetes.io/name: forgejo
+      app.kubernetes.io/instance: forgejo
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -23,30 +23,29 @@ spec:
   template:
     metadata:
       labels:
-        app: gitea
-        app.kubernetes.io/name: gitea
-        app.kubernetes.io/instance: gitea
+        app.kubernetes.io/name: forgejo
+        app.kubernetes.io/instance: forgejo
     spec:
       terminationGracePeriodSeconds: 60
       initContainers:
       - name: init-directories
-        image: "gitea/gitea:1.21.5-rootless"
+        image: codeberg.org/forgejo/forgejo:1.21-rootless
         imagePullPolicy: IfNotPresent
         command: ["/usr/local/sbin/init_directory_structure.sh"]
         envFrom:
         - configMapRef:
-            name: gitea-env-cm
+            name: forgejo-env-cm
         - secretRef:
-            name: gitea-env-secrets
+            name: forgejo-env-secrets
         volumeMounts:
-        - name: gitea-init-volume
+        - name: init-volume
           mountPath: /usr/local/sbin
-        - name: gitea-temp-volume
-          mountPath: /tmp/gitea
-        - name: gitea-config-volume
-          mountPath: /etc/gitea
-        - name: gitea-data-volume
-          mountPath: /var/lib/gitea
+        - name: temp-volume
+          mountPath: /tmp/forgejo
+        - name: config-volume
+          mountPath: /etc/forgejo
+        - name: data-volume
+          mountPath: /var/lib/forgejo
         resources:
           limits:
             cpu: 100m
@@ -55,24 +54,28 @@ spec:
             cpu: 50m
             memory: 64Mi
       - name: init-app-ini
-        image: "gitea/gitea:1.21.5-rootless"
+        image: codeberg.org/forgejo/forgejo:1.21-rootless
         imagePullPolicy: IfNotPresent
         command: ["/usr/local/sbin/config_environment.sh"]
+        # # Do nothing so we can debug (troubleshooting-start) ->
+        # command: [ "/bin/sh", "-c", "--" ]
+        # args: [ "sleep 900; /usr/local/sbin/config_environment.sh;" ]
+        # # <- (troubleshooting-end)
         envFrom:
         - configMapRef:
-            name: gitea-env-cm
+            name: forgejo-env-cm
         - secretRef:
-            name: gitea-env-secrets
+            name: forgejo-env-secrets
         volumeMounts:
-        - name: gitea-config-scripts-volume
+        - name: config-scripts-volume
           mountPath: /usr/local/sbin
-        - name: gitea-temp-volume
-          mountPath: /tmp/gitea
-        - name: gitea-config-volume
-          mountPath: /etc/gitea
-        - name: gitea-data-volume
-          mountPath: /var/lib/gitea
-        - name: gitea-inline-config-volume
+        - name: temp-volume
+          mountPath: /tmp/forgejo
+        - name: config-volume
+          mountPath: /etc/forgejo
+        - name: data-volume
+          mountPath: /var/lib/forgejo
+        - name: inline-config-volume
           mountPath: /env-to-ini-mounts/inlines/
         resources:
           limits:
@@ -81,24 +84,28 @@ spec:
           requests:
             cpu: 50m
             memory: 64Mi
-      - name: configure-gitea
-        image: "gitea/gitea:1.21.5-rootless"
-        command: ["/usr/local/sbin/configure_gitea.sh"]
+      - name: configure-forgejo
+        image: codeberg.org/forgejo/forgejo:1.21-rootless
+        command: ["/usr/local/sbin/configure_forgejo.sh"]
+        # # Do nothing so we can debug (troubleshooting-start) ->
+        # command: [ "/bin/sh", "-c", "--" ]
+        # args: [ "sleep 600;" ]
+        # # <- (troubleshooting-end)
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
-            name: gitea-env-cm
+            name: forgejo-env-cm
         - secretRef:
-            name: gitea-env-secrets
+            name: forgejo-env-secrets
         volumeMounts:
-        - name: gitea-init-volume
+        - name: init-volume
           mountPath: /usr/local/sbin
-        - name: gitea-temp-volume
-          mountPath: /tmp/gitea
-        - name: gitea-config-volume
-          mountPath: /etc/gitea
-        - name: gitea-data-volume
-          mountPath: /var/lib/gitea
+        - name: temp-volume
+          mountPath: /tmp/forgejo
+        - name: config-volume
+          mountPath: /etc/forgejo
+        - name: data-volume
+          mountPath: /var/lib/forgejo
         resources:
           limits:
             cpu: 100m
@@ -107,20 +114,20 @@ spec:
             cpu: 50m
             memory: 64Mi
       containers:
-      - name: gitea
-        image: gitea/gitea:1.21.5-rootless
+      - name: forgejo
+        image: codeberg.org/forgejo/forgejo:1.21-rootless
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
-            name: gitea-env-cm
+            name: forgejo-env-cm
         - secretRef:
-            name: gitea-env-secrets
+            name: forgejo-env-secrets
         ports:
         - containerPort: 2222
-          name: ssh
+          name: forgejo-ssh
           protocol: TCP
         - containerPort: 3000
-          name: http
+          name: forgejo-http
           protocol: TCP
         resources:
           limits:
@@ -139,29 +146,29 @@ spec:
           successThreshold: 1
           failureThreshold: 10
         volumeMounts:
-        - name: gitea-temp-volume
-          mountPath: /tmp/gitea
-        - name: gitea-config-volume
-          mountPath: /etc/gitea
-        - name: gitea-data-volume
-          mountPath: /var/lib/gitea
+        - name: temp-volume
+          mountPath: /tmp/forgejo
+        - name: config-volume
+          mountPath: /etc/forgejo
+        - name: data-volume
+          mountPath: /var/lib/forgejo
       volumes:
-      - name: gitea-init-volume
+      - name: init-volume
         secret:
-          secretName: gitea-init
+          secretName: forgejo-init
           defaultMode: 110
-      - name: gitea-config-scripts-volume
+      - name: config-scripts-volume
         secret:
-          secretName: gitea-config-scripts
+          secretName: forgejo-config-scripts
           defaultMode: 110
-      - name: gitea-inline-config-volume
+      - name: inline-config-volume
         secret:
-          secretName: gitea-inline-config
-      - name: gitea-temp-volume
+          secretName: forgejo-inline-config
+      - name: temp-volume
         emptyDir: {}
-      - name: gitea-config-volume
+      - name: config-volume
         persistentVolumeClaim:
-          claimName: gitea-config-pvc
-      - name: gitea-data-volume
+          claimName: forgejo-config-pvc
+      - name: data-volume
         persistentVolumeClaim:
-          claimName: gitea-data-pvc
+          claimName: forgejo-data-pvc

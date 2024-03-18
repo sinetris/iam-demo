@@ -2,9 +2,9 @@
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: gitea-data-pvc
+  name: forgejo-data-pvc
   labels:
-    app.kubernetes.io/name: gitea-data-pvc
+    app.kubernetes.io/name: forgejo-data-pvc
 spec:
   storageClassName: local-path
   accessModes:

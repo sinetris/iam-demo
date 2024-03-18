@@ -2,16 +2,15 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: forgejo-ssh
+  name: forgejo-web
   labels:
-    app.kubernetes.io/name: forgejo-ssh
+    app.kubernetes.io/name: forgejo-web
 spec:
-  type: LoadBalancer
   ports:
-  - name: ssh
-    port: 2222
+  - name: http
+    port: 80
     protocol: TCP
-    targetPort: 2222
+    targetPort: forgejo-http
   selector:
     app.kubernetes.io/name: forgejo
     app.kubernetes.io/instance: forgejo
