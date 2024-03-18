@@ -3,18 +3,24 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: redis
+  labels:
+    app.kubernetes.io/name: redis
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: redis
   replicas: 1
-  serviceName: redis-service
+  serviceName: redis-svc-headless
   template:
     metadata:
-      name: redis
+      labels:
+        app.kubernetes.io/instance: redis
     spec:
-      automountServiceAccountToken: false
+      serviceAccountName: redis
       containers:
       - name: redis
-        image: redis:7.2.4
-        imagePullPolicy: IfNotPresent
+        image: redis:7.2
+        imagePullPolicy: Always
         ports:
         - name: redis-port
           containerPort: 6379
@@ -29,7 +35,7 @@ spec:
           tcpSocket:
             port: 6379
         volumeMounts:
-        - name: redis-data
+        - name: data
           mountPath: /var/lib/redis
       securityContext:
         fsGroup: 999
@@ -37,9 +43,7 @@ spec:
       terminationGracePeriodSeconds: 120
   volumeClaimTemplates:
   - metadata:
-      name: redis-data
-      labels:
-        app.kubernetes.io/name: redis-data
+      name: data
     spec:
       accessModes:
       - ReadWriteOnce

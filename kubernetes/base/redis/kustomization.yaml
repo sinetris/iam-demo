@@ -6,12 +6,11 @@ labels:
 - includeSelectors: true
   pairs:
     app: redis
-    app.kubernetes.io/name: redis
     app.kubernetes.io/component: cache
     role: data
 
 resources:
-- service.yaml
 - service-headless.yaml
+- service.yaml
 - serviceaccount.yaml
 - statefulset.yaml
