@@ -4,12 +4,17 @@ kind: StatefulSet
 metadata:
   name: memcached
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: memcached
   replicas: 1
-  serviceName: memcached-svc
+  serviceName: memcached-svc-headless
   updateStrategy:
     type: RollingUpdate
   template:
     metadata:
+      labels:
+        app.kubernetes.io/instance: memcached
       annotations:
         prometheus.io/scrape: 'true'
         prometheus.io/port: '9150'
@@ -17,12 +22,15 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: memcached
-        image: memcached:1.6.23-alpine
-        imagePullPolicy: IfNotPresent
+        image: memcached:1.6-alpine
+        imagePullPolicy: Always
         ports:
         - name: memcached-port
           containerPort: 11211
         resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
           requests:
             cpu: 100m
             memory: 100Mi
@@ -37,12 +45,15 @@ spec:
           initialDelaySeconds: 5
           timeoutSeconds: 2
       - name: metrics
-        image: quay.io/prometheus/memcached-exporter:v0.14.2
-        imagePullPolicy: IfNotPresent
+        image: quay.io/prometheus/memcached-exporter:latest
+        imagePullPolicy: Always
         ports:
         - name: http-metrics
           containerPort: 9150
         resources:
+          limits:
+            cpu: 250m
+            memory: 256Mi
           requests:
             cpu: 50m
             memory: 100Mi
