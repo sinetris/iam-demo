@@ -37,6 +37,23 @@ spec:
             name: forgejo-env-cm
         - secretRef:
             name: forgejo-env-secrets
+        env:
+        # Forgejo is still using Gitea env vars
+        - name: GITEA_APP_INI
+          value: "$(FORGEJO_APP_INI)"
+        - name: GITEA_CUSTOM
+          value: "$(FORGEJO_CUSTOM)"
+        - name: GITEA_TEMP
+          value: "$(FORGEJO_TEMP)"
+        - name: GITEA_WORK_DIR
+          value: "$(FORGEJO_WORK_DIR)"
+        # Interpolate variables
+        - name: FORGEJO__CACHE__HOST
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/0?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__QUEUE__CONN_STR
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/1?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__SESSION__PROVIDER_CONFIG
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/2?pool_size=100&idle_timeout=180s&"
         volumeMounts:
         - name: init-volume
           mountPath: /usr/local/sbin
@@ -57,15 +74,28 @@ spec:
         image: codeberg.org/forgejo/forgejo:1.21-rootless
         imagePullPolicy: IfNotPresent
         command: ["/usr/local/sbin/config_environment.sh"]
-        # # Do nothing so we can debug (troubleshooting-start) ->
-        # command: [ "/bin/sh", "-c", "--" ]
-        # args: [ "sleep 900; /usr/local/sbin/config_environment.sh;" ]
-        # # <- (troubleshooting-end)
         envFrom:
         - configMapRef:
             name: forgejo-env-cm
         - secretRef:
             name: forgejo-env-secrets
+        env:
+        # Forgejo is still using Gitea env vars
+        - name: GITEA_APP_INI
+          value: "$(FORGEJO_APP_INI)"
+        - name: GITEA_CUSTOM
+          value: "$(FORGEJO_CUSTOM)"
+        - name: GITEA_TEMP
+          value: "$(FORGEJO_TEMP)"
+        - name: GITEA_WORK_DIR
+          value: "$(FORGEJO_WORK_DIR)"
+        # Interpolate variables
+        - name: FORGEJO__CACHE__HOST
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/0?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__QUEUE__CONN_STR
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/1?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__SESSION__PROVIDER_CONFIG
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/2?pool_size=100&idle_timeout=180s&"
         volumeMounts:
         - name: config-scripts-volume
           mountPath: /usr/local/sbin
@@ -87,16 +117,29 @@ spec:
       - name: configure-forgejo
         image: codeberg.org/forgejo/forgejo:1.21-rootless
         command: ["/usr/local/sbin/configure_forgejo.sh"]
-        # # Do nothing so we can debug (troubleshooting-start) ->
-        # command: [ "/bin/sh", "-c", "--" ]
-        # args: [ "sleep 600;" ]
-        # # <- (troubleshooting-end)
         imagePullPolicy: IfNotPresent
         envFrom:
         - configMapRef:
             name: forgejo-env-cm
         - secretRef:
             name: forgejo-env-secrets
+        env:
+        # Forgejo is still using Gitea env vars
+        - name: GITEA_APP_INI
+          value: "$(FORGEJO_APP_INI)"
+        - name: GITEA_CUSTOM
+          value: "$(FORGEJO_CUSTOM)"
+        - name: GITEA_TEMP
+          value: "$(FORGEJO_TEMP)"
+        - name: GITEA_WORK_DIR
+          value: "$(FORGEJO_WORK_DIR)"
+        # Interpolate variables
+        - name: FORGEJO__CACHE__HOST
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/0?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__QUEUE__CONN_STR
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/1?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__SESSION__PROVIDER_CONFIG
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/2?pool_size=100&idle_timeout=180s&"
         volumeMounts:
         - name: init-volume
           mountPath: /usr/local/sbin
@@ -122,6 +165,23 @@ spec:
             name: forgejo-env-cm
         - secretRef:
             name: forgejo-env-secrets
+        env:
+        # Forgejo is still using Gitea env vars
+        - name: GITEA_APP_INI
+          value: "$(FORGEJO_APP_INI)"
+        - name: GITEA_CUSTOM
+          value: "$(FORGEJO_CUSTOM)"
+        - name: GITEA_TEMP
+          value: "$(FORGEJO_TEMP)"
+        - name: GITEA_WORK_DIR
+          value: "$(FORGEJO_WORK_DIR)"
+        # Interpolate variables
+        - name: FORGEJO__CACHE__HOST
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/0?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__QUEUE__CONN_STR
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/1?pool_size=100&idle_timeout=180s&"
+        - name: FORGEJO__SESSION__PROVIDER_CONFIG
+          value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/2?pool_size=100&idle_timeout=180s&"
         ports:
         - containerPort: 2222
           name: forgejo-ssh

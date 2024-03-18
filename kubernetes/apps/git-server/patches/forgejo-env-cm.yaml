@@ -4,6 +4,9 @@ kind: ConfigMap
 metadata:
   name: forgejo-env-cm
 data:
+  # splitted configs
+  FORGEJO_REDIS_HOSTNAME: forgejo-redis-svc-headless.tools
+  FORGEJO_REDIS_PORT: "6379"
   # general
   FORGEJO__APP_NAME: "IAM Demo GIT Server"
   FORGEJO__RUN_MODE: prod
@@ -11,7 +14,6 @@ data:
   FORGEJO__ACTIONS__ENABLED: "true"
   # [cache]
   FORGEJO__CACHE__ADAPTER: redis
-  FORGEJO__CACHE__HOST: redis://:@forgejo-redis.tools:6379/0?pool_size=100&idle_timeout=180s&
   # [database]
   FORGEJO__DATABASE__DB_TYPE: postgres
   FORGEJO__DATABASE__HOST: forgejo-postgres-svc-headless.tools:5432
@@ -22,7 +24,7 @@ data:
   FORGEJO__LFS__PATH: /var/lib/forgejo/data/lfs
   # [mailer]
   FORGEJO__MAILER__ENABLED: "true"
-  FORGEJO__MAILER__FROM: noreply@example.com
+  FORGEJO__MAILER__FROM: noreply@iam-demo.test
   FORGEJO__MAILER__SUBJECT_PREFIX: "[FORGEJO]"
   FORGEJO__MAILER__PROTOCOL: smtp
   FORGEJO__MAILER__SMTP_ADDR: mailpit-smtp-svc.tools
@@ -30,7 +32,6 @@ data:
   # [metrics]
   FORGEJO__METRICS__ENABLED: "true"
   # [queue]
-  FORGEJO__QUEUE__CONN_STR: redis://:@forgejo-redis.tools:6379/1?pool_size=100&idle_timeout=180s&
   FORGEJO__QUEUE__TYPE: redis
   # [repository]
   FORGEJO__REPOSITORY__DEFAULT_REPO_UNITS: repo.code,repo.releases,repo.issues,repo.pulls,repo.wiki,repo.projects,repo.packages,repo.actions
@@ -60,5 +61,4 @@ data:
   FORGEJO__SERVICE__REQUIRE_SIGNIN_VIEW: "true"
   FORGEJO__SERVICE__SHOW_REGISTRATION_BUTTON: "false"
   # [session]
-  FORGEJO__SESSION__PROVIDER_CONFIG: redis://:@forgejo-redis.tools:6379/2?pool_size=100&idle_timeout=180s&
   FORGEJO__SESSION__PROVIDER: redis
