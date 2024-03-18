@@ -12,8 +12,6 @@ data:
   USER_GID: "1000"
   TMPDIR: /tmp/forgejo
   FORGEJO_APP_INI: /etc/forgejo/app.ini
-  FORGEJO_WORK_DIR: /var/lib/forgejo
   FORGEJO_CUSTOM: /var/lib/forgejo/custom
   FORGEJO_TEMP: /tmp/forgejo
-  FORGEJO__server__LFS_START_SERVER: "true"
-  FORGEJO__lfs__PATH: /var/lib/forgejo/data/lfs
+  FORGEJO_WORK_DIR: /var/lib/forgejo

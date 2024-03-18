@@ -4,7 +4,7 @@ set -Eeuo pipefail
 base_domain=iam-demo.test
 check_hostnames_on_port=(
   'Kubernetes-Control-Plane iam-control-plane 6443'
-  'Gitea git 443'
+  'Forgejo git 443'
   'Grafana grafana 443'
   'Loki loki 443'
   'Prometheus prometheus 443'
