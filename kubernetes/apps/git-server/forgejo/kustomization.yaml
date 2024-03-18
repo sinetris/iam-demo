@@ -5,33 +5,24 @@ kind: Kustomization
 namespace: tools
 
 labels:
+- includeSelectors: true
+  pairs:
+    app: forgejo
 - includeSelectors: false
   pairs:
-    app: gitea
     app.kubernetes.io/version: 1.21.5
     version: 1.21.5
 
 resources:
-- configmaps/gitea-env-cm.yaml
-- deployments/gitea.yaml
-- ingresses/gitea-ingress.yaml
-- persistentvolumeclaims/gitea-config-pvc.yaml
-- persistentvolumeclaims/gitea-data-pvc.yaml
-- secrets/gitea-inline-config.yaml
-- secrets/gitea-init.yaml
-- secrets/gitea-config-scripts.yaml
-- servicemonitor/gitea.yaml
-- services/gitea-http.yaml
-- services/gitea-ssh.yaml
-
-secretGenerator:
-- name: gitea-env-secrets
-  literals:
-  - GITEA_ADMIN_USERNAME=gitea-admin
-  - GITEA_ADMIN_PASSWORD=giteapw123!
-  - GITEA_ADMIN_EMAIL=gitea@iam-demo.test
-
-generatorOptions:
-  disableNameSuffixHash: true
-  labels:
-    app.kubernetes.io/component: configuration
+- configmap-env.yaml
+- deployment.yaml
+- ingress.yaml
+- persistentvolumeclaim-config.yaml
+- persistentvolumeclaim-data.yaml
+- secret-config-scripts.yaml
+- secret-env.yaml
+- secret-init.yaml
+- secret-inline-config.yaml
+- service-web.yaml
+- service-ssh.yaml
+- servicemonitor.yaml

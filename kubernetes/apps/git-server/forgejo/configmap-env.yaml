@@ -2,14 +2,18 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: gitea-env-cm
+  name: forgejo-env-cm
   labels:
-    app.kubernetes.io/name: gitea-env-cm
+    app.kubernetes.io/name: forgejo-env-cm
     app.kubernetes.io/component: configuration
 data:
-  HOME: /var/lib/gitea/git
-  GITEA_APP_INI: /etc/gitea/app.ini
-  GITEA_WORK_DIR: /var/lib/gitea
-  GITEA_CUSTOM: /var/lib/gitea/custom
-  GITEA_TEMP: /tmp/gitea
-  TMPDIR: /tmp/gitea
+  HOME: /var/lib/forgejo/git
+  USER_UID: "1000"
+  USER_GID: "1000"
+  TMPDIR: /tmp/forgejo
+  FORGEJO_APP_INI: /etc/forgejo/app.ini
+  FORGEJO_WORK_DIR: /var/lib/forgejo
+  FORGEJO_CUSTOM: /var/lib/forgejo/custom
+  FORGEJO_TEMP: /tmp/forgejo
+  FORGEJO__server__LFS_START_SERVER: "true"
+  FORGEJO__lfs__PATH: /var/lib/forgejo/data/lfs

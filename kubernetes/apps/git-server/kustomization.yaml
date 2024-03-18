@@ -8,17 +8,17 @@ labels:
 
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/part-of: gitea
+    app.kubernetes.io/part-of: forgejo
 
 resources:
-- gitea
+- forgejo
 - redis
 - postgres
 
 patches:
-- path: patches/gitea-env-cm.yaml
+- path: patches/forgejo-env-cm.yaml
 
 replacements:
-- path: patches/gitea-db-name.yaml
-- path: patches/gitea-db-password.yaml
-- path: patches/gitea-db-user.yaml
+- path: patches/forgejo-db-name.yaml
+- path: patches/forgejo-db-password.yaml
+- path: patches/forgejo-db-user.yaml

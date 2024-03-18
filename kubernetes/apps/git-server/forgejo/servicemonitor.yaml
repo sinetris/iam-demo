@@ -2,14 +2,14 @@
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor
 metadata:
-  name: gitea
+  name: forgejo
   labels:
-    app.kubernetes.io/name: gitea
-    app.kubernetes.io/instance: gitea
+    app.kubernetes.io/name: forgejo
+    app.kubernetes.io/instance: forgejo
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: gitea
-      app.kubernetes.io/instance: gitea
+      app.kubernetes.io/name: forgejo
+      app.kubernetes.io/instance: forgejo
   endpoints:
   - port: http
