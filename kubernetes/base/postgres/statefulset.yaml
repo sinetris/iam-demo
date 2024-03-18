@@ -3,23 +3,24 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
+  labels:
+    app.kubernetes.io/name: postgres
 spec:
   replicas: 1
   serviceName: postgres-svc-headless
   selector:
     matchLabels:
-      app.kubernetes.io/name: postgres
+      app.kubernetes.io/instance: postgres
   template:
     metadata:
-      name: postgres
       labels:
-        app.kubernetes.io/name: postgres
+        app.kubernetes.io/instance: postgres
     spec:
       serviceAccountName: postgres
       containers:
       - name: postgres
-        image: postgres:16.2
-        imagePullPolicy: IfNotPresent
+        image: postgres:16
+        imagePullPolicy: Always
         envFrom:
         - configMapRef:
             name: postgres-env-cm
@@ -65,13 +66,13 @@ spec:
           mountPath: /dev/shm
         - name: socket-directory
           mountPath: /var/run/postgresql
-        - name: postgres-data
+        - name: data
           mountPath: /var/lib/postgresql/data
-        - name: postgres-db-init
+        - name: db-init
           mountPath: /docker-entrypoint-initdb.d
       - name: postgres-exporter
-        image: "quay.io/prometheuscommunity/postgres-exporter:v0.11.1"
-        imagePullPolicy: IfNotPresent
+        image: "quay.io/prometheuscommunity/postgres-exporter:latest"
+        imagePullPolicy: Always
         securityContext:
           allowPrivilegeEscalation: false
         envFrom:
@@ -79,7 +80,7 @@ spec:
             name: postgres-env-cm
         env:
         - name: DATA_SOURCE_NAME
-          value: "host=/var/run/postgresql user=${POSTGRES_USER} application_name=postgres_exporter sslmode=disable"
+          value: "host=/var/run/postgresql user=${POSTGRES_USER} application_name=postgres_exporter sslmode=${POSTGRES_SSLMODE}"
         ports:
         - containerPort: 9187
           name: pg-exporter
@@ -97,7 +98,7 @@ spec:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
-      name: postgres-data
+      name: data
     spec:
       accessModes:
       - ReadWriteOnce
@@ -107,7 +108,7 @@ spec:
   - apiVersion: v1
     kind: PersistentVolumeClaim
     metadata:
-      name: postgres-db-init
+      name: db-init
     spec:
       accessModes:
       - ReadWriteOnce

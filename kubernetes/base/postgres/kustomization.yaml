@@ -15,7 +15,7 @@ labels:
 resources:
 - configmap.yaml
 - secret.yaml
-- service.yaml
 - service-headless.yaml
+- service.yaml
 - serviceaccount.yaml
 - statefulset.yaml

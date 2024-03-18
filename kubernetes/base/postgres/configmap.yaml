@@ -4,8 +4,9 @@ kind: ConfigMap
 metadata:
   name: postgres-env-cm
   labels:
-    app: postgres
+    app.kubernetes.io/name: postgres-env-cm
 data:
   POSTGRES_USER: postgres
   POSTGRES_DB: postgres
+  POSTGRES_SSLMODE: disable
   PGDATA: /var/lib/postgresql/data
