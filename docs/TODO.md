@@ -6,7 +6,7 @@
 
 - [Documentation](#documentation)
   - [Describe better the project scope](#describe-better-the-project-scope)
-  - [Warning](#warning)
+  - [Add Warning](#add-warning)
   - [Add an Infrastructure overview](#add-an-infrastructure-overview)
   - [Add Development instructions](#add-development-instructions)
   - [Add screenshots](#add-screenshots)
@@ -30,7 +30,7 @@
 The README should:
 
 - [ ] be concise
-- [ ] include a [warning](#warning)
+- [ ] include a [warning](#add-warning)
 - [ ] [describe better the project scope](#describe-better-the-project-scope)
 - [ ] include a link to this document
 - [ ] contain links to the main topics covered in the project documentation folder
@@ -52,7 +52,7 @@ Add an overview and place the tools used in the appropriate sub-set.
 Clarify that the tools selected are only used for the sake of semplicity (and
 in some cases not the best tools for the job) to cover certain topics.
 
-### Warning
+### Add Warning
 
 Add a warning like the folowing in the [README](../README.md):
 
@@ -82,7 +82,7 @@ Add a warning like the folowing in the [README](../README.md):
   - [ ] Firefox bookmarks
   - [ ] Consul
   - [ ] Grafana
-  - [ ] Gitea
+  - [ ] Forgejo
   - [ ] Keycloak
   - [ ] Traefik Dashboard
   - [ ] Kubernetes Dashboard
@@ -91,27 +91,23 @@ Add a warning like the folowing in the [README](../README.md):
 
 ## Install Applications
 
-- [x] [Gitea][gitea]: a painless self-hosted Git service
+- [x] [Forgejo][forgejo]: self-hosted Git service
 - [x] [Keycloak][keycloak]: IAM, IdP and SSO
 - [x] [Hashicorp Vault][vault]: secrets management
 - [x] [Consul][consul]: zero trust networking
-  - [ ] configure [Vault as the Secrets Backend for Consul][consul-vault]
 - [x] [Trivy][trivy]: vulnerability scanners
 - [x] [Grafana][grafana]: dashboards for metrics, logs, tracing
 - [x] [Prometheus][prometheus]: monitoring system (metrics)
 - [x] [Alertmanager][alertmanager]: alerts handling
 - [x] [Grafana Loki][grafana-loki]: multi-tenant log aggregation system
 - [x] [Grafana Tempo][grafana-tempo]: distributed tracing backend
-- [ ] [woodpecker-ci]: CI/CD pipelines as code
-  - [ ] [Renovate][renovate]: automate dependency update
-  - [ ] [Conftest][conftest]: use OPA policies to test configurations
 - [ ] [midPoint][midpoint]: Identity Governance and Administration
 - [ ] [Grafana OnCall][grafana-oncall]: on-call management system
 - [ ] [Grafana k6][grafana-k6]: load testing tool
 - [ ] [Wazuh][wazuh]: unified XDR and SIEM protection for endpoints and cloud workloads
 - [ ] [HashiCorp Boundary][boundary]: simple and secure remote access
 - [ ] [Waypoint][waypoint]: lower cognitive load for applications deployment
-- [ ] [MailHog][mailhog]: Web and API based SMTP testing
+- [x] [Mailpit][mailpit]: Web and API based SMTP testing
 - [ ] [Backstage][backstage]: open platform for building developer portals
 - [ ] [Fleet][fleet]: device management (MDM)
 - [ ] [ERPNext][erpnext]: Enterprise Resource Planning
@@ -130,14 +126,17 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] move Redis to [base](../kubernetes/base/)
   - [x] use `StatefulSet`
   - [x] use [Redis base](../kubernetes/base/redis/) in services
-- [ ] setup **Gitea**
+- [ ] setup **Forgejo**
   - [x] certificate for [git.iam-demo.test](https://git.iam-demo.test)
   - [x] use [base/postgres](../kubernetes/base/postgres)
   - [x] use [base/redis](../kubernetes/base//redis)
   - [x] setup ssh-git loadbalancer
   - [x] initialize database and create admin credentials
-  - [ ] ensure [Gitea OCI registry][gitea-oci-registry] is working properly
+  - [ ] ensure the [Container Registry][forgejo-container-registry] is working properly
   - [ ] setup Keycloak as IdP
+  - [ ] [Renovate][renovate]: automate dependency update
+  - [ ] [Conftest][conftest]: use OPA policies to test configurations
+  - [ ] ensure all instances of Gitea are replaced by Forgejo
 - [x] use `.test` tld for external domains
 - [x] use a separate DNS server resolver for external domains (Bind9)
 - [ ] generate certificates in a proper way
@@ -148,7 +147,7 @@ Add a warning like the folowing in the [README](../README.md):
   - [ ] apply instructions for Kubernetes certificates
     - [ ] [Manage TLS Certificates in a Cluster][kubernetes-managing-tls]
     - [ ] [PKI certificates and requirements][kubernetes-pki-best-practices]
-  - [x] ~~use in combination with [mkcert][mkcert] to install the root ca
+  - [ ] ~~use in combination with [mkcert][mkcert] to install the root ca
         certs in client machines trust stores~~
       > not flexible enough for our usecase
   - [x] useful code to generate [CA + intermediate certificate][k3s-custom-ca]
@@ -162,8 +161,8 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
       [Grafana][grafana], [Tempo][grafana-tempo]
   - [ ] install [Grafana Agent Flow[grafana-agent-flow]]
-  - [ ] configure Grafana Agent flot use
-        [loki.source.kubernetes][grafana-agent-loki-source-k8s] component
+  - [ ] configure Grafana Agent Flow to use [loki.source.kubernetes][grafana-agent-loki-source-k8s]
+        component
   - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
@@ -176,6 +175,7 @@ Add a warning like the folowing in the [README](../README.md):
   - [ ] configure [Consul Service Mesh][consul-service-mesh]
   - [ ] configure [Consul API Gateway][consul-api-gateway]
   - [ ] check [Consul tutorials][consul-tutorials]
+  - [ ] configure [Vault as the Secrets Backend for Consul][consul-vault]
 - [ ] configure [Trivy][trivy]
   - [ ] configure [Trivy Policy Reporter Integration][trivy-policy-reporter] to
         send vulnerability and audit reports to [Loki as target in Policy Report][policy-reporter-loki]
@@ -238,11 +238,17 @@ kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum
 
 - ~~[Harbor][harbor]: artifacts registry (for Docker images and OPA policies)~~\
   Harbor require too much work to deploy on ARM64 and we can use the already
-  deployed [Gitea OCI registry][gitea-oci-registry]
+  deployed [Forgejo OCI registry][forgejo-container-registry]
 - ~~[Notary][notary]: trust over arbitrary collections of data~~
 - ~~[Drone][drone]: CI/CD pipelines as code~~\
-  Given the license change and the creation of [Gitness][gitness] (to be
-  evalued), we will use [Gitea][gitea] and [Woodpecker CI][woodpecker-ci]
+  Excluded because of the license change and the creation of [Gitness][gitness]
+  (to be evalued)
+- ~~[Gitea][gitea]: a painless self-hosted Git service~~\
+  Excluded because domains and trademark of Gitea were transferred to a for-profit
+  company without knowledge or approval of the community.\
+  Switching to [Forgejo][forgejo-compare-to-gitea]
+- ~~[MailHog][mailhog]: Web and API based SMTP testing~~\
+  Not maintained anymore. Switching to [Mailpit][mailpit].
 
 ## Future changes
 
@@ -269,6 +275,11 @@ kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum
   - [ ] create a `.internal` DNS zone (like in [AWS][aws-internal-tld] or
         [Google Cloud][google-cloud-internal-tld]) for domain accessible only
         from the internal network
+  - [ ] add explanation on why `.internal` will not end up like `.dev`
+  - [ ] add explanation on why is better to add a "sinkhole" for `.internal` domains
+        not managed by us and why is better to use `.example` or `.test` TLDs to
+        simulate real-life external domains
+  - [ ] add "sinkhole" for any other `.internal` domains in our DNS server
   - [ ] use [ExternalDNS][external-dns] for [Traefik Proxy source][external-dns-traefik]
         to dynamically configure Bind9 using the [RFC 2136 provider][external-dns-rfc2136]
 - [ ] add [tfsec][tfsec] (terrafrom security scanners) in CI pipelines
@@ -395,6 +406,7 @@ different platforms.
 
 ### Optional applications
 
+- [ ] [woodpecker-ci]: CI/CD pipelines as code
 - [ ] [Falco][falco]: threat detection
 - [ ] [plantuml-server][plantuml-server]: diagrams as code
 - [ ] [Restic][restic]: operating systems backup solution
@@ -458,10 +470,12 @@ virtual machine.
 [external-dns]: <https://github.com/kubernetes-sigs/external-dns> "ExternalDNS"
 [falco]: <https://falco.org/> "Falco"
 [fleet]: <https://github.com/fleetdm/fleet> "Fleet"
+[forgejo-compare-to-gitea]: <https://forgejo.org/compare-to-gitea/> "Forgejo Comparison with Gitea"
+[forgejo-container-registry]: <https://forgejo.org/docs/latest/user/packages/container/> "Forgejo Container Registry"
+[forgejo]: <https://forgejo.org/> "Forgejo"
 [fossa-github-badge-pr]: <https://docs.fossa.com/docs/quick-import#getting-a-badge-pull-request-githubcom-only> "FOSSA on GitHub.com - Getting a Badge Pull Request"
 [fossa-yml]: <https://github.com/fossas/fossa-cli/blob/master/docs/references/files/fossa-yml.md> "FOSSA yaml configuration"
 [fossa]: <https://fossa.com/> "Free Open Source Software Analysis"
-[gitea-oci-registry]: <https://docs.gitea.com/usage/packages/container> "Gitea OCI Registry"
 [gitea]: <https://gitea.io/> "Gitea"
 [gitness]: <https://gitness.com/> "Gitness"
 [google-cloud-internal-tld]: <https://cloud.google.com/compute/docs/internal-dns> "Google Cloud internal tld"
@@ -485,6 +499,7 @@ virtual machine.
 [kustomize]: <https://kustomize.io/> "Kustomize"
 [magtape]: <https://github.com/tmobile/magtape> "MagTape"
 [mailhog]: <https://github.com/mailhog/MailHog> "MailHog"
+[mailpit]: <https://github.com/axllent/mailpit> "Mailpit"
 [mattermost]: <https://mattermost.com/> "Mattermost"
 [metallb]: <https://github.com/metallb/metallb> "MetalLB"
 [microsoft-remote-desktop]: <https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/remote-desktop-clients> "Microsoft Remote Desktop"

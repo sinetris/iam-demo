@@ -60,6 +60,18 @@ To check for duplicate entries in `/var/db/dhcpd_leases`, run:
 cat /var/db/dhcpd_leases | grep -E -o 'name=.+' | sort | uniq -c
 ```
 
+Another problematic part is the firewall.
+
+```shell
+# Check if the firewall is enabled
+/usr/libexec/ApplicationFirewall/socketfilterfw --getglobalstate
+# If the firewall is enabled, check that bootpd is allowed
+/usr/libexec/ApplicationFirewall/socketfilterfw --listapps
+# You can add bootpd to the allowed apps from the command line (requires admin privileges)
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /usr/libexec/bootpd
+sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblock /usr/libexec/bootpd
+```
+
 ### Instances
 
 #### QEMU

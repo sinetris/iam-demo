@@ -3,6 +3,7 @@
 [Back to README](README.md)
 
 - [Inspect pods](#inspect-pods)
+  - [Inspect crashing pods](#inspect-crashing-pods)
 - [Start a throw away pod](#start-a-throw-away-pod)
 - [Helm](#helm)
   - [List Environment Variables](#list-environment-variables)
@@ -15,9 +16,10 @@
 
 ```sh
 # Examples to select the pod you want to access
-# - gitea
+# - Forgejo
 pod_namespace=tools
-pod_labels=app.kubernetes.io/instance=gitea,app.kubernetes.io/name=gitea
+pod_labels=app.kubernetes.io/instance=forgejo,app.kubernetes.io/name=forgejo
+pod_container=configure-forgejo
 # - consul
 pod_namespace=tools
 pod_labels=app=consul,component=server
@@ -33,7 +35,26 @@ kubectl logs -n "${pod_namespace:?}" "${pod_name:?}"
 # describe pod
 kubectl describe pod -n "${pod_namespace:?}" "${pod_name:?}"
 # access the pod shell
-kubectl exec  --stdin --tty -n "${pod_namespace:?}" "${pod_name:?}" -- /bin/sh
+kubectl exec  --stdin --tty -n "${pod_namespace:?}" "${pod_name:?}" --container="${pod_container:-}" -- /bin/sh
+```
+
+### Inspect crashing pods
+
+```yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: my-service
+spec:
+  containers:
+  - name: my-instance
+    # keep the image you want to debug, we use 'ubuntu:latest' as an example
+    image: ubuntu:latest
+      # add/replace 'command' and 'args'
+      # Do nothing so we can debug (troubleshooting-start) ->
+      command: [ "/bin/bash", "-c", "--" ]
+      args: [ "while true; do sleep 30; done;" ]
+      # <- (troubleshooting-end)
 ```
 
 ## Start a throw away pod
