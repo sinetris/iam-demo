@@ -4,6 +4,7 @@ kind: Service
 metadata:
   name: tempo-gossip-ring
   labels:
+    app.kubernetes.io/name: tempo-gossip-ring
     app.kubernetes.io/component: gossip-ring
 spec:
   type: ClusterIP

@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: tempo-querier
   labels:
+    app.kubernetes.io/name: tempo-querier
     app.kubernetes.io/component: querier
 spec:
   minReadySeconds: 10
@@ -11,6 +12,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
+      app.kubernetes.io/name: tempo-querier
       app.kubernetes.io/component: querier
   strategy:
     rollingUpdate:
@@ -19,6 +21,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: tempo-querier
         app.kubernetes.io/component: querier
     spec:
       serviceAccountName: tempo

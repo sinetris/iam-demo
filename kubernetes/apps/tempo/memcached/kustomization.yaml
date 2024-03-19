@@ -4,6 +4,11 @@ kind: Kustomization
 
 namePrefix: tempo-
 
+labels:
+- includeSelectors: true
+  pairs:
+    app: memcached
+
 resources:
 - ../../../base/memcached
 

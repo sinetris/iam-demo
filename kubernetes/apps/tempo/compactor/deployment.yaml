@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: tempo-compactor
   labels:
+    app.kubernetes.io/name: tempo-compactor
     app.kubernetes.io/component: compactor
 spec:
   minReadySeconds: 10
@@ -11,6 +12,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
+      app.kubernetes.io/name: tempo-compactor
       app.kubernetes.io/component: compactor
   strategy:
     rollingUpdate:
@@ -19,6 +21,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: tempo-compactor
         app.kubernetes.io/component: compactor
     spec:
       serviceAccountName: tempo

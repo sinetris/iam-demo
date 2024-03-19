@@ -4,11 +4,13 @@ kind: StatefulSet
 metadata:
   name: tempo-ingester
   labels:
+    app.kubernetes.io/name: tempo-ingester
     app.kubernetes.io/component: ingester
 spec:
   replicas: 3
   selector:
     matchLabels:
+      app.kubernetes.io/name: tempo-ingester
       app.kubernetes.io/component: ingester
   serviceName: ingester
   podManagementPolicy: Parallel

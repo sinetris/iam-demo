@@ -4,6 +4,7 @@ kind: Service
 metadata:
   name: tempo-distributor
   labels:
+    app.kubernetes.io/name: tempo-distributor
     app.kubernetes.io/component: distributor
 spec:
   type: ClusterIP
@@ -28,4 +29,5 @@ spec:
     protocol: TCP
     targetPort: grpc-otlp
   selector:
+    app.kubernetes.io/name: tempo-distributor
     app.kubernetes.io/component: distributor
