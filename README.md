@@ -84,7 +84,7 @@ Open a terminal and type:
 
 ```sh
 # Configure iam-demo-tech k8s cluster as default
-echo 'export KUBECONFIG=~/.kube/config-iam-demo-tech' >> ~/.bashrc
+echo 'export KUBECONFIG=~/.kube/config-iam-demo-tech' | sudo tee --append /etc/bash.bashrc
 # Add kubectl completion
 kubectl completion bash | sudo tee /etc/bash_completion.d/kubectl
 # Add kustomize completion
