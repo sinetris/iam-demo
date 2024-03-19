@@ -1,0 +1,39 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mailpit-env-cm
+  labels:
+    app.kubernetes.io/name: mailpit-env-cm
+data:
+  ## General
+  MP_DATA_FILE: /data/mailpit.db
+  MP_MAX_MESSAGES: "1000"
+
+  ## POP3 server
+  MP_POP3_BIND_ADDR: "0.0.0.0:1110"
+  MP_POP3_AUTH_FILE: /etc/mailpit/mail_authfile
+  # MP_POP3_TLS_CERT:
+  # MP_POP3_TLS_KEY:
+
+  ## SMTP server
+  MP_SMTP_ALLOWED_RECIPIENTS: '@example\.(com|net|org)$|@[a-zA-Z0-9][a-zA-Z0-9-]\.(test|example)$'
+  MP_SMTP_AUTH_ALLOW_INSECURE: "true"
+  MP_SMTP_AUTH_FILE: /etc/mailpit/mail_authfile
+  MP_SMTP_BIND_ADDR: "0.0.0.0:1025"
+  MP_SMTP_MAX_RECIPIENTS: "100"
+  # MP_SMTP_TLS_CERT:
+  # MP_SMTP_TLS_KEY:
+  MP_SMTP_TLS_REQUIRED: "false"
+
+  ## Web UI & API
+  # MP_API_CORS:
+  MP_ALLOW_UNTRUSTED_TLS: "false"
+  MP_UI_AUTH_FILE: /etc/mailpit/web_authfile
+  MP_UI_BIND_ADDR: "0.0.0.0:8025"
+  # MP_UI_TLS_CERT:
+  # MP_UI_TLS_KEY:
+
+  ## Webhook
+  # MP_WEBHOOK_URL: https://example.com/mailpit-webhook
+  # MP_WEBHOOK_LIMIT: "5"

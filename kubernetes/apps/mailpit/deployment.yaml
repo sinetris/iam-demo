@@ -1,0 +1,64 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mailpit
+  labels:
+    app.kubernetes.io/name: mailpit
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: mailpit
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: mailpit
+    spec:
+      containers:
+      - name: mailpit
+        image: axllent/mailpit:v1.14
+        envFrom:
+        - configMapRef:
+            name: mailpit-env-cm
+        ports:
+        - name: web-ui
+          containerPort: 8025
+        - name: mailpit-smtp
+          containerPort: 1025
+        livenessProbe:
+          httpGet:
+            path: /livez
+            port: web-ui
+          initialDelaySeconds: 5
+          timeoutSeconds: 5
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: web-ui
+          initialDelaySeconds: 5
+          timeoutSeconds: 2
+        resources:
+          limits:
+            cpu: 250m
+            memory: 128Mi
+          requests:
+            cpu: 125m
+            memory: 64Mi
+        volumeMounts:
+        - name: mailpit-data-volume
+          mountPath: /data
+        - name: mailpit-authfiles-volume
+          mountPath: /etc/mailpit/mail_authfile
+          subPath: mail_authfile
+        - name: mailpit-authfiles-volume
+          mountPath: /etc/mailpit/web_authfile
+          subPath: web_authfile
+      volumes:
+      - name: mailpit-data-volume
+        persistentVolumeClaim:
+          claimName: mailpit-data-pvc
+      - name: mailpit-authfiles-volume
+        secret:
+          secretName: mailpit-authfiles-secrets
+          defaultMode: 110

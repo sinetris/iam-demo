@@ -1,0 +1,16 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit-smtp-svc
+  labels:
+    app.kubernetes.io/name: mailpit-smtp-svc
+spec:
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/instance: mailpit
+  ports:
+  - name: smtp
+    port: 1025
+    protocol: TCP
+    targetPort: 1025

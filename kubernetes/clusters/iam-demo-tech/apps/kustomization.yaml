@@ -3,6 +3,7 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 resources:
+- ../../../apps/mailpit
 - ../../../apps/git-server
 - ../../../apps/keycloak-stack
 - ../../../apps/tempo
