@@ -8,12 +8,4 @@ resources:
 - ../../../base/memcached
 
 patches:
-- patch: |-
-    - op: add
-      path: /spec/template/spec/serviceAccountName
-      value: tempo
-  target:
-    group: apps
-    version: v1
-    kind: StatefulSet
-    labelSelector: "app.kubernetes.io/component=memcached-server"
+- path: patch-statefulset.yaml
