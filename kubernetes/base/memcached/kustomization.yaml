@@ -12,5 +12,4 @@ labels:
 resources:
 - service-headless.yaml
 - service.yaml
-- serviceaccount.yaml
 - statefulset.yaml
