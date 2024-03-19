@@ -88,21 +88,6 @@ spec:
         labelSelector:
           matchLabels:
             app.kubernetes.io/component: ingester
-      affinity:
-        podAntiAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-          - weight: 100
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app.kubernetes.io/component: ingester
-              topologyKey: kubernetes.io/hostname
-          - weight: 75
-            podAffinityTerm:
-              labelSelector:
-                matchLabels:
-                  app.kubernetes.io/component: ingester
-              topologyKey: topology.kubernetes.io/zone
       volumes:
       - name: config
         configMap:
