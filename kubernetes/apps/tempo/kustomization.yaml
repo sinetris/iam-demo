@@ -5,11 +5,9 @@ namespace: observability
 labels:
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/name: tempo
+    app: tempo
     app.kubernetes.io/part-of: tempo
 - includeSelectors: false
-  pairs:
-    app.kubernetes.io/version: "2.3.1"
 resources:
 - compactor/deployment.yaml
 - compactor/service.yaml

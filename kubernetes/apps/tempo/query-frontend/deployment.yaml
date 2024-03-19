@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: tempo-query-frontend
   labels:
+    app.kubernetes.io/name: tempo-query-frontend
     app.kubernetes.io/component: query-frontend
 spec:
   minReadySeconds: 10
@@ -11,6 +12,7 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
+      app.kubernetes.io/name: tempo-query-frontend
       app.kubernetes.io/component: query-frontend
   strategy:
     rollingUpdate:
@@ -19,6 +21,7 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: tempo-query-frontend
         app.kubernetes.io/component: query-frontend
     spec:
       serviceAccountName: tempo

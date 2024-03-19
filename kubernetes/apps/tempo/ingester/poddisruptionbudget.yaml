@@ -4,6 +4,7 @@ kind: PodDisruptionBudget
 metadata:
   name: tempo-ingester
   labels:
+    app.kubernetes.io/name: tempo-ingester
     app.kubernetes.io/component: ingester
 spec:
   selector:

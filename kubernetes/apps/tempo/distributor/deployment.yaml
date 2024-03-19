@@ -4,6 +4,7 @@ kind: Deployment
 metadata:
   name: tempo-distributor
   labels:
+    app.kubernetes.io/name: tempo-distributor
     app.kubernetes.io/component: distributor
 spec:
   minReadySeconds: 10
@@ -11,10 +12,12 @@ spec:
   revisionHistoryLimit: 10
   selector:
     matchLabels:
+      app.kubernetes.io/name: tempo-distributor
       app.kubernetes.io/component: distributor
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: tempo-distributor
         app.kubernetes.io/component: distributor
     spec:
       serviceAccountName: tempo

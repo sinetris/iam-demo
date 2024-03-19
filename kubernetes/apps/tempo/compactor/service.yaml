@@ -4,6 +4,7 @@ kind: Service
 metadata:
   name: tempo-compactor
   labels:
+    app.kubernetes.io/name: tempo-compactor
     app.kubernetes.io/component: compactor
 spec:
   type: ClusterIP
@@ -13,4 +14,5 @@ spec:
     targetPort: 3100
     protocol: TCP
   selector:
+    app.kubernetes.io/name: tempo-compactor
     app.kubernetes.io/component: compactor
