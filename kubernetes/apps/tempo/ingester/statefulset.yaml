@@ -18,22 +18,22 @@ spec:
   template:
     metadata:
       labels:
+        app.kubernetes.io/name: tempo-ingester
         app.kubernetes.io/component: ingester
     spec:
       serviceAccountName: tempo
       securityContext:
         fsGroup: 1000
       enableServiceLinks: false
-
       containers:
-      - args:
+      - name: ingester
+        image: grafana/tempo:2.4.0
+        imagePullPolicy: Always
+        args:
         - -target=ingester
         - -config.file=/conf/tempo.yaml
         - -mem-ballast-size-mbs=1024
         - -config.expand-env=true
-        image: grafana/tempo:2.4.0
-        imagePullPolicy: Always
-        name: ingester
         ports:
         - name: grpc
           containerPort: 9095

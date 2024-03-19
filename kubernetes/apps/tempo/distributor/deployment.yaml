@@ -22,14 +22,14 @@ spec:
         fsGroup: 1000
       enableServiceLinks: false
       containers:
-      - args:
+      - name: distributor
+        image: grafana/tempo:2.4.0
+        imagePullPolicy: Always
+        args:
         - -target=distributor
         - -config.file=/conf/tempo.yaml
         - -mem-ballast-size-mbs=1024
         - -config.expand-env=true
-        image: grafana/tempo:2.4.0
-        imagePullPolicy: Always
-        name: distributor
         ports:
         - containerPort: 7946
           name: http-memberlist

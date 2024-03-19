@@ -26,14 +26,14 @@ spec:
         fsGroup: 1000
       enableServiceLinks: false
       containers:
-      - args:
+      - name: query-frontend
+        image: grafana/tempo:2.4.0
+        imagePullPolicy: Always
+        args:
         - -target=query-frontend
         - -config.file=/conf/tempo.yaml
         - -mem-ballast-size-mbs=1024
         - -config.expand-env=true
-        image: grafana/tempo:2.4.0
-        imagePullPolicy: Always
-        name: query-frontend
         ports:
         - containerPort: 3100
           name: http-metrics
