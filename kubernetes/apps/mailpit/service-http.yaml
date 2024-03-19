@@ -1,0 +1,15 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mailpit-web-svc
+  labels:
+    app.kubernetes.io/name: mailpit-web-svc
+spec:
+  selector:
+    app.kubernetes.io/instance: mailpit
+  ports:
+  - name: http
+    protocol: TCP
+    port: 80
+    targetPort: web-ui

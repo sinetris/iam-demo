@@ -1,0 +1,25 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mailpit-ingress
+  labels:
+    app.kubernetes.io/name: mailpit-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+spec:
+  rules:
+  - host: mail.iam-demo.test
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: mailpit-web-svc
+            port:
+              number: 80
+  tls:
+  - hosts:
+    - mail.iam-demo.test
+    secretName: iam-demo-mailpit-tls

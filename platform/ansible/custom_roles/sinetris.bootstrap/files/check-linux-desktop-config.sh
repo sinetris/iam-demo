@@ -14,6 +14,7 @@ check_hostnames_on_port=(
   'Hashicorp-Vault vault 443'
   'MinIO-S3-API s3 443'
   'Minio-Web-Console minio 443'
+  'Mailpit mail 443'
 )
 
 bold_text=$(tput bold)
