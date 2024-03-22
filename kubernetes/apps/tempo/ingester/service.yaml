@@ -11,11 +11,11 @@ spec:
   - name: http-metrics
     port: 3100
     protocol: TCP
-    targetPort: 3100
+    targetPort: http-metrics
   - name: grpc
     port: 9095
     protocol: TCP
-    targetPort: 9095
+    targetPort: grpc
   selector:
     app.kubernetes.io/name: tempo-ingester
     app.kubernetes.io/component: ingester
