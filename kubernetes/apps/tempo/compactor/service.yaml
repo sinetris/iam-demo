@@ -11,7 +11,7 @@ spec:
   ports:
   - name: http-metrics
     port: 3100
-    targetPort: 3100
+    targetPort: http-metrics
     protocol: TCP
   selector:
     app.kubernetes.io/name: tempo-compactor

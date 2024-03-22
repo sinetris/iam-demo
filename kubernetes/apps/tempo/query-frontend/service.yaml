@@ -4,6 +4,7 @@ kind: Service
 metadata:
   name: tempo-query-frontend
   labels:
+    app.kubernetes.io/name: tempo-query-frontend
     app.kubernetes.io/component: query-frontend
 spec:
   type: ClusterIP

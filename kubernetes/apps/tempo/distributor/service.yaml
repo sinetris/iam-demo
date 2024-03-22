@@ -15,19 +15,19 @@ spec:
   - name: grpc
     port: 9095
     protocol: TCP
-    targetPort: 9095
-  - name: distributor-otlp-http
+    targetPort: grpc
+  - name: otlp-http
     port: 4318
     protocol: TCP
     targetPort: otlp-http
-  - name: grpc-distributor-otlp
+  - name: otlp-grpc
     port: 4317
     protocol: TCP
-    targetPort: grpc-otlp
-  - name: distributor-otlp-legacy
+    targetPort: otlp-grpc
+  - name: legacy-otlp-grpc
     port: 55680
     protocol: TCP
-    targetPort: grpc-otlp
+    targetPort: otlp-grpc
   selector:
     app.kubernetes.io/name: tempo-distributor
     app.kubernetes.io/component: distributor

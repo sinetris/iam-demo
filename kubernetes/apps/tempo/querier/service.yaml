@@ -4,16 +4,17 @@ kind: Service
 metadata:
   name: tempo-querier
   labels:
+    app.kubernetes.io/name: tempo-querier
     app.kubernetes.io/component: querier
 spec:
   ports:
   - name: http-metrics
     port: 3100
     protocol: TCP
-    targetPort: 3100
+    targetPort: http-metrics
   - name: grpc
     port: 9095
     protocol: TCP
-    targetPort: 9095
+    targetPort: grpc
   selector:
     app.kubernetes.io/component: querier
