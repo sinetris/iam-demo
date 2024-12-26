@@ -52,8 +52,9 @@ local create_vm(config, vm) =
     if [ $exit_code -eq 0 ]; then
       echo "✅ VM '%(hostname)s' already exist!"
     elif [ $exit_code -eq 2 ] && [[ $vm_status =~ 'does not exist' ]]; then
-      echo "Creating %(host_path)s/data"
-      mkdir -p "%(host_path)s/data"
+      echo "Creating %(host_path)s and subfolders"
+      mkdir -p "%(host_path)s/{cidata,shared}"
+      cp "cloud-init-%(hostname)s.yaml" %(host_path)s/cidata/user-data"
       multipass launch --cpus %(cpus)s \
         --disk %(storage_space)s \
         --memory %(memory)s \
@@ -289,10 +290,22 @@ local provision_vms(config, provisionings) =
       set -Eeuo pipefail
 
       if [ $# -lt 1 ]; then
-        echo $(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 [OPTIONS]$(tput sgr0)
+        echo $(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 VIRTUAL_MACHINE_NAME$(tput sgr0)
         exit 1
       fi
 
       multipass shell $1
+    |||,
+  virtualmachines_info(config)::
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+
+      if [ $# -lt 1 ]; then
+        echo $(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 VIRTUAL_MACHINE_NAME$(tput sgr0)
+        exit 1
+      fi
+
+      multipass info $1
     |||,
 }

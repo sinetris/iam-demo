@@ -4,6 +4,8 @@
     local orchestrator_implementation =
       if orchestrator == 'multipass' then
         import 'orchestrators/multipass.libsonnet'
+      else if orchestrator == 'vbox' then
+        import 'orchestrators/vbox.libsonnet'
       else if orchestrator == 'fake' then
         import 'orchestrators/fake.libsonnet'
       else
