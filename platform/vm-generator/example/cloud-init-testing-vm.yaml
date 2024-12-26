@@ -1,0 +1,89 @@
+---
+#cloud-config
+autoinstall:
+  version: 1
+  apt:
+    fallback: offline-install
+  storage:
+    layout:
+      name: direct
+    swap:
+      size: 0
+  late-commands:
+    - cp /cdrom/vboxpostinstall.sh /target/root/vboxpostinstall.sh
+    - chmod +x /target/root/vboxpostinstall.sh
+    - curtin in-target --target=/target -- /bin/bash /root/vboxpostinstall.sh --direct
+  user-data:
+    apt:
+      conf: |
+        APT {
+          Install-Recommends "false";
+          Install-Suggests "false";
+          Get {
+            Fix-Broken "true";
+          };
+        };
+    chpasswd:
+      expire: false
+    final_message: |
+      ## template: jinja
+      cloud-init final message
+      version: {{version}}
+      timestamp: {{timestamp}}
+      datasource: {{datasource}}
+      uptime: {{uptime}}
+    fqdn: "testing-vm.iam-demo.test"
+    growpart:
+      devices:
+        - "/"
+      ignore_growroot_disabled: false
+      mode: "auto"
+    hostname: "testing-vm"
+    package_reboot_if_required: true
+    package_update: true
+    package_upgrade: true
+    packages:
+      - apt-transport-https
+      - build-essential
+      - ca-certificates
+      - curl
+      - git
+      - gnupg2
+      - linux-headers-generic
+      - make
+      - perl
+      - python3
+      - python3-pip
+      - python3-venv
+      - wget
+    ssh_deletekeys: false
+    users:
+      - name: root
+        primary_group: root
+        groups: sudo
+        lock-passwd: false
+        passwd: '$6$x8j8ajPmI.xX2d98$rrHyLL4Q7zktiSNztC.88sbirIjYVM/kwrx6kQhblWSvQIosrgJlkk4HTtykRzVkS7evw3Hux21AH.dOoPDCP1'
+        uid: 0
+      - name: "sinetris"
+        groups:
+          - adm
+          - cdrom
+          - dip
+          - lxd
+          - netdev
+          - plugdev
+          - staff
+          - sudo
+          - users
+          - vboxsf
+        lock_passwd: false
+        shell: /bin/bash
+        passwd: '$6$x8j8ajPmI.xX2d98$rrHyLL4Q7zktiSNztC.88sbirIjYVM/kwrx6kQhblWSvQIosrgJlkk4HTtykRzVkS7evw3Hux21AH.dOoPDCP1'
+        ssh_authorized_keys:
+          - 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKFz8K0cj7KEIUfzSUaDZVgr7EicCrfXPgg5U/6bGNAD duilio@sinetris.net'
+        ssh_import_id:
+          - gh:sinetris
+        sudo: "ALL=(ALL) NOPASSWD:ALL"
+    timezone: Etc/UTC
+    ntp:
+      enabled: false
