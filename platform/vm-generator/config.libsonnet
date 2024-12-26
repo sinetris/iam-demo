@@ -1,4 +1,5 @@
 {
+  project_name: 'iam-demo',
   architecture: 'arm64',
   ansible_ssh_authorized_keys: [
     std.stripChars(importstr 'generated/.ssh/id_ed25519.pub', '\n'),
@@ -14,4 +15,13 @@
     // "gh:octocat",
   ],
   admin_ssh_import_ids: self.ansible_ssh_import_ids,
+  network: {
+    name: 'HON',
+    netmask: '255.255.255.0',
+    lower_ip: '192.168.100.1',
+    upper_ip: '192.168.100.100',
+  },
+  dns_servers: [
+    '1.1.1.1',
+  ],
 }

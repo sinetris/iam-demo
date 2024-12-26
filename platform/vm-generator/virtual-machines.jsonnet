@@ -9,8 +9,7 @@ local orchestrator = import 'lib/orchestrator.libsonnet';
 
 local utils = import 'lib/utils.libsonnet';
 
-function(orchestrator_name='multipass') {
-  // jsonnet doesn't allow dynamic import paths
+function(orchestrator_name='fake') {
   local orchestrator_implementation = orchestrator.get(orchestrator_name),
   'vms-status.sh': orchestrator_implementation.use.virtualmachines_list(setup),
   'vms-create.sh': orchestrator_implementation.use.virtualmachines_bootstrap(setup),
@@ -18,6 +17,7 @@ function(orchestrator_name='multipass') {
   'vms-provisioning.sh': orchestrator_implementation.use.virtualmachines_provisioning(setup),
   'vm-shell.sh': orchestrator_implementation.use.virtualmachine_shell(setup),
   'vms-destroy.sh': orchestrator_implementation.use.virtualmachines_destroy(setup),
+  'vm-info.sh': orchestrator_implementation.use.virtualmachines_info(setup),
 } + {
   [utils.cloudinit_filename(entry.hostname)]: utils.cloud_config(setup, entry)
   for entry in setup.virtual_machines

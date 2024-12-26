@@ -24,4 +24,6 @@
     self.fake_script(config, 'list'),
   virtualmachine_shell(config)::
     self.fake_script(config, 'shell'),
+  virtualmachine_info(config)::
+    self.fake_script(config, 'info'),
 }

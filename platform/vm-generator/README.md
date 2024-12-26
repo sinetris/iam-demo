@@ -1,6 +1,19 @@
-# Multipass
+# VM creation
 
-## Setup
+## Ubuntu ISO
+
+[Live Server](https://cdimage.ubuntu.com/releases/24.04/release/ubuntu-24.04.1-live-server-arm64.iso)
+[Cloud Image](https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img)
+
+## Create password hash
+
+```sh
+openssl passwd -6 -salt $(openssl rand -base64 8) password
+```
+
+## Multipass
+
+### Setup
 
 ```sh
 brew install multipass
@@ -10,7 +23,7 @@ multipass set local.driver=qemu
 
 > On macOS, enable `Full Disk Access` for `multipassd` in `Provacy & Security`
 
-## Generate configuration files
+### Generate configuration files
 
 ```sh
 mkdir -p generated/.ssh

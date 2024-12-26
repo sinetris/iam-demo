@@ -41,21 +41,21 @@ local add_default_machine_data(vm) = {
   host_path: error 'Must override "host_path"',
   cpus: 1,
   architecture: config.architecture,
-  memory: '1G',
+  memory: '1024',
   timeout: 15 * 60,
-  storage_space: '10G',
+  storage_space: '10240',
   users: [admin_user],
   mounts: [
     {
-      host_path: $.host_path + '/data',
+      host_path: $.host_path + '/shared',
       guest_path: '/var/local/data',
     },
   ],
 } + vm;
 
 {
-  application: 'iam-demo',
-  app_dir: '$HOME/.local/projects-data/' + self.application,
+  project_name: config.project_name,
+  app_dir: '$HOME/.local/projects-data/' + config.project_name,
   ansible_inventory_path:
     if std.objectHas(config, 'ansible_inventory_path') then
       config.ansible_inventory_path
@@ -84,8 +84,8 @@ local add_default_machine_data(vm) = {
       hostname: 'iam-control-plane',
       host_path: $.app_dir + '/' + self.hostname,
       cpus: 4,
-      memory: '8G',
-      storage_space: '25G',
+      memory: '8192',
+      storage_space: '25600',
       tags: [
         'kubernetes',
         'nested-hw-virtualization',
@@ -95,9 +95,8 @@ local add_default_machine_data(vm) = {
     add_default_machine_data({
       hostname: 'linux-desktop',
       host_path: $.app_dir + '/' + self.hostname,
-
       cpus: 2,
-      memory: '4G',
+      memory: '4096',
       tags: [
         'rdpserver',
         'desktop',
@@ -196,4 +195,6 @@ local add_default_machine_data(vm) = {
         |||,
     },
   ],
+  network: config.network,
+  dns_servers: config.dns_servers,
 }
