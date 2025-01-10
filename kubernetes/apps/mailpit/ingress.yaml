@@ -22,4 +22,4 @@ spec:
   tls:
   - hosts:
     - mail.iam-demo.test
-    secretName: iam-demo-mailpit-tls
+    secretName: iam-demo-mail-tls
