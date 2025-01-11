@@ -1,0 +1,30 @@
+---
+# Source: loki/templates/backend/query-scheduler-discovery.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-query-scheduler-discovery
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/component: backend
+    prometheus.io/service-monitor: "false"
+  annotations:
+spec:
+  type: ClusterIP
+  clusterIP: None
+  publishNotReadyAddresses: true
+  ports:
+  - name: http-metrics
+    port: 3100
+    targetPort: http-metrics
+    protocol: TCP
+  - name: grpc
+    port: 9095
+    targetPort: grpc
+    protocol: TCP
+  selector:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/component: backend

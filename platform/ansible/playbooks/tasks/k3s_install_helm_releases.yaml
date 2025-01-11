@@ -64,18 +64,13 @@
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-minio-values.yaml"
+# ## Helm chart have a bug that does not allow to remove the 'Hard node anti-affinity'
+# ## For now, I generated the files and removed 'affinity' using kustomize.
 - name: Install Loki
-  kubernetes.core.helm:
-    name: loki
-    state: present
-    chart_ref: grafana/loki
-    update_repo_cache: true
-    namespace: observability
-    create_namespace: true
-    timeout: 10m
-    wait: true
-    values_files:
-      - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
+  kubernetes.core.k8s:
+    definition: "{{ lookup('kubernetes.core.kustomize', dir=kustomize_files_path) }}"
+  vars:
+    kustomize_files_path: "{{ kubernetes_project_path }}/apps/loki"
 - name: Install Grafana Agent Flow
   kubernetes.core.helm:
     name: grafana-agent-flow
