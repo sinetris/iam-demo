@@ -1,0 +1,18 @@
+---
+# Source: loki/templates/results-cache/poddisruptionbudget-results-cache.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: loki-memcached-results-cache
+  namespace: observability
+  labels:
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/component: memcached-results-cache
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/component: memcached-results-cache
+  maxUnavailable: 1

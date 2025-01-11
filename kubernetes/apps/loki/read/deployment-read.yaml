@@ -1,0 +1,124 @@
+---
+# Source: loki/templates/read/deployment-read.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-read
+  namespace: observability
+  labels:
+    app.kubernetes.io/part-of: memberlist
+    helm.sh/chart: loki-6.24.0
+    app.kubernetes.io/name: loki
+    app.kubernetes.io/instance: loki
+    app.kubernetes.io/version: "3.3.2"
+    app.kubernetes.io/component: read
+spec:
+  replicas: 3
+  strategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: loki
+      app.kubernetes.io/instance: loki
+      app.kubernetes.io/component: read
+  template:
+    metadata:
+      annotations:
+        checksum/config: b74c7109e2c95cb6cb35abee7bc50a66f744092aa864cfafdecf6cfbf5d518f4
+      labels:
+        app.kubernetes.io/part-of: memberlist
+        app.kubernetes.io/name: loki
+        app.kubernetes.io/instance: loki
+        app.kubernetes.io/component: read
+    spec:
+      serviceAccountName: loki
+      automountServiceAccountToken: true
+
+      securityContext:
+        fsGroup: 10001
+        runAsGroup: 10001
+        runAsNonRoot: true
+        runAsUser: 10001
+      terminationGracePeriodSeconds: 30
+      containers:
+      - name: loki
+        image: docker.io/grafana/loki:3.3.2
+        imagePullPolicy: IfNotPresent
+        args:
+        - -config.file=/etc/loki/config/config.yaml
+        - -target=read
+        - -legacy-read-mode=false
+        - -common.compactor-grpc-address=loki-backend.observability.svc.cluster.local:9095
+        - -config.expand-env=true
+        ports:
+        - name: http-metrics
+          containerPort: 3100
+          protocol: TCP
+        - name: grpc
+          containerPort: 9095
+          protocol: TCP
+        - name: http-memberlist
+          containerPort: 7946
+          protocol: TCP
+        env:
+        - name: MINIO_S3_ENDPOINT
+          valueFrom:
+            configMapKeyRef:
+              key: internalEndpoint
+              name: minio-url
+        - name: MINIO_S3_ACCESKEYID
+          valueFrom:
+            secretKeyRef:
+              key: user
+              name: loki-s3-credentials
+        - name: MINIO_S3_SECRETACCESSKEY
+          valueFrom:
+            secretKeyRef:
+              key: password
+              name: loki-s3-credentials
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: http-metrics
+          initialDelaySeconds: 30
+          timeoutSeconds: 1
+        volumeMounts:
+        - name: config
+          mountPath: /etc/loki/config
+        - name: runtime-config
+          mountPath: /etc/loki/runtime-config
+        - name: tmp
+          mountPath: /tmp
+        - name: data
+          mountPath: /var/loki
+        resources: {}
+      affinity:
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchLabels:
+                app.kubernetes.io/component: read
+            topologyKey: kubernetes.io/hostname
+      volumes:
+      - name: tmp
+        emptyDir: {}
+      - name: data
+        emptyDir: {}
+      - name: config
+        configMap:
+          name: loki
+          items:
+          - key: "config.yaml"
+            path: "config.yaml"
+      - name: runtime-config
+        configMap:
+          name: loki-runtime

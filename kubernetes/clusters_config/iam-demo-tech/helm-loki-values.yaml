@@ -2,12 +2,27 @@
 # To generate reference values, run:
 #   helm show values grafana/loki
 #
-# NOTE: changed anti-affinity because this demo uses only one node
-#   Changes:
-# - requiredDuringSchedulingIgnoredDuringExecution
-# + preferredDuringSchedulingIgnoredDuringExecution
+# NOTE: This helm chart currently use Hard node anti-affinity and cannot be changed.
+#
+# We use this config file only to generate files for kustomize
 
 loki:
+  schemaConfig:
+    configs:
+    - from: "2024-04-01"
+      store: tsdb
+      object_store: s3
+      schema: v13
+      index:
+        prefix: loki_index_
+        period: 24h
+  pattern_ingester:
+    enabled: true
+  limits_config:
+    allow_structured_metadata: true
+    volume_enabled: true
+  ruler:
+    enable_api: true
   auth_enabled: false
   storage:
     type: s3
@@ -22,32 +37,16 @@ loki:
       insecure: true
       s3forcepathstyle: true
 
-# We sill use an external MinIO
+# We use an external MinIO
 minio:
   enabled: false
 
-monitoring:
-  dashboards:
-    namespace: observability
-  rules:
-    namespace: observability
-    additionalGroups:
-    - name: loki-rules
-      rules:
-      - record: job:loki_request_duration_seconds_bucket:sum_rate
-        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job)
-      - record: job_route:loki_request_duration_seconds_bucket:sum_rate
-        expr: sum(rate(loki_request_duration_seconds_bucket[1m])) by (le, job, route)
-      - record: node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate
-        expr: sum(rate(container_cpu_usage_seconds_total[1m])) by (node, namespace, pod, container)
+chunksCache:
+  enabled: false
 
 gateway:
-  affinity: |
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            topologyKey: kubernetes.io/hostname
+  enabled: true
+  replicas: 1
   ingress:
     enabled: true
     labels:
@@ -61,17 +60,12 @@ gateway:
       - pathType: Prefix
         path: /
     tls:
-    - secretName: iam-demo-vault-tls
+    - secretName: iam-demo-loki-tls
       hosts:
       - loki.iam-demo.test
 
 write:
-  affinity: |
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            topologyKey: kubernetes.io/hostname
+  replicas: 3
   extraArgs:
   - '-config.expand-env=true'
   extraEnv:
@@ -92,12 +86,7 @@ write:
         key: password
 
 read:
-  affinity: |
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            topologyKey: kubernetes.io/hostname
+  replicas: 3
   extraArgs:
   - '-config.expand-env=true'
   extraEnv:
@@ -118,12 +107,7 @@ read:
         key: password
 
 backend:
-  affinity: |
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            topologyKey: kubernetes.io/hostname
+  replicas: 3
   extraArgs:
   - '-config.expand-env=true'
   extraEnv:
@@ -143,6 +127,8 @@ backend:
         name: loki-s3-credentials
         key: password
 
-sidecar:
-  rules:
-    logLevel: DEBUG
+lokiCanary:
+  enabled: true
+
+serviceAccount:
+  create: true
