@@ -1,0 +1,43 @@
+---
+# Generate only CRDs
+
+nameOverride: observability-stack
+
+crds:
+  enabled: true
+
+# Do not create default rules
+
+defaultRules:
+  create: false
+
+# enable=false for anything else
+
+alertmanager:
+  enabled: false
+coreDns:
+  enabled: false
+grafana:
+  enabled: false
+kubeApiServer:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeEtcd:
+  enabled: false
+kubelet:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubernetesServiceMonitors:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeStateMetrics:
+  enabled: false
+nodeExporter:
+  enabled: false
+prometheus:
+  enabled: false
+prometheusOperator:
+  enabled: false

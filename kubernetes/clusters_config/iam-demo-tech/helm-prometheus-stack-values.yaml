@@ -6,7 +6,9 @@
 
 nameOverride: observability-stack
 
-namespaceOverride: observability
+# We install the CRDs using helm-prometheus-crds-values.yaml
+crds:
+  enabled: false
 
 alertmanager:
   enabled: true
@@ -106,6 +108,10 @@ prometheus:
     - action: replace
       replacement: loki
       targetLabel: cluster
+  prometheusSpec:
+    ruleNamespaceSelector:
+      matchLabels:
+        prometheus.io/discovery: enabled
 
 cleanPrometheusOperatorObjectNames: true
 
@@ -115,12 +121,10 @@ kubelet:
     - action: replace
       replacement: loki
       targetLabel: cluster
-    - targetLabel: metrics_path
+    - action: replace
       sourceLabels:
       - __metrics_path__
-    - targetLabel: instance
-      sourceLabels:
-      - node
+      targetLabel: metrics_path
 
 defaultRules:
   additionalRuleLabels:
