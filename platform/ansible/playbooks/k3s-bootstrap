@@ -4,13 +4,11 @@
   hosts: k3s_control_planes
   become: true
   tasks:
-    - name: Check that /var/local/data/ exists
-      failed_when: >-
-        not k3s_data_path.stat.exists
-        or not k3s_data_path.stat.isdir
-      ansible.builtin.stat:
+    - name: Ensures /var/local/data/ exists
+      ansible.builtin.file:
         path: /var/local/data/
-      register: k3s_data_path
+        state: directory
+        mode: u=rwx,g=rwx,o=rx
     - name: Install dependencies
       community.general.snap:
         name:
