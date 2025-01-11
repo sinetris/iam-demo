@@ -74,16 +74,16 @@ buckets:
 - name: tempo-traces
   policy: none
   purge: false
-# # Loki
-# - name: loki-chunks
-#   policy: none
-#   purge: false
-# - name: loki-ruler
-#   policy: none
-#   purge: false
-# - name: loki-admin
-#   policy: none
-#   purge: false
+# Loki
+- name: loki-chunks
+  policy: none
+  purge: false
+- name: loki-ruler
+  policy: none
+  purge: false
+- name: loki-admin
+  policy: none
+  purge: false
 # Terrakube
 - name: terrakube
   policy: none
