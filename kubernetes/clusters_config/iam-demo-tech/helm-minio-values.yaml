@@ -118,7 +118,7 @@ ingress:
   tls:
   - hosts:
     - s3.iam-demo.test
-    secretName: iam-demo-minio-api-tls
+    secretName: iam-demo-s3-tls
 
 consoleIngress:
   enabled: true
@@ -130,7 +130,7 @@ consoleIngress:
   tls:
   - hosts:
     - minio.iam-demo.test
-    secretName: iam-demo-minio-console-tls
+    secretName: iam-demo-minio-tls
 
 # # To configure for Keycloak
 # oidc:
