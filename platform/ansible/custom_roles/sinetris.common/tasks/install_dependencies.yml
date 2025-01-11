@@ -7,14 +7,14 @@
       - golang-go
       - chrony
       - ca-certificates
-- name: Install python libraries using pip
+      - snapd
+- name: Install python libraries using apt
   when:
     - python_libraries is defined
     - python_libraries is iterable
     - python_libraries is not string
-  ansible.builtin.pip:
-    name: "{{ library }}"
-    umask: "0022"
+  ansible.builtin.apt:
+    pkg: python3-{{ library }}
   loop: "{{ python_libraries | default([]) }}"
   loop_control:
     loop_var: library
