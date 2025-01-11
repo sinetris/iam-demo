@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+orchestrator_name=multipass
+
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 generated_path=generated
 project_generator_path="${project_path}/platform/vm-generator"
 generated_project_path="${project_generator_path}/${generated_path}"
 
 __usage=$(
-  cat <<-HELPMSG
+	cat <<-HELPMSG
 		$(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 [OPTIONS]$(tput sgr0)
 
 		$(tput setaf 3)$(tput bold)Manage machines provisioning.$(tput sgr0)
@@ -20,7 +22,7 @@ __usage=$(
 		  -p, --provision       $(tput setaf 8)Provision virtual machines$(tput sgr0)
 		  -d, --delete          $(tput setaf 8)Delete virtual machines$(tput sgr0)
 		  -h, --help            $(tput setaf 8)This help$(tput sgr0)
-HELPMSG
+	HELPMSG
 )
 
 usage() {
@@ -62,7 +64,7 @@ generate_bootstrap_scripts() {
   cd "${project_generator_path}"
   jsonnet --create-output-dirs \
     --multi "${generated_project_path}" \
-    --tla-str orchestrator_name="multipass" \
+    --tla-str orchestrator_name="${orchestrator_name}" \
     --string virtual-machines.jsonnet
   chmod u+x "${generated_project_path}"/*.sh
 }
@@ -167,9 +169,9 @@ echo "$(tput setaf 3)Project path: $(tput bold)${project_path}$(tput sgr0)"
 
 if $create || $setup || $provision; then
   echo
-  echo "$(tput setaf 3)To ssh into a virtual machine use $(tput bold)vm-shell.sh <vm-name>$(tput sgr0) from the project path."
+  echo "$(tput setaf 3)To ssh into a virtual machine use $(tput bold)vm-shell.sh <vm-name>$(tput sgr0) from generated the project path."
   echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
-  echo "  $(tput bold)cd ${project_path}$(tput sgr0)"
-  echo "  $(tput bold)./${generated_path}/vm-shell.sh ansible-controller$(tput sgr0)"
+  echo "  $(tput bold)cd ${generated_project_path}$(tput sgr0)"
+  echo "  $(tput bold)./vm-shell.sh ansible-controller$(tput sgr0)"
 fi
 exit 0
