@@ -44,6 +44,7 @@ local add_default_machine_data(vm) = {
   memory: '1024',
   timeout: 15 * 60,
   storage_space: '10240',
+  admin_username: config.admin_user,
   users: [admin_user],
   mounts: [
     {
@@ -65,6 +66,7 @@ local add_default_machine_data(vm) = {
     add_default_machine_data({
       hostname: 'ansible-controller',
       host_path: $.app_dir + '/' + self.hostname,
+      memory: '2048',
       mounts+: [
         {
           host_path: config.ansible_files_path,
@@ -83,8 +85,8 @@ local add_default_machine_data(vm) = {
       local vm = self,
       hostname: 'iam-control-plane',
       host_path: $.app_dir + '/' + self.hostname,
-      cpus: 4,
-      memory: '8192',
+      cpus: 8,
+      memory: '16384',
       storage_space: '25600',
       tags: [
         'kubernetes',
@@ -153,6 +155,9 @@ local add_default_machine_data(vm) = {
           cat inventory/machines_config.json \
             | jq '.list | {named_hosts: map({(.name|tostring): .ipv4[0]}) | add}' \
             | yq -P > inventory/group_vars/all/10-hosts
+          cat inventory/machines_config.json \
+            | jq '.nic as $n | {network_interface: $n} \
+            | yq -P > inventory/group_vars/all/20-hosts
           ansible 'all' -m ping
         |||,
     },
@@ -190,8 +195,7 @@ local add_default_machine_data(vm) = {
         |||
           set -Eeuo pipefail
           source $HOME/.profile
-          ansible-playbook playbooks/k3s-bootstrap
-          ansible-playbook playbooks/k3s-provisioning
+          ansible-playbook playbooks/all-setup
         |||,
     },
   ],

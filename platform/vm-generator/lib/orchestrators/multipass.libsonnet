@@ -28,8 +28,8 @@ local create_vm(config, vm) =
   assert std.isObject(vm);
   assert std.objectHas(vm, 'hostname');
   local cpus = std.get(vm, 'cpus', '1');
-  local storage_space = std.get(vm, 'storage_space', '5G');
-  local memory = std.get(vm, 'memory', '1G');
+  local storage_space = std.get(vm, 'storage_space', '5000');
+  local memory = std.get(vm, 'memory', '1024');
   local mount_opt(host_path, guest_path) =
     '--mount "%(host_path)s":%(guest_path)s' % {
       host_path: host_path,
@@ -53,11 +53,11 @@ local create_vm(config, vm) =
       echo "✅ VM '%(hostname)s' already exist!"
     elif [ $exit_code -eq 2 ] && [[ $vm_status =~ 'does not exist' ]]; then
       echo "Creating %(host_path)s and subfolders"
-      mkdir -p "%(host_path)s/{cidata,shared}"
-      cp "cloud-init-%(hostname)s.yaml" %(host_path)s/cidata/user-data"
+      mkdir -p "%(host_path)s/"{cidata,shared}
+      cp "cloud-init-%(hostname)s.yaml" "%(host_path)s/cidata/user-data"
       multipass launch --cpus %(cpus)s \
-        --disk %(storage_space)s \
-        --memory %(memory)s \
+        --disk %(storage_space)sM \
+        --memory %(memory)sM \
         --name "%(hostname)s" \
         --cloud-init "cloud-init-%(hostname)s.yaml" \
         --timeout %(timeout)s \
@@ -219,7 +219,7 @@ local provision_vms(config, provisionings) =
       echo "Generating machines_config.json for ansible"
       multipass list --format json | \
         jq --argjson vms_names_json "${vms_names_json}" \
-        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms}' \
+        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms, nic: "default"}' \
         > %(ansible_inventory_path)s/machines_config.json
       %(vms_provision)s
     ||| % {

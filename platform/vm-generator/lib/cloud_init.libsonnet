@@ -67,7 +67,15 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         ['mkdir', '-p', home_path + '/.local/bin'],
         ['chown', '-R', ownership, home_path + '/.local'],
       ];
-    local write_files() = if is_desktop then [
+    local write_files() = [
+      {
+        path: '/var/local/.test',
+        content: |||
+          File created!
+        |||,
+        permissions: '0o640',
+      },
+    ] + if is_desktop then [
       {
         path: '/etc/skel/.xsession',
         content: |||
@@ -125,34 +133,9 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
             };
           };
         ||| % { install_recommends: is_desktop },
-        // In case of problems finding packages for your CPU architecture, comment out
-        // the following 'primary' and 'security' sections to use the default values.
-        primary: [
-          {
-            arches: ['amd64', 'i386'],
-            search: ['http://archive.ubuntu.com/ubuntu'],
-            search_dns: true,
-          },
-          {
-            arches: ['default'],
-            search: ['http://ports.ubuntu.com/ubuntu-ports'],
-            search_dns: true,
-          },
-        ],
-        security: [
-          {
-            arches: ['amd64', 'i386'],
-            uri: 'http://security.ubuntu.com/ubuntu',
-          },
-          {
-            arches: ['default'],
-            uri: 'http://ports.ubuntu.com/ubuntu-ports',
-          },
-        ],
       },
       package_update: true,
       package_upgrade: true,
-      package_reboot_if_required: true,
       packages: [
         'ca-certificates',
         'build-essential',
@@ -161,7 +144,8 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'git',
         'curl',
         'wget',
-        // 'chrony',
+        'snapd',
+        'openssh-server',
         'vim',
         'apt-transport-https',
         'gnupg2',
@@ -196,11 +180,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
       ]) + std.flatMap(
         runcmd_for_user,
         ['ubuntu'] + [user.username for user in vm.users]
-      ) + [
-        ['apt', 'install', '--fix-broken', '-y'],
-        ['apt', 'clean'],
-        ['apt', 'autoclean'],
-      ],
+      ),
       write_files: write_files(),
       final_message: |||
         ## template: jinja
@@ -210,16 +190,16 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         datasource: {{datasource}}
         uptime: {{uptime}}
       |||,
-      snaps: [
-        {
-          name: 'yq',
-        },
-      ],
+      snap: {
+        commands: [
+          ['install', 'yq'],
+        ],
+      },
     } + if is_ansible_controller then {
-      lxd: {
-        init: {
-          storage_backend: 'dir',
-        },
+      ansible: {
+        package_name: 'ansible-core',
+        install_method: 'pip',
+        run_user: vm.admin_username,
       },
     } else {};
 
