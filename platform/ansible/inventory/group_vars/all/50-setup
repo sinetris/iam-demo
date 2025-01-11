@@ -16,7 +16,6 @@ ca_root_certs_timestamp: "1707244011"
 # Set do_not_log to true to hide sensitive data
 do_not_log: false
 is_dns_server: false
-network_interface: enp0s1
 dns_server_ip: "{{ named_hosts['ansible-controller'] }}"
 bootstrap_network:
   internal_dns: true
