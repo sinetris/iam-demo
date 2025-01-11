@@ -29,7 +29,7 @@ spec:
       terminationGracePeriodSeconds: 60
       initContainers:
       - name: init-directories
-        image: codeberg.org/forgejo/forgejo:1.21-rootless
+        image: codeberg.org/forgejo/forgejo:9.0-rootless
         imagePullPolicy: Always
         command: ["/usr/local/sbin/init_directory_structure.sh"]
         envFrom:
@@ -71,7 +71,7 @@ spec:
             cpu: 50m
             memory: 64Mi
       - name: init-app-ini
-        image: codeberg.org/forgejo/forgejo:1.21-rootless
+        image: codeberg.org/forgejo/forgejo:9.0-rootless
         imagePullPolicy: Always
         command: ["/usr/local/sbin/config_environment.sh"]
         envFrom:
@@ -115,7 +115,7 @@ spec:
             cpu: 50m
             memory: 64Mi
       - name: configure-forgejo
-        image: codeberg.org/forgejo/forgejo:1.21-rootless
+        image: codeberg.org/forgejo/forgejo:9.0-rootless
         command: ["/usr/local/sbin/configure_forgejo.sh"]
         imagePullPolicy: Always
         envFrom:
@@ -158,7 +158,7 @@ spec:
             memory: 64Mi
       containers:
       - name: forgejo
-        image: codeberg.org/forgejo/forgejo:1.21-rootless
+        image: codeberg.org/forgejo/forgejo:9.0-rootless
         imagePullPolicy: Always
         envFrom:
         - configMapRef:
@@ -199,7 +199,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /api/healthz
-            port: http
+            port: forgejo-http
           initialDelaySeconds: 200
           timeoutSeconds: 5
           periodSeconds: 10
