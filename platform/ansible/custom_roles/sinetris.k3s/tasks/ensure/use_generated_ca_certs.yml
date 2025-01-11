@@ -53,3 +53,19 @@
     chdir: "{{ k3s_tls_dir }}"
     creates: "{{ k3s_tls_dir }}/etcd/server-ca.crt"
   no_log: "{{ do_not_log }}"
+  register: custom_ca_result
+  changed_when: false
+  failed_when:
+    - custom_ca_result.rc != 0
+    - "'CA certificate generation complete.' not in custom_ca_result.stdout_lines"
+  environment:
+    PRODUCT: "{{ project_domain }}"
+    DATA_DIR: "/var/lib/rancher/k3s"
+    TIMESTAMP: "{{ ca_root_certs_timestamp }}"
+- name: Save custom_ca_result.stdout checksum
+  ansible.builtin.copy:
+    content: "{{ custom_ca_result.stdout | ansible.builtin.checksum }}"
+    dest: /usr/local/bin/generate-custom-ca-certs.sh.checksum
+    group: "{{ ansible_user }}"
+    owner: "{{ ansible_user }}"
+    mode: u=rw,go=r
