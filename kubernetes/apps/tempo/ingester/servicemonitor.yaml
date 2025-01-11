@@ -1,0 +1,29 @@
+---
+# Source: tempo-distributed/templates/compactor/servicemonitor-compactor.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tempo-ingester
+  labels:
+    app.kubernetes.io/name: tempo-ingester
+    app.kubernetes.io/component: ingester
+spec:
+  namespaceSelector:
+    matchNames:
+    - observability
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tempo-ingester
+      app.kubernetes.io/component: ingester
+    matchExpressions:
+    - key: prometheus.io/service-monitor
+      operator: In
+      values:
+      - "true"
+  endpoints:
+  - port: http-metrics
+    relabelings:
+    - sourceLabels: [job]
+      replacement: "observability/ingester"
+      targetLabel: job
+    scheme: http

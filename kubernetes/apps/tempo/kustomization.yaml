@@ -11,17 +11,22 @@ labels:
 resources:
 - compactor/deployment.yaml
 - compactor/service.yaml
+- compactor/servicemonitor.yaml
 - distributor/deployment.yaml
 - distributor/service.yaml
+- distributor/servicemonitor.yaml
 - gossip-ring/service.yaml
 - ingester/poddisruptionbudget.yaml
 - ingester/service.yaml
+- ingester/servicemonitor.yaml
 - ingester/statefulset.yaml
 - memcached
 - querier/deployment.yaml
 - querier/service.yaml
+- querier/servicemonitor.yaml
 - query-frontend/deployment.yaml
 - query-frontend/service.yaml
+- query-frontend/servicemonitor.yaml
 - configmap-runtime.yaml
 - configmap-tempo.yaml
 - serviceaccount.yaml

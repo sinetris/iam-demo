@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-distributor
     app.kubernetes.io/component: distributor
+    prometheus.io/service-monitor: "true"
 spec:
   type: ClusterIP
   ports:
