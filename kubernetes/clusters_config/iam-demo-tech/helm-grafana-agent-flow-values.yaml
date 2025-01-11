@@ -3,6 +3,7 @@ agent:
   mode: 'flow'
   enableReporting: false
   configMap:
+    create: false
     name: grafana-agent-flow-config
     key: config.river
   envFrom:
