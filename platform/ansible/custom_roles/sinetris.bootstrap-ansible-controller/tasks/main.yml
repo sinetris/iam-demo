@@ -2,15 +2,6 @@
 - name: Setup Ansible Controller
   become: true
   block:
-    - name: Install dependencies
-      ansible.builtin.include_role:
-        name: sinetris.common
-        tasks_from: install_dependencies.yml
-    - name: Add user 'ubuntu' to group 'adm'
-      ansible.builtin.user:
-        name: ubuntu
-        groups: adm
-        append: true
     - name: Create directory .kube in shared data directory
       ansible.builtin.file:
         path: /var/local/data/.kube
@@ -18,12 +9,18 @@
         owner: "{{ ansible_controller_user }}"
         group: "{{ ansible_controller_user }}"
         mode: u=rwx,g=rx,o=
-    - name: Install kubernetes library on ansible-controller using pip
-      become: false
+    - name: Install kubernetes library on ansible-controller
       delegate_to: localhost
-      ansible.builtin.pip:
-        name: kubernetes
-        umask: "0022"
+      ansible.builtin.apt:
+        pkg: python3-kubernetes
+        state: present
+    - name: Create directory /usr/local/etc/certs/
+      ansible.builtin.file:
+        path: /usr/local/etc/certs
+        state: directory
+        owner: root
+        group: adm
+        mode: u=rwx,g=rx,o=rx
     - name: Copy generate-custom-ca-certs.sh file
       delegate_to: localhost
       ansible.builtin.copy:
