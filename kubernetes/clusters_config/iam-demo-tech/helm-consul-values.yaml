@@ -5,17 +5,33 @@ global:
   logLevel: info
   logJSON: true
   domain: consul
-  image: hashicorp/consul:1.17.3
-  imageK8S: hashicorp/consul-k8s-control-plane:1.3.3
+  image: hashicorp/consul:1.20
+  imageK8S: hashicorp/consul-k8s-control-plane:1.6
   datacenter: iam-demo-dc
+  peering:
+    enabled: false
+
+  tls:
+    enabled: false
+
+  acls:
+    manageSystemACLs: false
+    createReplicationToken: false
+
+  argocd:
+    enabled: false
+
+  # Configure federation.
+  federation:
+    enabled: false
+
   metrics:
     enabled: true
     enableAgentMetrics: true
     enableHostMetrics: true
     enableTelemetryCollector: true
-  imageConsulDataplane: hashicorp/consul-dataplane:1.3.3
-  extraLabels:
-    app.kubernetes.io/part-of: consul
+
+  imageConsulDataplane: hashicorp/consul-dataplane:1.6
 
 server:
   enabled: true
@@ -23,10 +39,23 @@ server:
   ports:
     serflan:
       port: 8301
+  storage: 10Gi
   connect: true
   enableAgentDebug: false
   disruptionBudget:
     enabled: true
+  affinity: |
+    podAntiAffinity:
+      requiredDuringSchedulingIgnoredDuringExecution:
+        - labelSelector:
+            matchLabels:
+              app: {{ template "consul.name" . }}
+              release: "{{ .Release.Name }}"
+              component: server
+          topologyKey: kubernetes.io/hostname
+  exposeService:
+    enabled: "-"
+    type: LoadBalancer
 
 client:
   enabled: true
@@ -53,6 +82,7 @@ ui:
 
 syncCatalog:
   enabled: true
+  default: true
   toConsul: true
   toK8S: true
   consulNamespaces:
@@ -61,6 +91,7 @@ syncCatalog:
 
 connectInject:
   enabled: true
+  replicas: 1
   default: false
   transparentProxy:
     defaultEnabled: true
@@ -74,10 +105,7 @@ connectInject:
     managedGatewayClass:
       serviceType: LoadBalancer
 
-# only useful when running helm template.
-tests:
-  enabled: true
-
 telemetryCollector:
   enabled: true
   image: "hashicorp/consul-telemetry-collector:0.0.2"
+  replicas: 1
