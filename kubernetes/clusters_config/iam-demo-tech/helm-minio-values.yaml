@@ -1,13 +1,13 @@
 ---
 image:
   repository: quay.io/minio/minio
-  tag: RELEASE.2024-03-15T01-07-19Z
-  pullPolicy: Always
+  tag: RELEASE.2024-12-18T13-15-44Z
+  pullPolicy: IfNotPresent
 
 mcImage:
   repository: quay.io/minio/mc
-  tag: RELEASE.2024-03-13T23-51-57Z
-  pullPolicy: Always
+  tag: RELEASE.2024-11-21T17-21-54Z
+  pullPolicy: IfNotPresent
 
 mode: distributed
 
