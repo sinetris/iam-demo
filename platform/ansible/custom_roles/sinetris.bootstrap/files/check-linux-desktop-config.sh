@@ -29,6 +29,19 @@ for name_hostname_port in "${check_hostnames_on_port[@]}"; do
   service_name=${tmp_splitted_line[0]}
   fqdn_to_check=${tmp_splitted_line[1]}.${base_domain}
   port_to_check=${tmp_splitted_line[2]}
+
+  echo "Check ${info_text}${service_name}${reset_text} DNS resolution"
+  _cmd_output=$(host -t a iam-control-plane.iam-demo.test | grep -F "has address" 2>&1) &&
+    exit_status=$? || exit_status=$?
+  if [ "${exit_status}" -ne "0" ]; then
+    echo " ${bold_text}${bad_result_text}[Error]${reset_text}"
+    echo "   ${highlight_text}Can not resolve DNS for${reset_text} '${bold_text}${fqdn_to_check}${reset_text}'"
+    echo "   '${bad_result_text}${_cmd_output}${reset_text}'"
+  else
+    echo " ${bold_text}${good_result_text}[DNS OK]${reset_text}"
+    echo "   '${good_result_text}${_cmd_output}${reset_text}'"
+  fi
+
   echo "Check ${info_text}${service_name}${reset_text} on ${info_text}${bold_text}${fqdn_to_check}:${port_to_check}${reset_text}"
   openssl_connect_output=$(echo | openssl s_client -showcerts -servername ${fqdn_to_check} \
     -connect "${fqdn_to_check}:${port_to_check}" 2>&1) &&
