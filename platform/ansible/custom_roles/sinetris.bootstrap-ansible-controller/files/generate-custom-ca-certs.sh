@@ -48,29 +48,30 @@ cd "${DATA_DIR}"
 
 # Set up temporary openssl configuration
 mkdir -p ".ca/certs"
-trap "rm -rf .ca" EXIT
+# trap "rm -rf .ca" EXIT
 touch .ca/index
 openssl rand -hex 8 > .ca/serial
-cat >.ca/config <<'EOF'
-[ca]
-default_ca = ca_default
-[ca_default]
-dir = ./.ca
-database = $dir/index
-serial = $dir/serial
-new_certs_dir = $dir/certs
-default_md = sha256
-policy = policy_anything
-[policy_anything]
-commonName = supplied
-[req]
-distinguished_name = req_distinguished_name
-[req_distinguished_name]
-[v3_ca]
-subjectKeyIdentifier = hash
-authorityKeyIdentifier = keyid:always
-basicConstraints = critical, CA:true
-keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
+echo "Creating basic config file for root certificate"
+cat >.ca/config <<-'EOF'
+	[ca]
+	default_ca = ca_default
+	[ca_default]
+	dir = ./.ca
+	database = $dir/index
+	serial = $dir/serial
+	new_certs_dir = $dir/certs
+	default_md = sha256
+	policy = policy_anything
+	[policy_anything]
+	commonName = supplied
+	[req]
+	distinguished_name = req_distinguished_name
+	[req_distinguished_name]
+	[v3_ca]
+	subjectKeyIdentifier = hash
+	authorityKeyIdentifier = keyid:always
+	basicConstraints = critical, CA:true
+	keyUsage = critical, digitalSignature, keyEncipherment, keyCertSign
 EOF
 
 # Use existing root CA if present
