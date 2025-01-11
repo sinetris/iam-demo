@@ -1,4 +1,16 @@
 ---
+- name: Install Prometheus CRDs
+  kubernetes.core.helm:
+    name: prometheus-crds
+    state: present
+    chart_ref: prometheus-community/kube-prometheus-stack
+    update_repo_cache: true
+    namespace: observability
+    create_namespace: true
+    timeout: 10m
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-prometheus-crds-values.yaml"
 - name: Install cert-manager helm chart
   kubernetes.core.helm:
     name: cert-manager
@@ -30,11 +42,12 @@
 - name: Install Prometheus and Grafana
   kubernetes.core.helm:
     name: prometheus
+    state: present
     chart_ref: prometheus-community/kube-prometheus-stack
+    update_repo_cache: true
     namespace: observability
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-prometheus-stack-values.yaml"
