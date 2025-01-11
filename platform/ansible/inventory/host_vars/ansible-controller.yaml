@@ -114,6 +114,18 @@ bind9_zones:
         ttl: 1m
         type: CNAME
         content: iam-control-plane
+      - label: terrakube-api
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: terrakube-reg
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
+      - label: terrakube-ui
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
     include_text: |
       ; in case there is something you want to add
       ; at the end of the zone file

@@ -1,0 +1,17 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namePrefix: terrakube-
+resources:
+- ../../../base/redis
+
+secretGenerator:
+- name: redis-env-secret
+  literals:
+  - PASSWORD=terrakube-redis
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+patches:
+- path: patches/add-password.yaml

@@ -1,0 +1,34 @@
+---
+source:
+  kind: Secret
+  name: terrakube-s3-credentials
+  fieldPath: data.user
+targets:
+- select:
+    kind: Secret
+    name: terrakube-api-env-secrets
+  fieldPaths:
+  - data.AwsStorageAccessKey
+  options:
+    create: true
+- select:
+    kind: Secret
+    name: terrakube-executor-env-secrets
+  fieldPaths:
+  - data.AwsTerraformStateAccessKey
+  options:
+    create: true
+- select:
+    kind: Secret
+    name: terrakube-executor-env-secrets
+  fieldPaths:
+  - data.AwsTerraformOutputAccessKey
+  options:
+    create: true
+- select:
+    kind: Secret
+    name: terrakube-registry-env-secrets
+  fieldPaths:
+  - data.AwsStorageAccessKey
+  options:
+    create: true

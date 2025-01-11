@@ -1,0 +1,19 @@
+---
+# Source: terrakube/charts/dex/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: terrakube-dex
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 5556
+    targetPort: http
+    protocol: TCP
+    appProtocol: http
+  - name: telemetry
+    port: 5558
+    targetPort: telemetry
+    protocol: TCP
+    appProtocol: http

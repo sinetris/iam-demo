@@ -1,0 +1,13 @@
+---
+source:
+  kind: ConfigMap
+  name: terrakube-postgres-env-cm
+  fieldPath: data.POSTGRES_DB
+targets:
+- select:
+    kind: ConfigMap
+    name: terrakube-api-env-cm
+  fieldPaths:
+  - data.DatasourceDatabase
+  options:
+    create: true

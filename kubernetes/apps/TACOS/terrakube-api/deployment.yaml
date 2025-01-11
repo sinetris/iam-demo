@@ -1,0 +1,60 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terrakube-api
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: terrakube-api
+        image: azbuilder/api-server:2.24.1
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SERVICE_BINDING_ROOT
+          value: /mnt/platform/bindings
+        volumeMounts:
+        - name: ca-certs
+          mountPath: /mnt/platform/bindings/ca-certificates
+          readOnly: true
+        envFrom:
+        - configMapRef:
+            name: terrakube-api-env-cm
+        - secretRef:
+            name: terrakube-env-secrets
+        - secretRef:
+            name: terrakube-api-env-secrets
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          failureThreshold: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8080
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8080
+          initialDelaySeconds: 120
+          periodSeconds: 10
+      volumes:
+      - name: ca-certs
+        projected:
+          sources:
+          - configMap:
+              name: kube-root-ca.crt
+              items:
+              - key: ca.crt
+                path: iamdemo-ca.pem
+          - configMap:
+              name: terrakube-files
+              items:
+              - key: ca-certificates-type
+                path: type

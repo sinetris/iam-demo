@@ -1,0 +1,42 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tools
+
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/part-of: tacos
+
+secretGenerator:
+- name: terrakube-s3-credentials
+  literals:
+  - user=terrakube-admin
+  - password=terrakube-s3-pw
+  type: Opaque
+  options:
+    disableNameSuffixHash: true
+    labels:
+      app: minio
+      app.kubernetes.io/component: storage
+      app.kubernetes.io/part-of: tacos
+
+resources:
+- dex
+- openldap
+- postgres
+- redis
+- terrakube
+- terrakube-api
+- terrakube-executor
+- terrakube-registry
+- terrakube-ui
+
+replacements:
+- path: patches/postgres-db-name.yaml
+- path: patches/postgres-db-password.yaml
+- path: patches/postgres-db-user.yaml
+- path: patches/redis-password.yaml
+- path: patches/s3-access-key.yaml
+- path: patches/s3-secret-key.yaml

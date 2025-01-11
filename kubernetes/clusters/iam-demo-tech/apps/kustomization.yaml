@@ -7,3 +7,4 @@ resources:
 - ../../../apps/git-server
 - ../../../apps/keycloak-stack
 - ../../../apps/tempo
+- ../../../apps/TACOS

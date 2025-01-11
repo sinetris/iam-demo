@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terrakube-registry-env-cm
+data:
+  AzBuilderRegistry: 'https://terrakube-reg.iam-demo.test'
+  AzBuilderApiUrl: 'http://terrakube-api-service:8080'
+  AuthenticationValidationTypeRegistry: 'DEX'
+  DexIssuerUri: 'https://terrakube-api.iam-demo.test/dex'
+  TerrakubeEnableSecurity: 'true'
+  TerrakubeUiURL: 'https://terrakube-ui.iam-demo.test'
+  AppClientId: 'iamdemo-app'
+  AppIssuerUri: 'https://terrakube-api.iam-demo.test/dex'
+  # AWS S3 Storage using MINIO
+  RegistryStorageType: 'AwsStorageImpl'
+  AwsStorageBucketName: 'terrakube'
+  AwsStorageRegion: 'us-east-1'
+  AwsEndpoint: 'http://minio.tools:9000'

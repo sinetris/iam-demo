@@ -1,0 +1,40 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terrakube-registry
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: terrakube-registry
+        image: azbuilder/open-registry:2.24.1
+        ports:
+        - containerPort: 8075
+        volumeMounts:
+        envFrom:
+        - configMapRef:
+            name: terrakube-registry-env-cm
+        - secretRef:
+            name: terrakube-env-secrets
+        - secretRef:
+            name: terrakube-registry-env-secrets
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8075
+          failureThreshold: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8075
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8075
+          initialDelaySeconds: 120
+          periodSeconds: 10
