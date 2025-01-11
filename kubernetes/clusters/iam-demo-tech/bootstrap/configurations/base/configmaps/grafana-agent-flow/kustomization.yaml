@@ -5,7 +5,7 @@ kind: Kustomization
 configMapGenerator:
 - name: grafana-agent-flow-env
   literals:
-  - LOKI_URL=http://loki-gateway.observability.svc.cluster.local.:80
+  - LOKI_URL=http://loki-gateway.observability:80
   options:
     labels:
       app.kubernetes.io/name: grafana-agent-flow-env
