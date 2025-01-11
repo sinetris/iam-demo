@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-query-frontend
     app.kubernetes.io/component: query-frontend
+    prometheus.io/service-monitor: "true"
 spec:
   type: ClusterIP
   ports:

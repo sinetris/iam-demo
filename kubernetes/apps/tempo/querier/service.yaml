@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-querier
     app.kubernetes.io/component: querier
+    prometheus.io/service-monitor: "true"
 spec:
   ports:
   - name: http-metrics

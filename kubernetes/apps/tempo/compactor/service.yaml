@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-compactor
     app.kubernetes.io/component: compactor
+    prometheus.io/service-monitor: "true"
 spec:
   type: ClusterIP
   ports:

@@ -1,0 +1,28 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tempo-compactor
+  labels:
+    app.kubernetes.io/name: tempo-compactor
+    app.kubernetes.io/component: compactor
+spec:
+  namespaceSelector:
+    matchNames:
+    - observability
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tempo-compactor
+      app.kubernetes.io/component: compactor
+    matchExpressions:
+    - key: prometheus.io/service-monitor
+      operator: In
+      values:
+      - "true"
+  endpoints:
+  - port: http-metrics
+    relabelings:
+    - sourceLabels: [job]
+      replacement: "observability/compactor"
+      targetLabel: job
+    scheme: http

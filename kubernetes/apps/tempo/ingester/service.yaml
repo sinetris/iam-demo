@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-ingester
     app.kubernetes.io/component: ingester
+    prometheus.io/service-monitor: "true"
 spec:
   ports:
   - name: http-metrics

@@ -1,0 +1,28 @@
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: tempo-distributor
+  labels:
+    app.kubernetes.io/name: tempo-distributor
+    app.kubernetes.io/component: distributor
+spec:
+  namespaceSelector:
+    matchNames:
+    - observability
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: tempo-distributor
+      app.kubernetes.io/component: distributor
+    matchExpressions:
+    - key: prometheus.io/service-monitor
+      operator: In
+      values:
+      - "true"
+  endpoints:
+  - port: http-metrics
+    relabelings:
+    - sourceLabels: [job]
+      replacement: "observability/distributor"
+      targetLabel: job
+    scheme: http
