@@ -1,0 +1,49 @@
+---
+connectors:
+- config:
+    bindDN: cn=admin,dc=example,dc=org
+    bindPW: admin
+    groupSearch:
+      baseDN: ou=Groups,dc=example,dc=org
+      filter: (objectClass=groupOfNames)
+      nameAttr: cn
+      userMatchers:
+      - groupAttr: member
+        userAttr: DN
+    host: terrakube-openldap-service:1389
+    insecureNoSSL: true
+    userSearch:
+      baseDN: ou=users,dc=example,dc=org
+      emailAttr: mail
+      filter: (objectClass=person)
+      idAttr: DN
+      nameAttr: cn
+      username: mail
+    usernamePrompt: Email Address
+  id: ldap
+  name: OpenLDAP
+  type: ldap
+issuer: https://terrakube-api.iam-demo.test/dex
+oauth2:
+  responseTypes:
+  - code
+  - token
+  - id_token
+staticClients:
+- id: iamdemo-app
+  name: iamdemo-app
+  public: true
+  redirectURIs:
+  - https://terrakube-ui.iam-demo.test
+  - /device/callback
+  - http://localhost:10000/login
+  - http://localhost:10001/login
+storage:
+  type: kubernetes
+  config:
+    inCluster: true
+web:
+  allowedOrigins:
+  - '*'
+  http: 0.0.0.0:5556
+  skipApprovalScreen: true

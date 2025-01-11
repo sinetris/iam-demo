@@ -1,0 +1,42 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terrakube-api-env-cm
+data:
+  DexClientId: 'iamdemo-app'
+  TERRAKUBE_ADMIN_GROUP: 'TERRAKUBE_ADMIN'
+  GroupValidationType: 'DEX'
+  UserValidationType: 'DEX'
+  AuthenticationValidationType: 'DEX'
+  ExecutorReplicas: '1'
+  DexIssuerUri: 'https://terrakube-api.iam-demo.test/dex'
+  AzBuilderExecutorUrl: 'http://terrakube-executor-service:8090/api/v1/terraform-rs'
+  TerrakubeUiURL: 'https://terrakube-ui.iam-demo.test'
+  TerrakubeHostname: 'terrakube-api.iam-demo.test'
+  # AWS S3 Storage
+  StorageType: 'AWS'
+  AwsEndpoint: 'http://minio.tools:9000'
+  AwsStorageBucketName: 'terrakube'
+  AwsStorageRegion: 'us-east-1'
+  # Database options
+  ApiDataSourceType: 'POSTGRESQL'
+  DatasourceHostname: 'terrakube-postgres-svc-headless'
+  DatasourceDatabase: 'postgres'
+  DatasourceUser: 'postgres'
+  DatasourcePort: '5432'
+  DatasourceSchema: 'public'
+  DatasourceSslMode: 'disable'
+  # Redis
+  TerrakubeRedisPort: '6379'
+  TerrakubeRedisHostname: 'terrakube-redis-svc-headless'
+  # Custom terraform releases url
+  CustomTerraformReleasesUrl: 'https://releases.hashicorp.com/terraform/index.json'
+  # Load the default data for testing
+  spring_profiles_active: 'demo'
+  # ModuleCache
+  ModuleCacheMaxTotal: '128'
+  ModuleCacheMaxIdle: '128'
+  ModuleCacheMinIdle: '64'
+  ModuleCacheTimeout: '600000'
+  ModuleCacheSchedule: '0 */3 * ? * *'

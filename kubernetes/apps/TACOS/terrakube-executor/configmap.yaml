@@ -1,0 +1,27 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: terrakube-executor-env-cm
+data:
+  # General Settings
+  AzBuilderApiUrl: 'http://terrakube-api-service:8080'
+  ExecutorFlagBatch: 'false'
+  ExecutorFlagDisableAcknowledge: 'false'
+  TerrakubeToolsRepository: 'https://github.com/AzBuilder/terrakube-extensions'
+  TerrakubeToolsBranch: 'main'
+  TerrakubeEnableSecurity: 'true'
+  TerrakubeRegistryDomain: 'terrakube-reg.iam-demo.test'
+  TerrakubeApiUrl: 'https://terrakube-api.iam-demo.test'
+  # Redis
+  TerrakubeRedisPort: '6379'
+  TerrakubeRedisHostname: 'terrakube-redis-svc-headless'
+  # AWS S3 Storage
+  AwsTerraformStateBucketName: 'terrakube'
+  AwsTerraformStateRegion: 'us-east-1'
+  TerraformOutputType: 'AwsTerraformOutputImpl'
+  AwsTerraformOutputBucketName: 'terrakube'
+  AwsTerraformOutputRegion: 'us-east-1'
+  AwsEndpoint: 'http://minio.tools:9000'
+  # Custom terraform releases url
+  CustomTerraformReleasesUrl: 'https://releases.hashicorp.com/terraform/index.json'

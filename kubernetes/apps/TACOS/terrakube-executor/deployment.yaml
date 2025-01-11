@@ -1,0 +1,44 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: terrakube-executor
+spec:
+  replicas: 1
+  template:
+    spec:
+      containers:
+      - name: terrakube-executor
+        image: azbuilder/executor:2.24.1
+        ports:
+        - containerPort: 8090
+        volumeMounts:
+        env:
+        - name: InternalSecret
+          valueFrom:
+            secretKeyRef:
+              name: terrakube-env-secrets
+              key: InternalSecret
+        envFrom:
+        - configMapRef:
+            name: terrakube-executor-env-cm
+        - secretRef:
+            name: terrakube-executor-env-secrets
+        startupProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8090
+          failureThreshold: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /actuator/health/liveness
+            port: 8090
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /actuator/health/readiness
+            port: 8090
+          initialDelaySeconds: 120
+          periodSeconds: 10

@@ -1,0 +1,23 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: terrakube-registry-ingress
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+spec:
+  rules:
+  - host: "terrakube-reg.iam-demo.test"
+    http:
+      paths:
+      - path: "/"
+        pathType: "Prefix"
+        backend:
+          service:
+            name: terrakube-registry-service
+            port:
+              number: 8075
+  tls:
+  - hosts:
+    - "terrakube-reg.iam-demo.test"
+    secretName: iam-demo-terrakube-reg-tls

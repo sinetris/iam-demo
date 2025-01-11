@@ -1,0 +1,13 @@
+---
+source:
+  kind: ConfigMap
+  name: terrakube-postgres-env-cm
+  fieldPath: data.POSTGRES_USER
+targets:
+- select:
+    kind: Secret
+    name: terrakube-api-env-secrets
+  fieldPaths:
+  - data.DatasourceUser
+  options:
+    create: true

@@ -1,0 +1,38 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openldap
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openldap
+    spec:
+      containers:
+      - name: openldap
+        image: bitnami/openldap:2.6
+        env:
+        - name: LDAP_ADMIN_USERNAME
+          value: admin
+        - name: LDAP_ADMIN_PASSWORD
+          value: admin
+        - name: LDAP_ROOT
+          value: dc=example,dc=org
+        - name: LDAP_CUSTOM_LDIF_DIR
+          value: "/ldifs"
+        ports:
+        - containerPort: 1389
+        volumeMounts:
+        - name: openldap-config
+          mountPath: "/ldifs/config-ldap.ldif"
+          subPath: "config-ldap.ldif"
+          readOnly: true
+      volumes:
+      - name: openldap-config
+        secret:
+          secretName: openldap-secrets
+          items:
+          - key: "config-ldap.ldif"
+            path: "config-ldap.ldif"

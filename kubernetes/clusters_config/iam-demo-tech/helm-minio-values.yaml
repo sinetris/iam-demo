@@ -36,6 +36,14 @@ policies:
     - 'arn:aws:s3:::tempo-traces/*'
     actions:
     - "s3:*"
+- name: terrakube-services
+  statements:
+  - effect: Allow
+    resources:
+    - 'arn:aws:s3:::terrakube'
+    - 'arn:aws:s3:::terrakube/*'
+    actions:
+    - "s3:*"
 
 users:
 - accessKey: console-admin
@@ -50,6 +58,10 @@ users:
   existingSecret: tempo-s3-credentials
   existingSecretKey: password
   policy: tempo-services
+- accessKey: terrakube-admin
+  existingSecret: terrakube-s3-credentials
+  existingSecretKey: password
+  policy: terrakube-services
 
 # svcaccts:
 #   - accessKey: my-service
@@ -72,6 +84,10 @@ buckets:
 # - name: loki-admin
 #   policy: none
 #   purge: false
+# Terrakube
+- name: terrakube
+  policy: none
+  purge: false
 
 # Internal S3 API port
 minioAPIPort: "9000"
