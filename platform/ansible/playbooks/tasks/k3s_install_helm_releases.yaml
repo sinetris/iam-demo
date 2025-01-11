@@ -14,12 +14,12 @@
 - name: Install cert-manager helm chart
   kubernetes.core.helm:
     name: cert-manager
+    state: present
     chart_ref: jetstack/cert-manager
-    chart_version: v1.12.0
+    update_repo_cache: true
     namespace: security
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-cert-manager-values.yaml"
@@ -31,11 +31,12 @@
 - name: Install Consul
   kubernetes.core.helm:
     name: consul
+    state: present
     chart_ref: hashicorp/consul
+    update_repo_cache: true
     namespace: tools
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-consul-values.yaml"
@@ -56,6 +57,7 @@
     name: minio
     state: present
     chart_ref: minio/minio
+    update_repo_cache: true
     namespace: tools
     create_namespace: true
     timeout: 10m
@@ -65,44 +67,48 @@
 - name: Install Loki
   kubernetes.core.helm:
     name: loki
+    state: present
     chart_ref: grafana/loki
+    update_repo_cache: true
     namespace: observability
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-loki-values.yaml"
 - name: Install Grafana Agent Flow
   kubernetes.core.helm:
     name: grafana-agent-flow
+    state: present
     chart_ref: grafana/grafana-agent
+    update_repo_cache: true
     namespace: observability
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-grafana-agent-flow-values.yaml"
 - name: Install Vault
   kubernetes.core.helm:
     name: vault
+    state: present
     chart_ref: hashicorp/vault
+    update_repo_cache: true
     namespace: tools
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-vault-values.yaml"
 - name: Install Trivy
   kubernetes.core.helm:
     name: trivy
+    state: present
     chart_ref: aqua/trivy-operator
+    update_repo_cache: true
     namespace: tools
     create_namespace: true
     timeout: 10m
-    state: present
     wait: true
     values_files:
       - "{{ kubernetes_cluster_config_path }}/helm-trivy-values.yaml"
