@@ -5,8 +5,8 @@ source:
   fieldPath: data.POSTGRES_USER
 targets:
 - select:
-    kind: Secret
-    name: terrakube-api-env-secrets
+    kind: ConfigMap
+    name: terrakube-api-env-cm
   fieldPaths:
   - data.DatasourceUser
   options:

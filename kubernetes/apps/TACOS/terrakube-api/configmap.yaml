@@ -22,8 +22,6 @@ data:
   # Database options
   ApiDataSourceType: 'POSTGRESQL'
   DatasourceHostname: 'terrakube-postgres-svc-headless'
-  DatasourceDatabase: 'postgres'
-  DatasourceUser: 'postgres'
   DatasourcePort: '5432'
   DatasourceSchema: 'public'
   DatasourceSslMode: 'disable'

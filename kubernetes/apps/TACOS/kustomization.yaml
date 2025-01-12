@@ -9,20 +9,8 @@ labels:
   pairs:
     app.kubernetes.io/part-of: tacos
 
-secretGenerator:
-- name: terrakube-s3-credentials
-  literals:
-  - user=terrakube-admin
-  - password=terrakube-s3-pw
-  type: Opaque
-  options:
-    disableNameSuffixHash: true
-    labels:
-      app: minio
-      app.kubernetes.io/component: storage
-      app.kubernetes.io/part-of: tacos
-
 resources:
+- ../../clusters/iam-demo-tech/bootstrap/configurations/base/secrets/terrakube-s3-credentials
 - dex
 - openldap
 - postgres
