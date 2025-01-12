@@ -10,12 +10,12 @@ labels:
     role: data
 
 resources:
+- configmap.yaml
 - deployment.yaml
-- secret.yaml
+- secrets.yaml
 - service.yaml
 
 secretGenerator:
-- name: openldap-secrets
-  behavior: merge
+- name: openldap-files-secrets
   files:
-  - config-ldap.ldif
+  - config-ldap.ldif=assets/config-ldap.ldif
