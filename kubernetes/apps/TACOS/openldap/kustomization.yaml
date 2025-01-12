@@ -4,3 +4,8 @@ kind: Kustomization
 namePrefix: terrakube-
 resources:
 - ../../../base/openldap
+secretGenerator:
+- name: openldap-files-secrets
+  behavior: merge
+  files:
+  - config-ldap.ldif=assets/config-ldap.ldif

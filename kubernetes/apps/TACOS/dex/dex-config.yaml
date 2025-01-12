@@ -1,10 +1,10 @@
 ---
 connectors:
 - config:
-    bindDN: cn=admin,dc=example,dc=org
+    bindDN: cn=admin,dc=iam-demo,dc=test
     bindPW: admin
     groupSearch:
-      baseDN: ou=Groups,dc=example,dc=org
+      baseDN: ou=Groups,dc=iam-demo,dc=test
       filter: (objectClass=groupOfNames)
       nameAttr: cn
       userMatchers:
@@ -13,7 +13,7 @@ connectors:
     host: terrakube-openldap-service:1389
     insecureNoSSL: true
     userSearch:
-      baseDN: ou=users,dc=example,dc=org
+      baseDN: ou=users,dc=iam-demo,dc=test
       emailAttr: mail
       filter: (objectClass=person)
       idAttr: DN

@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: openldap-env-cm
+  labels:
+    app.kubernetes.io/name: openldap-env-cm
+data:
+  LDAP_ADMIN_USERNAME: admin
+  LDAP_USERS: customuser
+  LDAP_ROOT: dc=iam-demo,dc=test
+  LDAP_ADMIN_DN: cn=admin,dc=iam-demo,dc=test

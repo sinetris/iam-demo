@@ -1,0 +1,22 @@
+dn: dc=iam-demo,dc=test
+dc: iam-demo
+objectClass: dcObject
+objectClass: organization
+o: IAM Demo
+
+dn: ou=users,dc=iam-demo,dc=test
+ou: users
+objectClass: organizationalunit
+
+dn: cn=admin,ou=users,dc=iam-demo,dc=test
+objectClass: inetOrgPerson
+sn: Admin
+cn: Admin
+mail: admin@iam-demo.test
+userpassword: admin
+
+# Group definitions.
+
+dn: ou=Groups,dc=iam-demo,dc=test
+objectClass: organizationalUnit
+ou: Groups

@@ -14,14 +14,13 @@ spec:
       - name: openldap
         image: bitnami/openldap:2.6
         env:
-        - name: LDAP_ADMIN_USERNAME
-          value: admin
-        - name: LDAP_ADMIN_PASSWORD
-          value: admin
-        - name: LDAP_ROOT
-          value: dc=example,dc=org
         - name: LDAP_CUSTOM_LDIF_DIR
           value: "/ldifs"
+        envFrom:
+        - configMapRef:
+            name: openldap-env-cm
+        - secretRef:
+            name: openldap-env-secrets
         ports:
         - containerPort: 1389
         volumeMounts:
@@ -32,7 +31,7 @@ spec:
       volumes:
       - name: openldap-config
         secret:
-          secretName: openldap-secrets
+          secretName: openldap-files-secrets
           items:
           - key: "config-ldap.ldif"
             path: "config-ldap.ldif"
