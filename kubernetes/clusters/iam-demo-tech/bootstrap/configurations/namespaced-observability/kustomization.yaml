@@ -6,5 +6,6 @@ namespace: observability
 resources:
 - ../base/configmaps/grafana-agent-flow
 - ../base/configmaps/minio-urls
-- ../base/secrets/tempo-s3-credentials
 - ../base/secrets/loki-s3-credentials
+- ../base/secrets/tempo-s3-credentials
+- ../base/secrets/terrakube-s3-credentials

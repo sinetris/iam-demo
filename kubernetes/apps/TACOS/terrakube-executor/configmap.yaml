@@ -13,6 +13,7 @@ data:
   TerrakubeEnableSecurity: 'true'
   TerrakubeRegistryDomain: 'terrakube-reg.iam-demo.test'
   TerrakubeApiUrl: 'https://terrakube-api.iam-demo.test'
+  TerraformStateType: 'AwsTerraformStateImpl'
   # Redis
   TerrakubeRedisPort: '6379'
   TerrakubeRedisHostname: 'terrakube-redis-svc-headless'

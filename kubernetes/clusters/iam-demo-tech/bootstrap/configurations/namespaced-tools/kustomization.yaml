@@ -5,7 +5,8 @@ kind: Kustomization
 namespace: tools
 resources:
 - ../base/configmaps/minio-urls
-- ../base/secrets/tempo-s3-credentials
 - ../base/secrets/loki-s3-credentials
+- ../base/secrets/tempo-s3-credentials
+- ../base/secrets/terrakube-s3-credentials
 - ../base/secrets/minio-admin-secret
 - ../base/secrets/minio-console-admin-credentials
