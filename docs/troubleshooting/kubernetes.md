@@ -2,6 +2,7 @@
 
 [Back to README](README.md)
 
+- [Check K3S](#check-k3s)
 - [Inspect pods](#inspect-pods)
   - [Inspect crashing pods](#inspect-crashing-pods)
 - [Start a throw away pod](#start-a-throw-away-pod)
@@ -11,6 +12,12 @@
   - [List all releases](#list-all-releases)
   - [Generate yaml values and templates](#generate-yaml-values-and-templates)
 - [Kustomize](#kustomize)
+
+## Check K3S
+
+```sh
+k3s check-config
+```
 
 ## Inspect pods
 
