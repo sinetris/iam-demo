@@ -7,6 +7,7 @@
   - [Remote Desktop](#remote-desktop)
 - [Troubleshoot Multipass on macOS](#troubleshoot-multipass-on-macos)
   - [Files locations](#files-locations)
+  - [Uninstall Multipass](#uninstall-multipass)
   - [Networking](#networking-1)
   - [Instances](#instances)
     - [QEMU](#qemu)
@@ -41,6 +42,16 @@ the instructions in [Mouse scrolling in Firefox](virtualmachines.md#mouse-scroll
 - Generated virtual machines and ssh keys: `/var/root/Library/Application\ Support/multipassd/`
 - Logs: `/Library/Logs/Multipass/multipassd.log`
 
+```shell
+tail -f /Library/Logs/Multipass/multipassd.log
+```
+
+### Uninstall Multipass
+
+```sh
+sudo sh "/Library/Application Support/com.canonical.multipass/uninstall.sh"
+```
+
 ### Networking
 
 The first place to check is the Multipass official documentation page on
@@ -60,6 +71,12 @@ To check for duplicate entries in `/var/db/dhcpd_leases`, run:
 cat /var/db/dhcpd_leases | grep -E -o 'name=.+' | sort | uniq -c
 ```
 
+```shell
+sudo launchctl stop com.apple.bootpd
+sudo rm /var/db/dhcpd_leases
+sudo launchctl start com.apple.bootpd
+```
+
 Another problematic part is the firewall.
 
 ```shell
@@ -70,6 +87,10 @@ Another problematic part is the firewall.
 # You can add bootpd to the allowed apps from the command line (requires admin privileges)
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --add /usr/libexec/bootpd
 sudo /usr/libexec/ApplicationFirewall/socketfilterfw --unblock /usr/libexec/bootpd
+```
+
+```shell
+sudo tcpdump -i bridge100 udp port 67 and port 68
 ```
 
 ### Instances

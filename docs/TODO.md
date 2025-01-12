@@ -5,25 +5,29 @@
 > Table of content
 
 - [Documentation](#documentation)
-  - [Describe better the project scope](#describe-better-the-project-scope)
+  - [Project scope](#project-scope)
   - [Add Warning](#add-warning)
   - [Add an Infrastructure overview](#add-an-infrastructure-overview)
   - [Add Development instructions](#add-development-instructions)
   - [Add screenshots](#add-screenshots)
-- [Install Applications](#install-applications)
+  - [Internal DNS server](#internal-dns-server)
 - [Setup and configurations](#setup-and-configurations)
+  - [Install Applications](#install-applications)
+  - [Basic setup](#basic-setup)
   - [Compliance As Code](#compliance-as-code)
   - [Kubernetes resources labels and annotations](#kubernetes-resources-labels-and-annotations)
-- [Excluded Applications](#excluded-applications)
-- [Future changes](#future-changes)
+- [Future changes and alternatives](#future-changes-and-alternatives)
+  - [Excluded Applications](#excluded-applications)
   - [Change configuration](#change-configuration)
+    - [Basic changes](#basic-changes)
     - [Restructure Ansible code](#restructure-ansible-code)
       - [ansible directory layout](#ansible-directory-layout)
     - [Restructure Kubernetes code](#restructure-kubernetes-code)
       - [kubernetes directory layout](#kubernetes-directory-layout)
   - [Optional applications](#optional-applications)
     - [Interesting projects](#interesting-projects)
-  - [Alternative to linux-desktop](#alternative-to-linux-desktop)
+  - [Alternative to linux-desktop virtual machine](#alternative-to-linux-desktop-virtual-machine)
+    - [Browser from host machine](#browser-from-host-machine)
 
 ## Documentation
 
@@ -31,7 +35,7 @@ The README should:
 
 - [ ] be concise
 - [ ] include a [warning](#add-warning)
-- [ ] [describe better the project scope](#describe-better-the-project-scope)
+- [ ] have a better description of the [project scope](#project-scope)
 - [ ] include a link to this document
 - [ ] contain links to the main topics covered in the project documentation folder
 - [ ] include [FOSSA badge on GitHub][fossa-github-badge-pr]
@@ -42,7 +46,7 @@ The documentation folder should:
 - [ ] include [development instructions](#add-development-instructions)
 - [ ] include [screenshots](#add-screenshots)
 
-### Describe better the project scope
+### Project scope
 
 This project is an implementation example of what will be defined in
 [sinetris/iam-introduction](https://github.com/sinetris/iam-introduction).
@@ -89,7 +93,16 @@ Add a warning like the folowing in the [README](../README.md):
   - [ ] Terminal execute `~/bin/check-vm-config.sh`
 - [ ] Ansible Controller
 
-## Install Applications
+### Internal DNS server
+
+- [ ] document usage of `.internal` tld
+- [ ] when using a real (owned) domains
+  - [ ] ensure external DNS servers do not resolve internal domains
+        (avoid cache problems)
+
+## Setup and configurations
+
+### Install Applications
 
 - [x] [Forgejo][forgejo]: self-hosted Git service
 - [x] [Keycloak][keycloak]: IAM, IdP and SSO
@@ -101,6 +114,7 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] [Alertmanager][alertmanager]: alerts handling
 - [x] [Grafana Loki][grafana-loki]: multi-tenant log aggregation system
 - [x] [Grafana Tempo][grafana-tempo]: distributed tracing backend
+- [x] [Terrakube][terrakube]: Open source IaC Automation and Collaboration Software-
 - [ ] [midPoint][midpoint]: Identity Governance and Administration
 - [ ] [Grafana OnCall][grafana-oncall]: on-call management system
 - [ ] [Grafana k6][grafana-k6]: load testing tool
@@ -111,6 +125,7 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] [Backstage][backstage]: open platform for building developer portals
 - [ ] [Fleet][fleet]: device management (MDM)
 - [ ] [ERPNext][erpnext]: Enterprise Resource Planning
+- [ ] [Kyverno][kyverno]: Policy-as-Code (PaC) lifecycle for Kubernetes
 
 > **Note:**
 >
@@ -118,7 +133,7 @@ Add a warning like the folowing in the [README](../README.md):
 > - many applications still need to be [configured](#setup-and-configurations)
 > - some applications have been moved to [Excluded Applications](#excluded-applications)
 
-## Setup and configurations
+### Basic setup
 
 - [x] move Postgres to [base](../kubernetes/base/)
   - [x] use `StatefulSet`
@@ -160,9 +175,10 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] setup [pre-commit][pre-commit] for this project repository
 - [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
       [Grafana][grafana], [Tempo][grafana-tempo]
-  - [ ] install [Grafana Agent Flow[grafana-agent-flow]]
-  - [ ] configure Grafana Agent Flow to use [loki.source.kubernetes][grafana-agent-loki-source-k8s]
-        component
+  - [x] install [Grafana Agent Flow[grafana-agent-flow]]
+    - [ ] configure Grafana Agent Flow to use [loki.source.kubernetes][grafana-agent-loki-source-k8s]
+          component
+    - [ ] configure Grafana Agent Flow to use [discovery.consul][grafana-agent-loki-discovery-consul]
   - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
@@ -187,6 +203,10 @@ Add a warning like the folowing in the [README](../README.md):
   - [x] move endpoints from to ConfigMap
   - [x] save MinIO credentials in Kubernetes Secret
 - [ ] setup [FOSSA][fossa] and [.fossa.yml][fossa-yml] for the project repo
+- [ ] setup `linux-desktop`
+  - Firefox bookmarks
+    - [ ] add link to [Loki memberlist](https://loki.iam-demo.test/memberlist)
+    - [ ] add link to [Terrakube UI](https://terrakube-ui-demo.test)
 
 ### Compliance As Code
 
@@ -217,7 +237,7 @@ metadata:
     a8r.io/owner: "gitops-team@example.com"
 ```
 
-For more for annotations examples, check [Annotating Kubernetes Services for Humans][ambassador-k8s-annotations].
+For more annotations examples, check [Annotating Kubernetes Services for Humans][ambassador-k8s-annotations].
 
 Note that you can query `labels` to select resources, but you cannot query|
 `annotations`, which are just arbitrary key/value information and are not
@@ -234,7 +254,9 @@ kubectl get service -A -o jsonpath='{.items[?(@.metadata.annotations.prometheus\
 kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum/config)]}{.metadata.namespace}{"/"}{.metadata.name}{"\t"}{.metadata.creationTimestamp}{"\n"}{end}'
 ```
 
-## Excluded Applications
+## Future changes and alternatives
+
+### Excluded Applications
 
 - ~~[Harbor][harbor]: artifacts registry (for Docker images and OPA policies)~~\
   Harbor require too much work to deploy on ARM64 and we can use the already
@@ -250,9 +272,9 @@ kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum
 - ~~[MailHog][mailhog]: Web and API based SMTP testing~~\
   Not maintained anymore. Switching to [Mailpit][mailpit].
 
-## Future changes
-
 ### Change configuration
+
+#### Basic changes
 
 - [ ] configure Vault for production
   - [ ] set `server.dev.enabled` to `false`
@@ -292,7 +314,8 @@ kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum
 The project use [Ansible][ansible] to manage VMs and [bootsrap kubernetes](../kubernetes/).
 The [Ansible code](../platform/ansible/) for the custom_roles and playbooks
 needs to be restructured (add label, move tasks in the proper place, etc)
-and would be better to use a [dinamic Ansible inventory][ansible-dev-dynamic-inventory].
+and would be better to move the custom roles in Ansible collections and use a
+[dinamic Ansible inventory][ansible-dev-dynamic-inventory].
 
 ##### ansible directory layout
 
@@ -420,7 +443,9 @@ different platforms.
 - [ ] [PacBot][pacbot]: Policy as Code Bot (by T-Mobile)
 - [ ] [MagTape][magtape]: Policy-as-Code for Kubernetes (by T-Mobile)
 
-### Alternative to linux-desktop
+### Alternative to linux-desktop virtual machine
+
+#### Browser from host machine
 
 You can use the host machine (e.g. your laptop) instead of the `linux-desktop`
 virtual machine.
@@ -437,9 +462,9 @@ virtual machine.
 - self-signed CA root certificate must be installed on the host machine
 - VPNs are likely to interfere with the previous steps
 - most of the previous steps require administrative privileges, which are usually
-  not allowed (whether it is an enforced policy or not) on the work laptop
-- you must take into account that the configuration of the users' host machines
-  will likely be very different (OS, network configuration, etc.)
+  not allowed (whether it is an enforced policy or not) on company owned laptops
+- configuration of the users' host machines will likely be very different (OS,
+  network configuration, etc.)
 
 [age]: <https://github.com/FiloSottile/age> "age"
 [alertmanager]: <https://github.com/prometheus/alertmanager> "Alertmanager"
@@ -480,6 +505,7 @@ virtual machine.
 [gitness]: <https://gitness.com/> "Gitness"
 [google-cloud-internal-tld]: <https://cloud.google.com/compute/docs/internal-dns> "Google Cloud internal tld"
 [grafana-agent-flow]: <https://grafana.com/docs/agent/next/flow/> "Grafana Agent Flow"
+[grafana-agent-loki-discovery-consul]: <https://grafana.com/docs/agent/latest/flow/reference/components/discovery.consul/> "Grafana Agent Flow - discovery.consul"
 [grafana-agent-loki-source-k8s]: <https://grafana.com/docs/agent/next/flow/reference/components/loki.source.kubernetes/> "Grafana Agent Flow - loki.source.kubernetes"
 [grafana-k6]: <https://github.com/grafana/k6> "Grafana k6"
 [grafana-loki-auth]: <https://grafana.com/docs/loki/latest/operations/authentication/?pg=blog&plcmt=body-txt> "Grafana Loki authentication"
@@ -497,6 +523,7 @@ virtual machine.
 [kubernetes-multi-tenancy]: <https://kubernetes.io/docs/concepts/security/multi-tenancy/> "Kubernetes multi-tenancy"
 [kubernetes-pki-best-practices]: <https://kubernetes.io/docs/setup/best-practices/certificates/> "kubernetes PKI best practices"
 [kustomize]: <https://kustomize.io/> "Kustomize"
+[kyverno]: <https://kyverno.io/> "Kyverno"
 [magtape]: <https://github.com/tmobile/magtape> "MagTape"
 [mailhog]: <https://github.com/mailhog/MailHog> "MailHog"
 [mailpit]: <https://github.com/axllent/mailpit> "Mailpit"
@@ -522,6 +549,7 @@ virtual machine.
 [renovate]: <https://github.com/renovatebot/renovate> "Renovate"
 [restic]: <https://restic.net/> "Restic"
 [scap]: <http://scap.nist.gov/> "Security Content Automation Protocol"
+[terrakube]: <https://github.com/AzBuilder/terrakube> "Terrakube: Open source IaC Automation and Collaboration Software"
 [tfsec]: <https://github.com/liamg/tfsec> "tfsec"
 [trestle]: <https://github.com/IBM/compliance-trestle> "Trestle"
 [trivy-policy-reporter]: <https://aquasecurity.github.io/trivy-operator/latest/tutorials/integrations/policy-reporter/> "Trivy Policy Reporter Integration"

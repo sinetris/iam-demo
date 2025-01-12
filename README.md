@@ -13,7 +13,7 @@ Identity and Access Management (IAM) demo infrastructure.
     - [Test self-signed certificates](#test-self-signed-certificates)
     - [Complete Setup (required to run only once)](#complete-setup-required-to-run-only-once)
       - [Configure environment variables and shell completion](#configure-environment-variables-and-shell-completion)
-      - [Configure Gitea ssh keys](#configure-gitea-ssh-keys)
+      - [Configure Forgejo ssh keys](#configure-forgejo-ssh-keys)
   - [🧑‍💻 Access Kubernetes cluster](#-access-kubernetes-cluster)
     - [Connecting from the console](#connecting-from-the-console)
     - [Connect using linux-desktop browser](#connect-using-linux-desktop-browser)
@@ -95,7 +95,7 @@ helm completion bash | sudo tee /etc/bash_completion.d/helm
 exec $SHELL
 ```
 
-##### Configure Gitea ssh keys
+##### Configure Forgejo ssh keys
 
 Open a terminal to generate the ssh keys.
 
@@ -103,7 +103,7 @@ Open a terminal to generate the ssh keys.
 ssh-keygen -t ed25519 -C "iamadmin@iam-demo.test"
 ```
 
-Open a [Gitea](https://git.iam-demo.test) in a browser and login using the
+Open a [Forgejo](https://git.iam-demo.test) in a browser and login using the
 credentials from [Connect using linux-desktop browser](#connect-using-linux-desktop-browser).
 
 Open a terminal and copy your public ssh key in the clipboard.
@@ -112,7 +112,7 @@ Open a terminal and copy your public ssh key in the clipboard.
 cat ~/.ssh/id_ed25519.pub | tee >(xclip -selection clipboard); echo ''
 ```
 
-Open [Manage SSH Keys in Gitea](https://git.iam-demo.test/user/settings/keys)
+Open [Manage SSH Keys in Forgejo](https://git.iam-demo.test/user/settings/keys)
 in a browser and paste the public key.
 
 ### 🧑‍💻 Access Kubernetes cluster
@@ -177,9 +177,9 @@ Open Firefox inside the VM, and use the following URLs:
 - Grafana: <https://grafana.iam-demo.test>
   - user: admin
   - password: grafana-admin
-- Gitea: <https://git.iam-demo.test>
-  - user: gitea-admin
-  - password: giteapw123!
+- Forgejo: <https://git.iam-demo.test>
+  - user: forgejo-admin
+  - password: forgejopw123!
 - Prometheus: <https://prometheus.iam-demo.test>
 - Alertmanager: <https://alertmanager.iam-demo.test>
 - Consul: <https://consul.iam-demo.test>
@@ -193,6 +193,7 @@ respective subsections.
 Open a terminal and start port forwarding using:
 
 ```sh
+KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl port-forward \
   --namespace kube-system \
   $(kubectl get pods \
@@ -209,12 +210,14 @@ Open <http://127.0.0.1:9000/dashboard/> in a browser.
 Generate a token, print it and copy it to the clipboard:
 
 ```sh
+KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl -n kubernetes-dashboard create token admin-user | tee >(xclip -selection clipboard); echo ''
 ```
 
 Start the proxy:
 
 ```sh
+KUBECONFIG=~/.kube/config-iam-demo-tech
 kubectl proxy
 ```
 

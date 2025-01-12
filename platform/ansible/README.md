@@ -16,6 +16,17 @@ Check that ansible can connect to all hosts:
 ansible -m ping all
 ```
 
+Run all needed playbooks
+
+```bash
+ansible-playbook playbooks/all-setup -vvv
+# Or run them one by one
+ansible-playbook playbooks/bootstrap-ansible-controller -vvv
+ansible-playbook playbooks/bootstrap-bind -vvv
+ansible-playbook playbooks/basic-bootstrap -vvv
+ansible-playbook playbooks/k3s-all-setup -vvv
+```
+
 Examples of useful commands:
 
 ```bash
