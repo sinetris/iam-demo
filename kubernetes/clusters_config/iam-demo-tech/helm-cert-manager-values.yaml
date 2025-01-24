@@ -6,7 +6,9 @@ startupapicheck:
   enabled: true
   timeout: 5m
 
-# prometheus:
-#   enabled: true
-#   servicemonitor:
-#     enabled: true
+prometheus:
+  enabled: true
+  servicemonitor:
+    enabled: true
+    labels:
+      release: prometheus
