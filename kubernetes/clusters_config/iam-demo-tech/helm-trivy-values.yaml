@@ -1,5 +1,10 @@
 ---
+service:
+  headless: false
+  labels:
 serviceMonitor:
   enabled: true
   labels:
-    prometheus.io/service-monitor: "true"
+    release: prometheus
+trivy:
+  ignoreUnfixed: true
