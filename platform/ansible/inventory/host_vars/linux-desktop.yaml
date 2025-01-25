@@ -8,3 +8,5 @@ k3s_copy_cluster_config:
 use_selfsigned_root_ca: true
 is_linux_desktop: true
 desktop_user: iamadmin
+additional_packages:
+  - firefox
