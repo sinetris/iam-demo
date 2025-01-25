@@ -3,8 +3,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-  labels:
-    app.kubernetes.io/name: postgres
 spec:
   replicas: 1
   serviceName: postgres-svc-headless

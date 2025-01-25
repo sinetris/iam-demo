@@ -6,6 +6,7 @@ labels:
 - includeSelectors: true
   pairs:
     app: postgres
+    app.kubernetes.io/app: postgres
     app.kubernetes.io/component: database
     role: data
 
@@ -16,3 +17,9 @@ resources:
 - service.yaml
 - serviceaccount.yaml
 - statefulset.yaml
+
+secretGenerator:
+- name: postgres-env-secrets
+  behavior: merge
+  literals:
+  - POSTGRES_PASSWORD=password

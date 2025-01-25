@@ -6,6 +6,7 @@ labels:
 - includeSelectors: true
   pairs:
     app: memcached
+    app.kubernetes.io/app: memcached
     app.kubernetes.io/component: cache
     role: data
 
