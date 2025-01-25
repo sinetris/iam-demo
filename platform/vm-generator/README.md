@@ -52,9 +52,9 @@ multipass start linux-desktop
 
 ## Generate VMs configuration files
 
+Generate admin password and ansible ssh keys:
+
 ```sh
-# Set the Orchestrator to be used in the VM Generator
-vm_generator_orchestrator=multipass
 # Create a directory for the generated files
 mkdir -p generated/assets/.ssh
 # Create password hash
@@ -62,18 +62,21 @@ vm_admin_password=iamadmin
 openssl passwd -6 -salt $(openssl rand -base64 8) "${vm_admin_password}" > generated/assets/admin_password
 # Generate SSH keys for ansible
 ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f generated/assets/.ssh/id_ed25519 -q -N ""
-# Generate VMs scripts
+```
+
+Generate VMs management scripts:
+
+```sh
+# Set the Orchestrator to be used in the VM Generator
+vm_generator_orchestrator=multipass
+# Use 'arm64' for Apple silicon processors or 'amd64' for Intel and AMD 64bit CPUs
+host_architecture=arm64
 cp config.libsonnet.${vm_generator_orchestrator}.example config.libsonnet
 jsonnet --create-output-dirs \
 --multi ./generated \
 --tla-str orchestrator_name="${vm_generator_orchestrator}" \
+--ext-str architecture="${host_architecture}" \
 --string virtual-machines.jsonnet
-# Generate and provision VMs
-cd generated
-chmod u+x *.sh
-./vms-create.sh
-./vms-setup.sh
-./vms-provisioning.sh
 ```
 
 ## Manage VMs
@@ -85,7 +88,22 @@ chmod u+x *.sh
 ./vms-create.sh
 # Basic setup
 ./vms-setup.sh
+# Automated provisioning
 ./vms-provisioning.sh
+# Get all VMs status
+./vms-status.sh
+# Get status for a specific VM
+./vms-status.sh ansible-controller
+# Get info for a specific VM
+./vm-info.sh ansible-controller
+# Get console for a specific VM
+./vm-shell.sh ansible-controller
+```
+
+To destroy all VMs and the generated project folder:
+
+```sh
+./vms-destroy.sh
 ```
 
 ## Ubuntu ISO

@@ -1,6 +1,5 @@
 {
   project_name: 'iam-demo',
-  architecture: 'amd64',
   ansible_ssh_authorized_keys: [],
   ansible_files_path: 'the ansible folder',
   ansible_inventory_path: self.ansible_files_path + '/inventory',

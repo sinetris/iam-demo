@@ -93,7 +93,8 @@ local inline_shell_provisioning(opts) =
           echo "No need to reboot"
         else
           echo "Reboot"
-          multipass restart %(destination_host)s
+          multipass stop %(destination_host)s
+          multipass start %(destination_host)s
         fi
         set -e
       ||| % {
@@ -171,7 +172,7 @@ local create_vm(config, vm) =
         --disk %(storage_space)sM \
         --memory %(memory)sM \
         --name "${_vm_name}" \
-        --cloud-init "cloud-init-${_vm_name}.yaml" \
+        --cloud-init "assets/cloud-init-${_vm_name}.yaml" \
         --timeout %(timeout)s \
         %(mounts)s release:%(guest_os_release)s
     else

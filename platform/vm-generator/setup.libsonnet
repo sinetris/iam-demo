@@ -45,11 +45,11 @@ local add_default_machine_data(setup, vm) =
   {
     project_host_path: setup.project_dir + '/instances/' + vm.hostname,
     cpus: 1,
-    architecture: config.architecture,
+    architecture: std.extVar('prefix'),
     memory: '1024',
     timeout: 15 * 60,
     storage_space: '10240',
-    admin_username: config.admin_user,
+    admin_username: config.admin_username,
     users: [admin_user],
     mounts: [
       {
@@ -99,14 +99,14 @@ local add_default_machine_data(setup, vm) =
         {
           type: 'file',
           source_host: 'localhost',
-          source: './.ssh/id_ed25519.pub',
+          source: './assets/.ssh/id_ed25519.pub',
           destination: '/home/ubuntu/.ssh/id_ed25519.pub',
           create_parents_dir: true,
         },
         {
           type: 'file',
           source_host: 'localhost',
-          source: './.ssh/id_ed25519',
+          source: './assets/.ssh/id_ed25519',
           destination: '/home/ubuntu/.ssh/id_ed25519',
           create_parents_dir: true,
         },
