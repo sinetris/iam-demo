@@ -135,7 +135,7 @@ local add_default_machine_data(setup, vm) =
                 | yq -P > inventory/group_vars/all/10-hosts
               cat inventory/machines_config.json \
                 | jq '.nic as $n | {network_interface: $n}' \
-                | yq -P > inventory/group_vars/all/20-hosts
+                | yq -P > inventory/group_vars/all/20-config
               ansible 'all' -m ping
             |||,
         },
