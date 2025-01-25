@@ -8,7 +8,8 @@ labels:
 - includeSelectors: true
   pairs:
     app: mailpit
-    role: smtp
+    app.kubernetes.io/app: mailpit
+    app.kubernetes.io/part-of: mailpit
 
 resources:
 - configmap-env.yaml
@@ -16,5 +17,6 @@ resources:
 - deployment.yaml
 - ingress.yaml
 - secrets-authfiles.yaml
-- service-http.yaml
+- service-pop3.yaml
 - service-smtp.yaml
+- service-web.yaml

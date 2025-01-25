@@ -3,8 +3,6 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: mailpit
-  labels:
-    app.kubernetes.io/name: mailpit
 spec:
   selector:
     matchLabels:
@@ -17,25 +15,27 @@ spec:
     spec:
       containers:
       - name: mailpit
-        image: axllent/mailpit:v1.14
+        image: axllent/mailpit:v1.21
         envFrom:
         - configMapRef:
             name: mailpit-env-cm
         ports:
-        - name: web-ui
+        - name: mailpit-web
           containerPort: 8025
         - name: mailpit-smtp
           containerPort: 1025
+        - name: mailpit-pop3
+          containerPort: 1110
         livenessProbe:
           httpGet:
             path: /livez
-            port: web-ui
+            port: mailpit-web
           initialDelaySeconds: 5
           timeoutSeconds: 5
         readinessProbe:
           httpGet:
             path: /readyz
-            port: web-ui
+            port: mailpit-web
           initialDelaySeconds: 5
           timeoutSeconds: 2
         resources:
