@@ -1,8 +1,7 @@
 ---
 exclude: |
   (?x)^(
-      platform/ansible/installed/.*|
-      kubernetes/apps/kubernetes-dashboard/dashboard\.yaml
+      platform/ansible/installed/.*
   )$
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks

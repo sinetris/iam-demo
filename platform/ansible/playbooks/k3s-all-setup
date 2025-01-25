@@ -1,4 +1,5 @@
 ---
 - import_playbook: k3s-bootstrap
 - import_playbook: k3s-copy-config
-- import_playbook: k3s-provisioning
+- import_playbook: k3s-base-provisioning
+- import_playbook: k3s-apps-provisioning
