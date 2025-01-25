@@ -6,6 +6,7 @@ labels:
 - includeSelectors: true
   pairs:
     app: keycloak
+    app.kubernetes.io/component: application
 
 resources:
 - data-pvc.yaml
@@ -37,4 +38,3 @@ generatorOptions:
   disableNameSuffixHash: true
   labels:
     app: keycloak
-    app.kubernetes.io/component: configuration
