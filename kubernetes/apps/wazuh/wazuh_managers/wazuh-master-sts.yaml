@@ -7,14 +7,12 @@ spec:
   replicas: 1
   selector:
     matchLabels:
-      app: wazuh-manager
       node-type: master
   serviceName: wazuh-cluster
   podManagementPolicy: Parallel
   template:
     metadata:
       labels:
-        app: wazuh-manager
         node-type: master
       name: wazuh-manager-master
     spec:
@@ -140,7 +138,6 @@ spec:
   volumeClaimTemplates:
   - metadata:
       name: wazuh-manager-master
-      namespace: wazuh
     spec:
       accessModes:
       - ReadWriteOnce

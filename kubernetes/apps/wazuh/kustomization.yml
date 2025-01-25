@@ -1,11 +1,13 @@
 ---
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: tools
+
+namespace: security
+
 labels:
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/part-of: gitea
+    app.kubernetes.io/part-of: wazuh
 
 secretGenerator:
 - name: indexer-certs
@@ -47,11 +49,7 @@ resources:
 - secrets/dashboard-cred-secret.yaml
 - secrets/indexer-cred-secret.yaml
 
-- wazuh_managers/wazuh-cluster-svc.yaml
-- wazuh_managers/wazuh-master-svc.yaml
-- wazuh_managers/wazuh-workers-svc.yaml
-- wazuh_managers/wazuh-master-sts.yaml
-- wazuh_managers/wazuh-worker-sts.yaml
+- wazuh_managers
 
 - indexer_stack/wazuh-indexer/indexer-svc.yaml
 - indexer_stack/wazuh-indexer/cluster/indexer-api-svc.yaml
