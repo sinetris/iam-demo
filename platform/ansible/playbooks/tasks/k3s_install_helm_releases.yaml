@@ -113,7 +113,7 @@
     state: present
     chart_ref: aqua/trivy-operator
     update_repo_cache: true
-    namespace: tools
+    namespace: trivy-system
     create_namespace: true
     timeout: 10m
     wait: true

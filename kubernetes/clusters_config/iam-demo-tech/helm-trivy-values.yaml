@@ -1,4 +1,7 @@
 ---
+# We limit namespaces targets until the "Reconciler error"
+# is fixed in trivy-operator.
+targetNamespaces: "kube-system,security"
 service:
   headless: false
   labels:
@@ -8,3 +11,10 @@ serviceMonitor:
     release: prometheus
 trivy:
   ignoreUnfixed: true
+  severity: HIGH,CRITICAL
+trivyOperator:
+  scanJobCompressLogs: false
+operator:
+  infraAssessmentScannerEnabled: false
+  scanJobsConcurrentLimit: 3
+  scanJobsRetryDelay: 90s
