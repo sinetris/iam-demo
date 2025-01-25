@@ -158,7 +158,6 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'xfce4-terminal',
         'xfce4-clipman-plugin',
         'xclip',
-        'firefox',
       ]) + addArrayIf(is_rdp_server, [
         'xrdp',
       ]) + addArrayIf(is_vnc_server, [
@@ -167,10 +166,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'novnc',
         'x11vnc',
       ]),
-      runcmd: addArrayIf(is_desktop, [
-        ['wget', '-O', '/var/cache/apt/archives/vscode-stable.deb', code_pkg],
-        ['apt', 'install', '-y', '/var/cache/apt/archives/vscode-stable.deb'],
-      ]) + addArrayIf(is_rdp_server, [
+      runcmd: addArrayIf(is_rdp_server, [
         ['systemctl', 'enable', 'xrdp'],
         ['service', 'xrdp', 'restart'],
       ]) + addArrayIf(is_vnc_server, [
@@ -198,7 +194,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     } + if is_ansible_controller then {
       ansible: {
         package_name: 'ansible-core',
-        install_method: 'pip',
+        install_method: 'distro',
         run_user: vm.admin_username,
       },
     } else {};
