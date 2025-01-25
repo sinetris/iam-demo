@@ -1,0 +1,10 @@
+---
+- name: Try to fix hosts
+  hosts: all
+  gather_facts: true
+  become: true
+  tasks:
+    - name: Basic fixes
+      ansible.builtin.include_role:
+        name: sinetris.common
+        tasks_from: fixes.yml
