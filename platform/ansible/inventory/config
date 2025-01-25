@@ -21,5 +21,8 @@ all:
         k3s_control_planes:
           hosts:
             iam-control-plane:
+    dns_servers:
+      hosts:
+        ansible-controller:
   hosts:
     <<: *hosts
