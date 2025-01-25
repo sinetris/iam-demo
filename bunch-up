@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-orchestrator_name=multipass
+vm_generator_orchestrator=multipass
+architecture=amd64
 
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 generated_path=generated
 project_generator_path="${project_path}/platform/vm-generator"
 generated_project_path="${project_generator_path}/${generated_path}"
+valid_architectures=( amd64 arm64 )
+valid_orchestrators=( fake multipass vbox )
 
 __usage=$(
 	cat <<-HELPMSG
@@ -42,13 +45,13 @@ check_dependency() {
 }
 
 generate_ansible_ssh_keys() {
-  if [ -f "${generated_project_path}/.ssh/id_ed25519.pub" ]; then
+  if [ -f "${generated_project_path}/assets/.ssh/id_ed25519.pub" ]; then
     echo "Using existing SSH keys for ansible ✅"
   else
     check_dependency 'ssh-keygen'
     echo "Generating SSH keys for ansible ..."
-    mkdir -p "${generated_project_path}/.ssh"
-    ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f "${generated_project_path}/.ssh/id_ed25519" -q -N ""
+    mkdir -p "${generated_project_path}/assets/.ssh"
+    ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f "${generated_project_path}/assets/.ssh/id_ed25519" -q -N ""
   fi
 }
 
@@ -59,12 +62,15 @@ generate_bootstrap_scripts() {
   else
     echo "Missing config.libsonnet"
     echo "Copying config.libsonnet.example to config.libsonnet"
-    cp "${project_generator_path}/config.libsonnet.example" "${project_generator_path}/config.libsonnet"
+    cp "${project_generator_path}/config.libsonnet.${vm_generator_orchestrator}.example" "${project_generator_path}/config.libsonnet"
   fi
+  echo "Using orchestrator: $(tput bold)${vm_generator_orchestrator}$(tput sgr0)"
+  echo "Using architecture: $(tput bold)${architecture}$(tput sgr0)"
   cd "${project_generator_path}"
   jsonnet --create-output-dirs \
     --multi "${generated_project_path}" \
-    --tla-str orchestrator_name="${orchestrator_name}" \
+    --tla-str orchestrator_name="${vm_generator_orchestrator}" \
+    --ext-str architecture="${architecture}" \
     --string virtual-machines.jsonnet
   chmod u+x "${generated_project_path}"/*.sh
 }
@@ -103,6 +109,16 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       setup=true
       provision=true
       ;;
+    -o | --orchestrator)
+      vm_generator_orchestrator=( "${2?Missing argument for  -o | --orchestrator}" ) ;
+      shift
+      shift
+      ;;
+    -r | --architecture)
+      architecture=( "${2?Missing argument for  -r | --architecture}" ) ;
+      shift
+      shift
+      ;;
     -g | --generate)
       shift
       generate=true
@@ -135,6 +151,16 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       ;;
   esac
 done
+
+if [[ ! " ${valid_architectures[*]} " =~ " ${architecture} " ]]; then
+  printf "$(tput setaf 1)Error: 'architecture' must be one of: $(tput bold)${valid_architectures[*]}$(tput sgr0)\n" >&2
+  exit 1
+fi
+
+if [[ ! " ${valid_orchestrators[*]} " =~ " ${vm_generator_orchestrator} " ]]; then
+  printf "$(tput setaf 1)Error: 'orchestrator' must be one of: $(tput bold)${valid_orchestrators[*]}$(tput sgr0)\n" >&2
+  exit 1
+fi
 
 if $delete; then
   machines_delete
