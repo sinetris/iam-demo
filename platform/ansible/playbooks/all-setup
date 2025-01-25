@@ -1,4 +1,5 @@
 ---
+- import_playbook: basic-fixes
 - import_playbook: bootstrap-ansible-controller
 - import_playbook: bootstrap-bind
 - import_playbook: basic-bootstrap
