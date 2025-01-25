@@ -4,12 +4,10 @@ kind: ServiceMonitor
 metadata:
   name: forgejo
   labels:
-    app.kubernetes.io/name: forgejo
-    app.kubernetes.io/instance: forgejo
+    release: prometheus
 spec:
   selector:
     matchLabels:
-      app.kubernetes.io/name: forgejo
       app.kubernetes.io/instance: forgejo
   endpoints:
   - port: http
