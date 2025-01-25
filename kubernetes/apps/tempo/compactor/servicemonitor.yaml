@@ -6,6 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-compactor
     app.kubernetes.io/component: compactor
+    release: prometheus
 spec:
   namespaceSelector:
     matchNames:
