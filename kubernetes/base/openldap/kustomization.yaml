@@ -6,6 +6,7 @@ labels:
 - includeSelectors: true
   pairs:
     app: openldap
+    app.kubernetes.io/app: openldap
     app.kubernetes.io/component: ldap
     role: data
 
@@ -16,6 +17,11 @@ resources:
 - service.yaml
 
 secretGenerator:
-- name: openldap-files-secrets
+- name: openldap-ldif-files-secrets
   files:
   - config-ldap.ldif=assets/config-ldap.ldif
+- name: openldap-env-secrets
+  behavior: merge
+  literals:
+  - LDAP_ADMIN_PASSWORD=adminpassword
+  - LDAP_PASSWORDS=custompassword

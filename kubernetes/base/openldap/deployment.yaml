@@ -4,18 +4,21 @@ kind: Deployment
 metadata:
   name: openldap
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: openldap
   replicas: 1
   template:
     metadata:
       labels:
-        app: openldap
+        app.kubernetes.io/instance: openldap
     spec:
       containers:
       - name: openldap
         image: bitnami/openldap:2.6
         env:
         - name: LDAP_CUSTOM_LDIF_DIR
-          value: "/ldifs"
+          value: "/var/local/ldifs"
         envFrom:
         - configMapRef:
             name: openldap-env-cm
@@ -25,13 +28,9 @@ spec:
         - containerPort: 1389
         volumeMounts:
         - name: openldap-config
-          mountPath: "/ldifs/config-ldap.ldif"
-          subPath: "config-ldap.ldif"
+          mountPath: /var/local/ldifs
           readOnly: true
       volumes:
       - name: openldap-config
         secret:
-          secretName: openldap-files-secrets
-          items:
-          - key: "config-ldap.ldif"
-            path: "config-ldap.ldif"
+          secretName: openldap-ldif-files-secrets
