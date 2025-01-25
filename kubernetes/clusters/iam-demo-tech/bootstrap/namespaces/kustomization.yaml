@@ -8,6 +8,7 @@ labels:
     prometheus.io/discovery: enabled
 
 resources:
+- kubernetes-dashboard.yaml
 - observability.yaml
 - security.yaml
 - tools.yaml

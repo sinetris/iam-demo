@@ -31,6 +31,18 @@
         kustomize_files_path: "{{ project_bootstrap_kustomize_path }}/configurations"
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"
+    - name: Run kustomize for kubernetes-dashboard token
+      delegate_to: localhost
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      kubernetes.core.k8s:
+        definition: "{{
+            lookup('kubernetes.core.kustomize', dir=kubernetes_dashboard_path)
+          }}"
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"
     - name: Create root CA secret in cert-manager namespace
       connection: local
       vars:
@@ -63,17 +75,5 @@
         - k3s_state == 'installed'
       delegate_to: localhost
       ansible.builtin.import_tasks: tasks/k3s_install_helm_releases.yaml
-      environment:
-        KUBECONFIG: "{{ k3s_kubeconfig }}"
-    - name: Run kustomize for the project
-      delegate_to: localhost
-      when:
-        - k3s_primary_control_node
-        - k3s_state is defined
-        - k3s_state == 'installed'
-      kubernetes.core.k8s:
-        definition: "{{
-            lookup('kubernetes.core.kustomize', dir=project_apps_kustomize_path)
-          }}"
       environment:
         KUBECONFIG: "{{ k3s_kubeconfig }}"

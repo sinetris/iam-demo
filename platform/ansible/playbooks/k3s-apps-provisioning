@@ -1,0 +1,17 @@
+---
+- name: K3S cluster applications setup
+  hosts: k3s_cluster
+  become: false
+  tasks:
+    - name: Run kustomize for the project
+      delegate_to: localhost
+      when:
+        - k3s_primary_control_node
+        - k3s_state is defined
+        - k3s_state == 'installed'
+      kubernetes.core.k8s:
+        definition: "{{
+            lookup('kubernetes.core.kustomize', dir=project_apps_kustomize_path)
+          }}"
+      environment:
+        KUBECONFIG: "{{ k3s_kubeconfig }}"

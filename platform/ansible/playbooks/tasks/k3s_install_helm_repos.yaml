@@ -3,6 +3,10 @@
   kubernetes.core.helm_plugin:
     plugin_path: https://github.com/databus23/helm-diff
     state: present
+- name: Add kubernetes-dashboard chart repo
+  kubernetes.core.helm_repository:
+    name: kubernetes-dashboard
+    repo_url: https://kubernetes.github.io/dashboard/
 - name: Add jetstack chart repo
   kubernetes.core.helm_repository:
     name: jetstack

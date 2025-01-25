@@ -1,4 +1,16 @@
 ---
+- name: Install kubernetes-dashboard helm chart
+  kubernetes.core.helm:
+    name: kubernetes-dashboard
+    state: present
+    chart_ref: kubernetes-dashboard/kubernetes-dashboard
+    update_repo_cache: true
+    namespace: kubernetes-dashboard
+    create_namespace: false
+    timeout: 10m
+    wait: true
+    values_files:
+      - "{{ kubernetes_cluster_config_path }}/helm-kubernetes-dashboard-values.yaml"
 - name: Install Prometheus CRDs
   kubernetes.core.helm:
     name: prometheus-crds
