@@ -18,6 +18,16 @@
   loop: "{{ python_libraries | default([]) }}"
   loop_control:
     loop_var: library
+- name: Install additional packages
+  when:
+    - additional_packages is defined
+    - additional_packages is iterable
+    - additional_packages is not string
+  ansible.builtin.apt:
+    pkg: "{{ library }}"
+  loop: "{{ additional_packages | default([]) }}"
+  loop_control:
+    loop_var: library
 - name: Install k8s clients
   ansible.builtin.import_tasks: install_k8s_clients.yaml
 - name: Configure Go
