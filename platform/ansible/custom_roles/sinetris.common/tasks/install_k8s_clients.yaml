@@ -11,24 +11,25 @@
     - name: Test variables are set correctly
       ansible.builtin.assert:
         that:
+          - apt_keyring_path is defined
+          - apt_keyring_path is string
           - kubernetes_minor_version is defined
           - kubernetes_minor_version is string
-          - kubernetes_gpg_keyring is defined
-          - kubernetes_gpg_keyring is string
           - kustomize_version is defined
           - kustomize_version is string
         quiet: true
     - name: Add Helm Signing Certificate
-      ansible.builtin.apt_key:
+      ansible.builtin.get_url:
         url: https://baltocdn.com/helm/signing.asc
-        state: present
+        dest: "{{ apt_keyring_path }}/helm.asc"
+        mode: u=rx,go=r
     - name: Install apt-transport-https
       ansible.builtin.apt:
         name: apt-transport-https
         state: present
     - name: Add Helm Repository to APT Sources
       ansible.builtin.apt_repository:
-        repo: deb https://baltocdn.com/helm/stable/debian all main
+        repo: "deb [signed-by={{ apt_keyring_path }}/helm.asc] https://baltocdn.com/helm/stable/debian all main"
         state: present
         mode: u=rw,g=r,o=r
         update_cache: true
@@ -37,13 +38,13 @@
         name: helm
         state: present
     - name: Add kubectl Signing Certificate
-      ansible.builtin.apt_key:
+      ansible.builtin.get_url:
         url: https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/Release.key
-        keyring: "{{ kubernetes_gpg_keyring }}"
-        state: present
+        dest: "{{ apt_keyring_path }}/kubernetes.asc"
+        mode: u=rx,go=r
     - name: Add the Kubernetes Repository
       ansible.builtin.apt_repository:
-        repo: "deb [signed-by={{ kubernetes_gpg_keyring }}] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /"
+        repo: "deb [signed-by={{ apt_keyring_path }}/kubernetes.asc] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /"
         filename: kubernetes
         mode: u=rw,g=r,o=r
         update_cache: true
