@@ -12,7 +12,6 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: wazuh-indexer
-  namespace: wazuh
 spec:
   replicas: 3
   selector:
