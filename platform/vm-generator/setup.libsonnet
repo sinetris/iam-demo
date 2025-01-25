@@ -11,7 +11,7 @@ local admin_user =
     && std.isArray(config.admin_ssh_import_ids)
     && std.length(config.admin_ssh_import_ids) > 0;
   {
-    username: config.admin_user,
+    username: config.admin_username,
     is_admin: true,
     password: config.admin_password,
     [if use_ssh_authorized_keys then 'ssh_authorized_keys']:
@@ -37,54 +37,112 @@ local ansible_user =
       config.ansible_ssh_import_ids,
   };
 
-local add_default_machine_data(vm) = {
-  host_path: error 'Must override "host_path"',
-  cpus: 1,
-  architecture: config.architecture,
-  memory: '1024',
-  timeout: 15 * 60,
-  storage_space: '10240',
-  admin_username: config.admin_user,
-  users: [admin_user],
-  mounts: [
-    {
-      host_path: $.host_path + '/shared',
-      guest_path: '/var/local/data',
-    },
-  ],
-} + vm;
+local add_default_machine_data(setup, vm) =
+  assert std.isObject(setup);
+  assert std.objectHas(vm, 'hostname');
+  assert std.isObject(vm);
+  assert std.objectHas(vm, 'hostname');
+  {
+    project_host_path: setup.project_dir + '/instances/' + vm.hostname,
+    cpus: 1,
+    architecture: config.architecture,
+    memory: '1024',
+    timeout: 15 * 60,
+    storage_space: '10240',
+    admin_username: config.admin_user,
+    users: [admin_user],
+    mounts: [
+      {
+        host_path: $.project_host_path + '/shared',
+        guest_path: '/var/local/data',
+      },
+    ],
+    provisionings: [
+      {
+        type: 'inline-shell',
+        script:
+          |||
+            set -Eeuo pipefail
+            cloud-init status --wait --long
+          |||,
+      },
+    ],
+  } + vm;
 
 {
+  local setup = self,
   project_name: config.project_name,
-  app_dir: '$HOME/.local/projects-data/' + config.project_name,
+  project_dir: '$HOME/.local/projects/' + config.project_name,
   ansible_inventory_path:
     if std.objectHas(config, 'ansible_inventory_path') then
       config.ansible_inventory_path
     else '.',
   base_domain: 'iam-demo.test',
   virtual_machines: [
-    add_default_machine_data({
+    add_default_machine_data(setup, {
       hostname: 'ansible-controller',
-      host_path: $.app_dir + '/' + self.hostname,
       memory: '2048',
       mounts+: [
         {
-          host_path: config.ansible_files_path,
+          host_path: '${generated_files_path}/' + config.ansible_files_path,
           guest_path: '/ansible',
         },
         {
-          host_path: config.kubernetes_files_path,
+          host_path: '${generated_files_path}/' + config.kubernetes_files_path,
           guest_path: '/kubernetes',
         },
       ],
       tags: [
         'ansible-controller',
       ],
+      base_provisionings: [
+        {
+          type: 'file',
+          source_host: 'localhost',
+          source: './.ssh/id_ed25519.pub',
+          destination: '/home/ubuntu/.ssh/id_ed25519.pub',
+          create_parents_dir: true,
+        },
+        {
+          type: 'file',
+          source_host: 'localhost',
+          source: './.ssh/id_ed25519',
+          destination: '/home/ubuntu/.ssh/id_ed25519',
+          create_parents_dir: true,
+        },
+        {
+          type: 'inline-shell',
+          script:
+            |||
+              set -Eeuo pipefail
+              sudo chown ubuntu /home/ubuntu/.ssh/id_*
+              sudo chmod u=rw,go= /home/ubuntu/.ssh/id_*
+              sudo apt-get install -y ansible
+            |||,
+        },
+        {
+          type: 'inline-shell',
+          working_directory: '/ansible',
+          script:
+            |||
+              set -Eeuo pipefail
+              source $HOME/.profile
+              cat inventory/machines_config.json \
+                | jq '.list | {all: {hosts: map({(.name|tostring): {ansible_host: .ipv4[0]}}) | add}}' \
+                | yq -P > inventory/machines_ips
+              cat inventory/machines_config.json \
+                | jq '.list | {named_hosts: map({(.name|tostring): .ipv4[0]}) | add}' \
+                | yq -P > inventory/group_vars/all/10-hosts
+              cat inventory/machines_config.json \
+                | jq '.nic as $n | {network_interface: $n}' \
+                | yq -P > inventory/group_vars/all/20-hosts
+              ansible 'all' -m ping
+            |||,
+        },
+      ],
     }),
-    add_default_machine_data({
-      local vm = self,
+    add_default_machine_data(setup, {
       hostname: 'iam-control-plane',
-      host_path: $.app_dir + '/' + self.hostname,
       cpus: 8,
       memory: '16384',
       storage_space: '25600',
@@ -94,9 +152,8 @@ local add_default_machine_data(vm) = {
       ],
       users+: [ansible_user],
     }),
-    add_default_machine_data({
+    add_default_machine_data(setup, {
       hostname: 'linux-desktop',
-      host_path: $.app_dir + '/' + self.hostname,
       cpus: 2,
       memory: '4096',
       tags: [
@@ -106,61 +163,7 @@ local add_default_machine_data(vm) = {
       users+: [ansible_user],
     }),
   ],
-  base_provisionings: [
-    {
-      type: 'file',
-      destination_host: 'ansible-controller',
-      source_host: 'localhost',
-      source: './.ssh/id_ed25519.pub',
-      destination: '/home/ubuntu/.ssh/id_ed25519.pub',
-      create_parents_dir: true,
-    },
-    {
-      type: 'file',
-      destination_host: 'ansible-controller',
-      source_host: 'localhost',
-      source: './.ssh/id_ed25519',
-      destination: '/home/ubuntu/.ssh/id_ed25519',
-      create_parents_dir: true,
-    },
-    {
-      type: 'inline-shell',
-      destination_host: 'ansible-controller',
-      script:
-        |||
-          set -Eeuo pipefail
-          cloud-init status --wait --long
-          source $HOME/.profile
-          sudo snap install yq
-          python3 -m pip install --no-input --upgrade pip --user
-          python3 -m pip install --no-input --user argcomplete
-          [ -f ~/.bash_completion ] || activate-global-python-argcomplete --user
-          python3 -m pip install --no-input ansible --user
-          python3 -m pip install --no-input ansible-lint --user
-          sudo chown ubuntu /home/ubuntu/.ssh/id_*
-          sudo chmod u=rw,go= /home/ubuntu/.ssh/id_*
-        |||,
-    },
-    {
-      type: 'inline-shell',
-      destination_host: 'ansible-controller',
-      working_directory: '/ansible',
-      script:
-        |||
-          set -Eeuo pipefail
-          source $HOME/.profile
-          cat inventory/machines_config.json \
-            | jq '.list | {all: {hosts: map({(.name|tostring): {ansible_host: .ipv4[0]}}) | add}}' \
-            | yq -P > inventory/machines_ips
-          cat inventory/machines_config.json \
-            | jq '.list | {named_hosts: map({(.name|tostring): .ipv4[0]}) | add}' \
-            | yq -P > inventory/group_vars/all/10-hosts
-          cat inventory/machines_config.json \
-            | jq '.nic as $n | {network_interface: $n} \
-            | yq -P > inventory/group_vars/all/20-hosts
-          ansible 'all' -m ping
-        |||,
-    },
+  provisionings: [
     {
       type: 'inline-shell',
       destination_host: 'ansible-controller',
@@ -185,8 +188,6 @@ local add_default_machine_data(vm) = {
         |||,
       reboot_on_error: true,
     },
-  ],
-  app_provisionings: [
     {
       type: 'inline-shell',
       destination_host: 'ansible-controller',

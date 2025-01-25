@@ -74,6 +74,7 @@ local create_vm(config, vm) =
   assert std.objectHas(config, 'base_domain');
   assert std.isObject(vm);
   assert std.objectHas(vm, 'hostname');
+  assert std.objectHas(vm, 'project_host_path');
   local cpus = std.get(vm, 'cpus', '1');
   local storage_space = std.get(vm, 'storage_space', '5000');
   local memory = std.get(vm, 'memory', '1024');
@@ -105,7 +106,7 @@ local create_vm(config, vm) =
   |||
     vbox_architecture=arm
     vbox_vm_ostype=Ubuntu24_LTS_arm64
-    vbox_basefolder=%(host_path)s
+    vbox_basefolder=%(project_host_path)s
     vbox_machine_name=%(hostname)s
     vbox_vm_cidata_iso="${vbox_basefolder:?}/disks/seed.iso"
     vbox_vm_disk_file="${vbox_basefolder:?}/disks/boot-disk.vdi"
@@ -232,7 +233,7 @@ local create_vm(config, vm) =
     base_domain: config.base_domain,
     project_name: config.project_name,
     hostname: vm.hostname,
-    host_path: vm.host_path,
+    project_host_path: vm.project_host_path,
     cpus: vm.cpus,
     storage_space: vm.storage_space,
     timeout: vm.timeout,
@@ -264,14 +265,14 @@ local destroy_vm(config, vm) =
   assert std.objectHas(vm, 'hostname');
 
   |||
-    vbox_basefolder=%(host_path)s
+    vbox_basefolder=%(project_host_path)s
     vbox_vm_cidata_iso="${vbox_basefolder:?}/disks/seed.iso"
     vbox_vm_disk_file="${vbox_basefolder:?}/disks/boot-disk.vdi"
     VBoxManage unregistervm "%(hostname)s" --delete-all
     VBoxManage closemedium dvd "${vbox_vm_cidata_iso:?}" --delete
     VBoxManage closemedium disk "${vbox_vm_disk_file:?}" --delete
   ||| % {
-    host_path: vm.host_path,
+    project_host_path: vm.project_host_path,
     hostname: vm.hostname,
   };
 
@@ -349,7 +350,7 @@ local provision_vms(config, provisionings) =
           -o UserKnownHostsFile=/dev/null \
           -o StrictHostKeyChecking=no \
           -o IdentitiesOnly=yes \
-          -i "${this_file_path}generated/.ssh/id_ed25519"
+          -i "${this_file_path}generated/assets/.ssh/id_ed25519"
           user@remotehost.example.com \
         <<-'EOF'
         	%(script)s
@@ -496,7 +497,7 @@ local provision_vms(config, provisionings) =
 
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-      ssh -o "IdentitiesOnly=yes" -i "${this_file_path}generated/.ssh/id_ed25519" $1
+      ssh -o "IdentitiesOnly=yes" -i "${this_file_path}generated/assets/.ssh/id_ed25519" $1
     |||,
   virtualmachines_info(config)::
     assert std.isObject(config);
