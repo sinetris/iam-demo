@@ -13,7 +13,7 @@ local cloud_init = import 'cloud_init.libsonnet';
        '.' + opts.extension
      else ''),
   cloudinit_filename(hostname)::
-    self.file_name(hostname, {
+    'assets/' + self.file_name(hostname, {
       prefix: 'cloud-init',
       extension: 'yaml',
     }),

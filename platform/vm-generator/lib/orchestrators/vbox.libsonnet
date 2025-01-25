@@ -119,7 +119,7 @@ local create_vm(config, vm) =
     vbox_vm_mac_address_cloud_init=$(awk -v mac_address="${_generated_vm_mac_address}" 'BEGIN {print tolower(mac_address)}')
     # MAC Address in VirtualBox configuration is uppercase and without colon separator
     vbox_vm_mac_address=$(awk -v mac_address="${_generated_vm_mac_address}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
-    cp "cloud-init-%(hostname)s.yaml" "${vbox_vm_cidata_origin_path:?}/user-data"
+    cp "assets/cloud-init-%(hostname)s.yaml" "${vbox_vm_cidata_origin_path:?}/user-data"
     # Create cloud-init network configuration
     tee "${vbox_vm_cidata_origin_path:?}/network-config" > /dev/null <<-EOT
     version: 2
