@@ -24,7 +24,10 @@ ansible-playbook playbooks/all-setup -vvv
 ansible-playbook playbooks/bootstrap-ansible-controller -vvv
 ansible-playbook playbooks/bootstrap-bind -vvv
 ansible-playbook playbooks/basic-bootstrap -vvv
-ansible-playbook playbooks/k3s-all-setup -vvv
+ansible-playbook playbooks/k3s-bootstrap -vvv
+ansible-playbook playbooks/k3s-copy-config -vvv
+ansible-playbook playbooks/k3s-base-provisioning -vvv
+ansible-playbook playbooks/k3s-apps-provisioning -vvv
 ```
 
 Examples of useful commands:

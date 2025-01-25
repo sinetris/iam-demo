@@ -76,21 +76,28 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] Hardware Requirements
 - [ ] Dependencies
   - [Jsonnet][jsonnet]
-  - [Microsoft Remote Desktop][microsoft-remote-desktop]
+  - [Windows App (aka: Microsoft Remote Desktop)][microsoft-remote-desktop]
   - [Multipass][multipass]
   - [pre-commit][pre-commit]
 
 ### Add screenshots
 
 - [ ] Linux Desktop
+  - [ ] Terminal execute `~/bin/check-vm-config.sh`
   - [ ] Firefox bookmarks
+  - [ ] Alertmanager
   - [ ] Consul
   - [ ] Grafana
   - [ ] Forgejo
   - [ ] Keycloak
+  - [ ] Mailpit
+  - [ ] midPoint
+  - [ ] MinIO
+  - [ ] Prometheus
+  - [ ] Terrakube
+  - [ ] Vault
   - [ ] Traefik Dashboard
   - [ ] Kubernetes Dashboard
-  - [ ] Terminal execute `~/bin/check-vm-config.sh`
 - [ ] Ansible Controller
 
 ### Internal DNS server
@@ -115,7 +122,7 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] [Grafana Loki][grafana-loki]: multi-tenant log aggregation system
 - [x] [Grafana Tempo][grafana-tempo]: distributed tracing backend
 - [x] [Terrakube][terrakube]: Open source IaC Automation and Collaboration Software-
-- [ ] [midPoint][midpoint]: Identity Governance and Administration
+- [x] [midPoint][midpoint]: Identity Governance and Administration
 - [ ] [Grafana OnCall][grafana-oncall]: on-call management system
 - [ ] [Grafana k6][grafana-k6]: load testing tool
 - [ ] [Wazuh][wazuh]: unified XDR and SIEM protection for endpoints and cloud workloads
@@ -151,7 +158,7 @@ Add a warning like the folowing in the [README](../README.md):
   - [ ] setup Keycloak as IdP
   - [ ] [Renovate][renovate]: automate dependency update
   - [ ] [Conftest][conftest]: use OPA policies to test configurations
-  - [ ] ensure all instances of Gitea are replaced by Forgejo
+  - [x] ensure all instances of Gitea are replaced by Forgejo (where possible)
 - [x] use `.test` tld for external domains
 - [x] use a separate DNS server resolver for external domains (Bind9)
 - [ ] generate certificates in a proper way
@@ -175,10 +182,8 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] setup [pre-commit][pre-commit] for this project repository
 - [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
       [Grafana][grafana], [Tempo][grafana-tempo]
-  - [x] install [Grafana Agent Flow[grafana-agent-flow]]
-    - [ ] configure Grafana Agent Flow to use [loki.source.kubernetes][grafana-agent-loki-source-k8s]
-          component
-    - [ ] configure Grafana Agent Flow to use [discovery.consul][grafana-agent-loki-discovery-consul]
+  - [x] install [Grafana Agent Flow][grafana-agent-flow] (DEPRECATED)
+  - [ ] replace [Grafana Agent Flow][grafana-agent-flow] with [Grafana Alloy][grafana-alloy]
   - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
@@ -199,14 +204,17 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] [setup cert-manager to use Vault][cert-manager-vault]
 - [ ] use [age][age] (good and simple encryption tool) for secrets
 - [ ] add proper [labels and annotations for Kubernetes resources](#kubernetes-resources-labels-and-annotations)
-- [ ] use separate [MinIO][minio] deployment
+- [x] use separate [MinIO][minio] deployment
   - [x] move endpoints from to ConfigMap
   - [x] save MinIO credentials in Kubernetes Secret
 - [ ] setup [FOSSA][fossa] and [.fossa.yml][fossa-yml] for the project repo
 - [ ] setup `linux-desktop`
   - Firefox bookmarks
-    - [ ] add link to [Loki memberlist](https://loki.iam-demo.test/memberlist)
-    - [ ] add link to [Terrakube UI](https://terrakube-ui-demo.test)
+    - [x] add link to [Loki memberlist](https://loki.iam-demo.test/memberlist)
+    - [x] add link to [Mailpit](https://mailpit.iam-demo.test)
+    - [x] add link to [midPoint](https://midpoint.iam-demo.test)
+    - [x] add link to [Terrakube UI](https://terrakube-ui.iam-demo.test)
+    - [x] update link to [Kubernetes Dashboard](https://localhost:8443)
 
 ### Compliance As Code
 
@@ -505,8 +513,7 @@ virtual machine.
 [gitness]: <https://gitness.com/> "Gitness"
 [google-cloud-internal-tld]: <https://cloud.google.com/compute/docs/internal-dns> "Google Cloud internal tld"
 [grafana-agent-flow]: <https://grafana.com/docs/agent/next/flow/> "Grafana Agent Flow"
-[grafana-agent-loki-discovery-consul]: <https://grafana.com/docs/agent/latest/flow/reference/components/discovery.consul/> "Grafana Agent Flow - discovery.consul"
-[grafana-agent-loki-source-k8s]: <https://grafana.com/docs/agent/next/flow/reference/components/loki.source.kubernetes/> "Grafana Agent Flow - loki.source.kubernetes"
+[grafana-alloy]: <https://grafana.com/docs/alloy> "Grafana Alloy"
 [grafana-k6]: <https://github.com/grafana/k6> "Grafana k6"
 [grafana-loki-auth]: <https://grafana.com/docs/loki/latest/operations/authentication/?pg=blog&plcmt=body-txt> "Grafana Loki authentication"
 [grafana-loki]: <https://grafana.com/oss/loki/> "Grafana Loki"
