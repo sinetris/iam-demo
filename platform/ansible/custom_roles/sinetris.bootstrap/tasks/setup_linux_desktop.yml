@@ -1,4 +1,23 @@
 ---
+- name: Install apt-transport-https
+  ansible.builtin.apt:
+    name: apt-transport-https
+    state: present
+- name: Add Microsoft Signing Certificate
+  ansible.builtin.get_url:
+    url: https://packages.microsoft.com/keys/microsoft.asc
+    dest: "{{ apt_keyring_path }}/microsoft.asc"
+    mode: u=rx,go=r
+- name: Add the VS Code Repository
+  ansible.builtin.apt_repository:
+    repo: "deb [arch=amd64,arm64,armhf signed-by={{ apt_keyring_path }}/microsoft.asc] https://packages.microsoft.com/repos/code stable main"
+    filename: vscode
+    mode: u=rw,g=r,o=r
+    update_cache: true
+- name: Install vscode
+  ansible.builtin.apt:
+    name: code
+    state: present
 - name: Ensures /etc/firefox/certificates exists
   ansible.builtin.file:
     path: /etc/firefox/certificates
