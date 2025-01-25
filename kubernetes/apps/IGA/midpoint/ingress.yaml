@@ -1,0 +1,23 @@
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: midpoint
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+spec:
+  rules:
+  - host: midpoint.iam-demo.test
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: midpoint-svc
+            port:
+              number: 8080
+  tls:
+  - hosts:
+    - midpoint.iam-demo.test
+    secretName: iam-demo-midpoint-tls

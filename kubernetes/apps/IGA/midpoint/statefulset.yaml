@@ -1,0 +1,104 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: midpoint
+spec:
+  replicas: 1
+  serviceName: midpoint-svc
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: midpoint
+  progressDeadlineSeconds: 600
+  revisionHistoryLimit: 10
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: midpoint
+    spec:
+      terminationGracePeriodSeconds: 60
+      initContainers:
+      - name: check-db
+        image: debian:sid-slim
+        imagePullPolicy: Always
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          apt-get update;
+          apt-get install -y --no-install-recommends postgresql-client;
+          echo "Wait for DB to be ready";
+          exec pg_isready -U "${MP_SET_midpoint_repository_jdbcUsername}" -d "dbname=${MP_DATABASE_NAME}" -h "${MP_DATABASE_SERVICE}" -p 5432;
+        envFrom:
+        - configMapRef:
+            name: midpoint-repository-env-cm
+        - secretRef:
+            name: midpoint-repository-env-secrets
+      - name: config-init
+        image: evolveum/midpoint:4.9
+        imagePullPolicy: Always
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          cd /opt/midpoint;
+          bin/midpoint.sh init-native;
+          echo ' - - - - - - ';
+          bin/ninja.sh -B info >/dev/null 2>/var/local/logs/ninja.log;
+          grep -q "ERROR" /var/local/logs/ninja.log && (
+            bin/ninja.sh -B run-sql --create --mode REPOSITORY;
+            bin/ninja.sh -B run-sql --create --mode AUDIT;
+          ) || echo -e '\n Repository init is not needed...';
+        envFrom:
+        - configMapRef:
+            name: midpoint-repository-env-cm
+        - secretRef:
+            name: midpoint-repository-env-secrets
+        - secretRef:
+            name: midpoint-env-secrets
+        env:
+        - name: MP_INIT_CFG
+          value: /opt/midpoint/var
+        - name: MP_SET_midpoint_repository_jdbcUrl
+          value: jdbc:postgresql://$(MP_DATABASE_SERVICE):5432/$(MP_DATABASE_NAME)
+        volumeMounts:
+        - name: midpoint-home
+          mountPath: /opt/midpoint/var
+        - name: init-log-volume
+          mountPath: /var/local/logs
+      containers:
+      - name: midpoint
+        image: evolveum/midpoint:4.9
+        ports:
+        - name: gui
+          containerPort: 8080
+          protocol: TCP
+        envFrom:
+        - configMapRef:
+            name: midpoint-repository-env-cm
+        - secretRef:
+            name: midpoint-repository-env-secrets
+        - configMapRef:
+            name: midpoint-env-cm
+        - secretRef:
+            name: midpoint-env-secrets
+        env:
+        - name: MP_SET_midpoint_repository_jdbcUrl
+          value: jdbc:postgresql://$(MP_DATABASE_SERVICE):5432/$(MP_DATABASE_NAME)
+        volumeMounts:
+        - name: midpoint-home
+          mountPath: /opt/midpoint/var
+        - name: init-log-volume
+          mountPath: /var/local/logs
+      volumes:
+      - name: init-log-volume
+        emptyDir: {}
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: midpoint-home
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 10Gi

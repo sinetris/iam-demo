@@ -1,0 +1,26 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namePrefix: midpoint-
+
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/name: midpoint
+
+resources:
+- ../../../base/postgres
+
+configMapGenerator:
+- name: postgres-env-cm
+  behavior: merge
+  literals:
+  - POSTGRES_USER=midpoint
+  - POSTGRES_DB=midpoint
+
+secretGenerator:
+- name: postgres-env-secrets
+  behavior: merge
+  literals:
+  - POSTGRES_PASSWORD=password

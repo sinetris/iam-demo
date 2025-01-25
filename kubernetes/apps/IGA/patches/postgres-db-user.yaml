@@ -1,0 +1,13 @@
+---
+source:
+  kind: ConfigMap
+  name: midpoint-postgres-env-cm
+  fieldPath: data.POSTGRES_USER
+targets:
+- select:
+    kind: ConfigMap
+    name: midpoint-repository-env-cm
+  fieldPaths:
+  - data.MP_SET_midpoint_repository_jdbcUsername
+  options:
+    create: true
