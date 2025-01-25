@@ -8,10 +8,8 @@ labels:
 - includeSelectors: true
   pairs:
     app: forgejo
-- includeSelectors: false
-  pairs:
-    app.kubernetes.io/version: 1.21.5
-    version: 1.21.5
+    app.kubernetes.io/app: forgejo
+    app.kubernetes.io/component: application
 
 resources:
 - configmap-env.yaml
@@ -24,5 +22,5 @@ resources:
 - secret-init.yaml
 - secret-inline-config.yaml
 - service-web.yaml
-- service-ssh.yaml
+- service-git-ssh.yaml
 - servicemonitor.yaml

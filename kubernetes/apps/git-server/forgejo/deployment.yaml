@@ -5,15 +5,12 @@ metadata:
   name: forgejo
   labels:
     app.kubernetes.io/name: forgejo
-    app.kubernetes.io/instance: forgejo
-    app.kubernetes.io/component: deployment
 spec:
   replicas: 1
   progressDeadlineSeconds: 600
   revisionHistoryLimit: 10
   selector:
     matchLabels:
-      app.kubernetes.io/name: forgejo
       app.kubernetes.io/instance: forgejo
   strategy:
     type: RollingUpdate
@@ -23,7 +20,6 @@ spec:
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: forgejo
         app.kubernetes.io/instance: forgejo
     spec:
       terminationGracePeriodSeconds: 60
@@ -184,7 +180,7 @@ spec:
           value: "redis://:@$(FORGEJO_REDIS_HOSTNAME):$(FORGEJO_REDIS_PORT)/2?pool_size=100&idle_timeout=180s&"
         ports:
         - containerPort: 2222
-          name: forgejo-ssh
+          name: forgejo-git-ssh
           protocol: TCP
         - containerPort: 3000
           name: forgejo-http
