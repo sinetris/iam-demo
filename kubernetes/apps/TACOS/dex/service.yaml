@@ -1,11 +1,12 @@
 ---
-# Source: terrakube/charts/dex/templates/service.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: terrakube-dex
+  name: terrakube-dex-svc
 spec:
   type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: dex
   ports:
   - name: http
     port: 5556

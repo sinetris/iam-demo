@@ -5,7 +5,13 @@ metadata:
   name: terrakube-api
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: terrakube-api
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: terrakube-api
     spec:
       containers:
       - name: terrakube-api
@@ -54,7 +60,7 @@ spec:
               - key: ca.crt
                 path: iamdemo-ca.pem
           - configMap:
-              name: terrakube-files
+              name: terrakube-api-files
               items:
               - key: ca-certificates-type
                 path: type

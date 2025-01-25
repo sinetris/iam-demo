@@ -5,7 +5,13 @@ metadata:
   name: terrakube-ui
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: terrakube-ui
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: terrakube-ui
     spec:
       containers:
       - name: terrakube-ui

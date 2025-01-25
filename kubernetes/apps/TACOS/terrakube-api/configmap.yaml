@@ -11,7 +11,7 @@ data:
   AuthenticationValidationType: 'DEX'
   ExecutorReplicas: '1'
   DexIssuerUri: 'https://terrakube-api.iam-demo.test/dex'
-  AzBuilderExecutorUrl: 'http://terrakube-executor-service:8090/api/v1/terraform-rs'
+  AzBuilderExecutorUrl: 'http://terrakube-executor-svc:8090/api/v1/terraform-rs'
   TerrakubeUiURL: 'https://terrakube-ui.iam-demo.test'
   TerrakubeHostname: 'terrakube-api.iam-demo.test'
   # AWS S3 Storage

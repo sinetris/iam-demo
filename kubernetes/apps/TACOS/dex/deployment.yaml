@@ -4,9 +4,14 @@ kind: Deployment
 metadata:
   name: terrakube-dex
 spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: dex
   replicas: 1
-  revisionHistoryLimit: 10
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: dex
     spec:
       serviceAccountName: terrakube-dex
       containers:
@@ -21,7 +26,9 @@ spec:
         - --telemetry-addr
         - 0.0.0.0:5558
         - /etc/dex/config.yaml
-        env:
+        envFrom:
+        - secretRef:
+            name: terrakube-dex-env-secrets
         ports:
         - name: http
           containerPort: 5556
@@ -47,7 +54,7 @@ spec:
       volumes:
       - name: config
         secret:
-          secretName: terrakube-dex-secrets
+          secretName: terrakube-dex-files-secrets
       - name: gcp-credentials
         secret:
           items:

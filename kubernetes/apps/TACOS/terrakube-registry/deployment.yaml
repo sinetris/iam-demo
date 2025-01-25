@@ -5,7 +5,13 @@ metadata:
   name: terrakube-registry
 spec:
   replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: terrakube-registry
   template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: terrakube-registry
     spec:
       containers:
       - name: terrakube-registry
