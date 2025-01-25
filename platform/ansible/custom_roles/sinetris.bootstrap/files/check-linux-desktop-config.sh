@@ -15,6 +15,10 @@ check_hostnames_on_port=(
   'MinIO-S3-API s3 443'
   'Minio-Web-Console minio 443'
   'Mailpit mail 443'
+  'midPoint midpoint 443'
+  'Terrakube-API terrakube-api 443'
+  'Terrakube-Registry terrakube-reg 443'
+  'Terrakube-UI terrakube-ui 443'
 )
 
 bold_text=$(tput bold)
