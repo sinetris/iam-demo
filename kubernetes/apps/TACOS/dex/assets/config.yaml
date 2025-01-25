@@ -1,8 +1,11 @@
 ---
 connectors:
-- config:
+- id: ldap
+  name: OpenLDAP
+  type: ldap
+  config:
     bindDN: cn=admin,dc=iam-demo,dc=test
-    bindPW: admin
+    bindPW: adminpassword
     groupSearch:
       baseDN: ou=Groups,dc=iam-demo,dc=test
       filter: (objectClass=groupOfNames)
@@ -10,7 +13,7 @@ connectors:
       userMatchers:
       - groupAttr: member
         userAttr: DN
-    host: terrakube-openldap-service:1389
+    host: terrakube-openldap-svc:1389
     insecureNoSSL: true
     userSearch:
       baseDN: ou=users,dc=iam-demo,dc=test
@@ -20,9 +23,6 @@ connectors:
       nameAttr: cn
       username: mail
     usernamePrompt: Email Address
-  id: ldap
-  name: OpenLDAP
-  type: ldap
 issuer: https://terrakube-api.iam-demo.test/dex
 oauth2:
   responseTypes:

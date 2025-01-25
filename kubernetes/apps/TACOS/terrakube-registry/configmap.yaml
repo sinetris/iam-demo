@@ -5,7 +5,7 @@ metadata:
   name: terrakube-registry-env-cm
 data:
   AzBuilderRegistry: 'https://terrakube-reg.iam-demo.test'
-  AzBuilderApiUrl: 'http://terrakube-api-service:8080'
+  AzBuilderApiUrl: 'http://terrakube-api-svc:8080'
   AuthenticationValidationTypeRegistry: 'DEX'
   DexIssuerUri: 'https://terrakube-api.iam-demo.test/dex'
   TerrakubeEnableSecurity: 'true'

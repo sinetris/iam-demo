@@ -6,9 +6,12 @@ labels:
 - includeSelectors: true
   pairs:
     app: terrakube-api
+    app.kubernetes.io/app: terrakube-api
+    app.kubernetes.io/component: api
 
 resources:
 - configmap.yaml
+- configmap-files.yaml
 - deployment.yaml
 - ingress.yaml
 - secrets.yaml

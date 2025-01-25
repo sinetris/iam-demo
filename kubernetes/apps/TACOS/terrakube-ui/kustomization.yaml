@@ -6,6 +6,8 @@ labels:
 - includeSelectors: true
   pairs:
     app: terrakube-ui
+    app.kubernetes.io/app: terrakube-ui
+    app.kubernetes.io/component: ui
 
 resources:
 - deployment.yaml

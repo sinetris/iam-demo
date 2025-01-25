@@ -6,6 +6,8 @@ labels:
 - includeSelectors: true
   pairs:
     app: terrakube-registry
+    app.kubernetes.io/app: terrakube-registry
+    app.kubernetes.io/component: registry
 
 resources:
 - configmap.yaml

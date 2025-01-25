@@ -14,7 +14,7 @@ spec:
         pathType: "Prefix"
         backend:
           service:
-            name: terrakube-registry-service
+            name: terrakube-registry-svc
             port:
               number: 8075
   tls:

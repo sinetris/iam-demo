@@ -5,8 +5,9 @@ kind: Kustomization
 labels:
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/name: dex
-    app.kubernetes.io/instance: terrakube
+    app.kubernetes.io/app: dex
+    app.kubernetes.io/name: terrakube-dex
+    app.kubernetes.io/component: OIDC
 
 resources:
 - clusterrole.yaml
@@ -15,12 +16,13 @@ resources:
 - role.yaml
 - rolebinding.yaml
 - secrets.yaml
+- secrets-files.yaml
 - secrets-gcp.yaml
 - service.yaml
 - serviceaccount.yaml
 
 secretGenerator:
-- name: terrakube-dex-secrets
+- name: terrakube-dex-files-secrets
   behavior: merge
   files:
-  - config.yaml=dex-config.yaml
+  - config.yaml=assets/config.yaml

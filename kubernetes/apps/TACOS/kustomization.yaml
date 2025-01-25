@@ -7,7 +7,7 @@ namespace: tools
 labels:
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/part-of: tacos
+    app.kubernetes.io/part-of: TACOS
 
 resources:
 - ../../clusters/iam-demo-tech/bootstrap/configurations/base/secrets/terrakube-s3-credentials
@@ -22,6 +22,7 @@ resources:
 - terrakube-ui
 
 replacements:
+- path: patches/openldap-password.yaml
 - path: patches/postgres-db-name.yaml
 - path: patches/postgres-db-password.yaml
 - path: patches/postgres-db-user.yaml

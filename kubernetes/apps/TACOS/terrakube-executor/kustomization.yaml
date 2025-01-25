@@ -6,6 +6,8 @@ labels:
 - includeSelectors: true
   pairs:
     app: terrakube-executor
+    app.kubernetes.io/app: terrakube-executor
+    app.kubernetes.io/component: executor
 
 resources:
 - configmap.yaml
