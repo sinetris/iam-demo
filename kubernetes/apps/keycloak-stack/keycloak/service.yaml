@@ -4,6 +4,8 @@ kind: Service
 metadata:
   name: keycloak-svc
 spec:
+  selector:
+    app.kubernetes.io/instance: keycloak
   ports:
   - name: http
     port: 8080
