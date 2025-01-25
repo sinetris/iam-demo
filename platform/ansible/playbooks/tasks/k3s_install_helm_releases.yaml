@@ -109,7 +109,7 @@
       - "{{ kubernetes_cluster_config_path }}/helm-vault-values.yaml"
 - name: Install Trivy
   kubernetes.core.helm:
-    name: trivy
+    name: trivy-operator
     state: present
     chart_ref: aqua/trivy-operator
     update_repo_cache: true
