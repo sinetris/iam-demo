@@ -7,6 +7,7 @@ metadata:
   labels:
     app.kubernetes.io/name: tempo-querier
     app.kubernetes.io/component: querier
+    release: prometheus
 spec:
   namespaceSelector:
     matchNames:
