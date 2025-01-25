@@ -20,5 +20,4 @@ generatorOptions:
   disableNameSuffixHash: true
   labels:
     app: grafana-agent-flow
-    app.kubernetes.io/component: configuration
     app.kubernetes.io/part-of: grafana-agent-flow
