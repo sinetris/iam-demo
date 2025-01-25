@@ -1,0 +1,9 @@
+---
+app:
+  mode: 'dashboard'
+  image:
+    pullPolicy: Always
+  security:
+    # Embed the CSRF key so it will not change on every deploy
+    csrfKey: >-
+      a0FHVXZaZ0RSYUpqdTQ4MGUvU1RoWjNtSEZsNHArbE02cjhheVo3emxUWkxWZ1B5Ym5JMTZSNVZSdTVwSmxvRWZlSjJzMmlSeERwRnY1YWRjQXRPdjhGaCtZRnA2MGRVck93ZHdIS04zOVgxVC9NOHJRTmdSSGN5clI1Mzh5L21sV1Z2RXVpcXlWcHNYdjdiK2syQ3pqeWs0d3lXZ3RwT3FidzAxSitWUTkyTkx1TVY4aERMMnFEaWxKM1R0RGVpTlJncE1hdXEwWXlqOERrOFBjMWQzZCtTWUFUanAvVTJJL001OFcvbnM3M2Z6NWw5TC9hSEtvYzk3SXJDbDJMaCtia0trSjUxUlZ1WDVBeGNZQnRINDk4L01hNTJBT2tQSGlOSkhiKzZJeTM1VGxRdlF4YmRqTHB1UDhSdDdlSXFSaStlQ05NTnJ1a09KOUJGRnJxd0JnPT0=
