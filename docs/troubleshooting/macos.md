@@ -9,6 +9,7 @@
   - [Files locations](#files-locations)
   - [Uninstall Multipass](#uninstall-multipass)
   - [Networking](#networking-1)
+    - [Fivewall](#fivewall)
   - [Instances](#instances)
     - [QEMU](#qemu)
       - [Apple Silicon CPUs (aarch64)](#apple-silicon-cpus-aarch64)
@@ -71,11 +72,17 @@ To check for duplicate entries in `/var/db/dhcpd_leases`, run:
 cat /var/db/dhcpd_leases | grep -E -o 'name=.+' | sort | uniq -c
 ```
 
+If there are dupicates, edit `/var/db/dhcpd_leases` and remove them.
+
+To remove all the dhcp leases you can delete the file content using:
+
 ```shell
-sudo launchctl stop com.apple.bootpd
-sudo rm /var/db/dhcpd_leases
-sudo launchctl start com.apple.bootpd
+sudo sh -c 'echo "" > /var/db/dhcpd_leases'
 ```
+
+#### Fivewall
+
+> Note: this shouldn't be needed anymore in recent versions.
 
 Another problematic part is the firewall.
 

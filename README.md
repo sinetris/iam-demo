@@ -20,6 +20,7 @@ Identity and Access Management (IAM) demo infrastructure.
       - [Traefik Dashboard](#traefik-dashboard)
       - [Kubernetes Dashboard](#kubernetes-dashboard)
 - [Troubleshooting](#troubleshooting)
+- [Screenshots](#screenshots)
 - [TODO](#todo)
 - [📄 License](#-license)
 
@@ -226,6 +227,10 @@ Access the kubernetes-dashboard in a web broser opening:
 ## Troubleshooting
 
 - [Troubleshooting](docs/troubleshooting/README.md)
+
+## Screenshots
+
+- [Screenshots](docs/screenshots.md)
 
 ## TODO
 
