@@ -5,6 +5,7 @@ kind: Kustomization
 namespace: observability
 resources:
 - ../base/configmaps/grafana-agent-flow
+- ../base/configmaps/grafana-dashboards
 - ../base/configmaps/minio-urls
 - ../base/secrets/loki-s3-credentials
 - ../base/secrets/tempo-s3-credentials
