@@ -33,9 +33,18 @@ grafana:
   enabled: true
   adminPassword: grafana-admin
   grafana.ini:
+    smtp:
+      enabled: true
+      host: mail.iam-demo.test:1025
+      from_address: no-reply@iam-demo.test
+      skip_verify: true
     server:
       domain: grafana.iam-demo.test
       root_url: "https://%(domain)s"
+  smtp:
+    existingSecret: grafana-smtp-credentials
+    userKey: user
+    passwordKey: password
   additionalDataSources:
   - name: Loki
     type: loki
