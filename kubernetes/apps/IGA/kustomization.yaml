@@ -1,0 +1,24 @@
+---
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: tools
+
+labels:
+- includeSelectors: true
+  pairs:
+    app.kubernetes.io/part-of: iga
+
+resources:
+- midpoint
+- postgres
+
+replacements:
+- path: patches/postgres-db-name.yaml
+- path: patches/postgres-db-password.yaml
+- path: patches/postgres-db-user.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+  labels:
+    app.kubernetes.io/component: database

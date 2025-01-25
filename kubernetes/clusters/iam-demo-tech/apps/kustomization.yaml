@@ -8,3 +8,4 @@ resources:
 - ../../../apps/keycloak-stack
 - ../../../apps/tempo
 - ../../../apps/TACOS
+- ../../../apps/IGA

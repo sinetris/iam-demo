@@ -1,0 +1,9 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: midpoint-env-cm
+data:
+  MP_NO_ENV_COMPAT: '1'
+  MP_UNSET_midpoint_repository_hibernateHbm2ddl: '1'
+  TZ: UTC

@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: midpoint-repository-env-cm
+data:
+  MP_DATABASE_SERVICE: midpoint-postgres-svc.tools
+  MP_SET_midpoint_repository_database: postgresql
