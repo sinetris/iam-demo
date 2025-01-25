@@ -11,8 +11,6 @@ k3s_copy_cluster_config:
     users:
       - iamadmin
       - ubuntu
-is_dns_server: true
-
 bind9_only_ipv4: true
 bind9_listen_on_ipv4:
   - localhost
