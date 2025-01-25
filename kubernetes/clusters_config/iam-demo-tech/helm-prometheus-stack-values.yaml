@@ -118,9 +118,9 @@ prometheus:
       replacement: loki
       targetLabel: cluster
   prometheusSpec:
-    ruleNamespaceSelector:
-      matchLabels:
-        prometheus.io/discovery: enabled
+    serviceMonitorSelectorNilUsesHelmValues: true
+    serviceMonitorSelector: {}
+    serviceMonitorNamespaceSelector: {}
 
 cleanPrometheusOperatorObjectNames: true
 
