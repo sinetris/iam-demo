@@ -83,22 +83,22 @@ Add a warning like the folowing in the [README](../README.md):
 ### Add screenshots
 
 - [ ] Linux Desktop
-  - [ ] Terminal execute `~/bin/check-vm-config.sh`
+  - [x] Terminal execute `~/bin/check-vm-config.sh`
   - [ ] Firefox bookmarks
   - [ ] Alertmanager
-  - [ ] Consul
+  - [x] Consul
   - [ ] Grafana
   - [ ] Forgejo
   - [ ] Keycloak
   - [ ] Mailpit
-  - [ ] midPoint
+  - [x] midPoint
   - [ ] MinIO
-  - [ ] Prometheus
-  - [ ] Terrakube
-  - [ ] Vault
+  - [x] Prometheus
+  - [x] Terrakube
+  - [x] Vault
   - [ ] Traefik Dashboard
-  - [ ] Kubernetes Dashboard
-- [ ] Ansible Controller
+  - [x] Kubernetes Dashboard
+- [x] Ansible Controller
 
 ### Internal DNS server
 
