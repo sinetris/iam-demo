@@ -48,7 +48,7 @@ grafana:
   additionalDataSources:
   - name: Loki
     type: loki
-    url: http://loki-gateway.observability:80
+    url: http://loki-gateway.observability
     editable: true
     access: proxy
     orgId: 1
