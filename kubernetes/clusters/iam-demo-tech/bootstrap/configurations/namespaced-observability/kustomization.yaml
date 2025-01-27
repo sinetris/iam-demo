@@ -4,7 +4,6 @@ kind: Kustomization
 
 namespace: observability
 resources:
-- ../base/configmaps/grafana-agent-flow
 - ../base/configmaps/grafana-alloy
 - ../base/configmaps/grafana-dashboards
 - ../base/configmaps/minio-urls
