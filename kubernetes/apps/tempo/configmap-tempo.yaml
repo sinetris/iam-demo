@@ -108,8 +108,8 @@ data:
           path: /var/tempo/traces
         memcached:
           consistent_hash: true
-          host: tempo-memcached
-          service: memcached-client
+          host: tempo-memcached-svc
+          service: memcached-port
           timeout: 500ms
         pool:
           max_workers: 400
