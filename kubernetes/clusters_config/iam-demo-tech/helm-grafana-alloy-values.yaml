@@ -1,0 +1,64 @@
+---
+crds:
+  create: true
+
+alloy:
+  configMap:
+    create: false
+    name: grafana-alloy-files-cm
+    key: config.alloy
+  envFrom:
+  - configMapRef:
+      name: grafana-alloy-env-cm
+  stabilityLevel: "generally-available"
+  storagePath: /tmp/alloy
+  listenAddr: 0.0.0.0
+  listenPort: 12345
+  listenScheme: HTTP
+  uiPathPrefix: /
+  ## Uncomment the following if you want to use Grafana Faro
+  # extraPorts:
+  # - name: "faro"
+  #   port: 12347
+  #   targetPort: 12347
+  #   protocol: "TCP"
+  #   appProtocol: "h2c"
+
+rbac:
+  create: true
+
+serviceAccount:
+  create: true
+
+configReloader:
+  enabled: true
+
+controller:
+  type: 'daemonset'
+  replicas: 1
+
+service:
+  enabled: true
+  type: ClusterIP
+  nodePort: 31128
+  internalTrafficPolicy: Cluster
+
+serviceMonitor:
+  enabled: true
+  additionalLabels:
+    release: prometheus
+
+ingress:
+  # Enable if you want to use Grafana Faro
+  enabled: false
+  annotations:
+    cert-manager.io/cluster-issuer: iam-demo-certs-issuer
+  path: /
+  faroPort: 12347
+  pathType: Prefix
+  hosts:
+  - alloy.iam-demo.test
+  tls:
+  - secretName: iam-demo-alloy-tls
+    hosts:
+    - alloy.iam-demo.test

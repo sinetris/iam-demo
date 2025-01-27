@@ -83,18 +83,18 @@
     definition: "{{ lookup('kubernetes.core.kustomize', dir=kustomize_files_path) }}"
   vars:
     kustomize_files_path: "{{ kubernetes_project_path }}/apps/loki"
-- name: Install Grafana Agent Flow
+- name: Grafana Alloy
   kubernetes.core.helm:
-    name: grafana-agent-flow
+    name: alloy
     state: present
-    chart_ref: grafana/grafana-agent
+    chart_ref: grafana/alloy
     update_repo_cache: true
     namespace: observability
-    create_namespace: true
+    create_namespace: false
     timeout: 10m
     wait: true
     values_files:
-      - "{{ kubernetes_cluster_config_path }}/helm-grafana-agent-flow-values.yaml"
+      - "{{ kubernetes_cluster_config_path }}/helm-grafana-alloy-values.yaml"
 - name: Install Vault
   kubernetes.core.helm:
     name: vault
