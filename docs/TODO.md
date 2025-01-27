@@ -183,7 +183,7 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
       [Grafana][grafana], [Tempo][grafana-tempo]
   - [x] install [Grafana Agent Flow][grafana-agent-flow] (DEPRECATED)
-  - [ ] replace [Grafana Agent Flow][grafana-agent-flow] with [Grafana Alloy][grafana-alloy]
+  - [x] replace [Grafana Agent Flow][grafana-agent-flow] with [Grafana Alloy][grafana-alloy]
   - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
