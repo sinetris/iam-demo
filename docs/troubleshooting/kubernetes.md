@@ -4,6 +4,7 @@
 
 - [Check K3S](#check-k3s)
 - [Inspect pods](#inspect-pods)
+- [Test Loki](#test-loki)
   - [Inspect crashing pods](#inspect-crashing-pods)
 - [Start a throw away pod](#start-a-throw-away-pod)
 - [Helm](#helm)
@@ -43,6 +44,19 @@ kubectl logs -n "${pod_namespace:?}" "${pod_name:?}"
 kubectl describe pod -n "${pod_namespace:?}" "${pod_name:?}"
 # access the pod shell
 kubectl exec  --stdin --tty -n "${pod_namespace:?}" "${pod_name:?}" --container="${pod_container:-}" -- /bin/sh
+```
+
+## Test Loki
+
+To test that Loki is working correctly, run the following command from one of the
+machines (e.g. `ansible-controller`).
+
+```sh
+# Send test data to Loki
+curl -H "Content-Type: application/json" -XPOST -s "https://loki.iam-demo.test/loki/api/v1/push"  \
+--data-raw '{"streams": [{"stream": {"job": "test"}, "values": [["'$(date +%s)'000000000", "fizzbuzz"]]}]}'
+# Verify that Loki did receive the data
+curl "https://loki.iam-demo.test/loki/api/v1/query_range" --data-urlencode 'query={job="test"}' | jq .data.result
 ```
 
 ### Inspect crashing pods
