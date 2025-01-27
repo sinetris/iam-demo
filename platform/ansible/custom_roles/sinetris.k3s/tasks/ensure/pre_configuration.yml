@@ -112,3 +112,17 @@
             hostvars[k3s_control_delegate].ansible_host
             | default(hostvars[k3s_control_delegate].ansible_fqdn)
           }}
+- name: Configure inotify
+  ansible.builtin.template:
+    src: sysctl-inotify.conf.j2
+    dest: "{{ k3s_sysctl_inotify_file }}"
+    owner: root
+    group: root
+    mode: u=rw,go=r
+  register: sysctl_inotify_file
+- name: Reload sysctl inotify config
+  ansible.builtin.command:
+    cmd: sysctl -p "{{ k3s_sysctl_inotify_file }}"
+  changed_when: true
+  when:
+    - sysctl_inotify_file.changed

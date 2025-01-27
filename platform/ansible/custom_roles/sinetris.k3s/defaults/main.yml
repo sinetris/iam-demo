@@ -90,3 +90,6 @@ k3s_become: false
 k3s_copy_ca_certs: true
 # Path where to find CA certs
 ca_root_certs_path: /usr/local/etc/certs/ca
+
+k3s_inotify_max_user_instances: 2048
+k3s_inotify_max_user_watches: 496748
