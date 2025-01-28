@@ -1,4 +1,4 @@
-# TODO
+# To Do
 
 [Project README](../README.md)
 
@@ -6,7 +6,6 @@
 
 - [Documentation](#documentation)
   - [Project scope](#project-scope)
-  - [Add Warning](#add-warning)
   - [Add an Infrastructure overview](#add-an-infrastructure-overview)
   - [Add Development instructions](#add-development-instructions)
   - [Add screenshots](#add-screenshots)
@@ -34,10 +33,10 @@
 The README should:
 
 - [ ] be concise
-- [ ] include a [warning](#add-warning)
+- [x] include a warning
 - [ ] have a better description of the [project scope](#project-scope)
-- [ ] include a link to this document
-- [ ] contain links to the main topics covered in the project documentation folder
+- [x] include a link to the TODO (this document)
+- [ ] include links to the main topics covered in the project documentation folder
 - [ ] include [FOSSA badge on GitHub][fossa-github-badge-pr]
 
 The documentation folder should:
@@ -56,19 +55,6 @@ Add an overview and place the tools used in the appropriate sub-set.
 Clarify that the tools selected are only used for the sake of semplicity (and
 in some cases not the best tools for the job) to cover certain topics.
 
-### Add Warning
-
-Add a warning like the folowing in the [README](../README.md):
-
-> **Warnings**
->
-> This project, for the time being, is not intended to have any backward
-> compatibility.
->
-> Virtual machines are often destroyed and recreated.\
-> Kubernetes resources are renamed, removed, modified, in ways that could
-> compromise previous deployments.
-
 ### Add an Infrastructure overview
 
 ### Add Development instructions
@@ -76,7 +62,7 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] Hardware Requirements
 - [ ] Dependencies
   - [Jsonnet][jsonnet]
-  - [Windows App (aka: Microsoft Remote Desktop)][microsoft-remote-desktop]
+  - [Windows App][microsoft-windows-app] (formerly known as [Microsoft Remote Desktop][microsoft-remote-desktop])
   - [Multipass][multipass]
   - [pre-commit][pre-commit]
 
@@ -126,6 +112,8 @@ Add a warning like the folowing in the [README](../README.md):
 - [ ] [Grafana OnCall][grafana-oncall]: on-call management system
 - [ ] [Grafana k6][grafana-k6]: load testing tool
 - [ ] [Wazuh][wazuh]: unified XDR and SIEM protection for endpoints and cloud workloads
+  > **Note:** on hold until all components can run on **arm64**.\
+  > See: <https://github.com/wazuh/wazuh/issues/18048>
 - [ ] [HashiCorp Boundary][boundary]: simple and secure remote access
 - [ ] [Waypoint][waypoint]: lower cognitive load for applications deployment
 - [x] [Mailpit][mailpit]: Web and API based SMTP testing
@@ -148,6 +136,12 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] move Redis to [base](../kubernetes/base/)
   - [x] use `StatefulSet`
   - [x] use [Redis base](../kubernetes/base/redis/) in services
+- [ ] Setup **Keycloak**
+  - [ ] update Keycloak to version `26.1`
+  - [ ] run Keycloak in production mode
+  - [ ] use separate domain for the Admin Console
+  - [ ] create `employee` realm
+  - [ ] create `customer` realm
 - [ ] setup **Forgejo**
   - [x] certificate for [git.iam-demo.test](https://git.iam-demo.test)
   - [x] use [base/postgres](../kubernetes/base/postgres)
@@ -182,22 +176,20 @@ Add a warning like the folowing in the [README](../README.md):
 - [x] setup [pre-commit][pre-commit] for this project repository
 - [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
       [Grafana][grafana], [Tempo][grafana-tempo]
-  - [x] install [Grafana Agent Flow][grafana-agent-flow] (DEPRECATED)
+  - [x] ~~install [Grafana Agent Flow][grafana-agent-flow]~~ (DEPRECATED)
   - [x] replace [Grafana Agent Flow][grafana-agent-flow] with [Grafana Alloy][grafana-alloy]
   - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
   - [x] use MinIO credentials and endpoint from Secret in Tempo
 - [ ] configure [Wazuh][wazuh]
-  - [ ] generate arm64 and amd64 containers
-  - [ ] push containers to internal registry
-  - [ ] use new containers in Wazuh deployment
 - [ ] configure [Consul][consul]
   - [ ] configure [Consul Service Mesh][consul-service-mesh]
   - [ ] configure [Consul API Gateway][consul-api-gateway]
   - [ ] check [Consul tutorials][consul-tutorials]
   - [ ] configure [Vault as the Secrets Backend for Consul][consul-vault]
 - [ ] configure [Trivy][trivy]
+  - [x] add Trivy dashboard in Grafana
   - [ ] configure [Trivy Policy Reporter Integration][trivy-policy-reporter] to
         send vulnerability and audit reports to [Loki as target in Policy Report][policy-reporter-loki]
 - [ ] separate generation of external (loadbalancer) and internal certificates
@@ -215,6 +207,11 @@ Add a warning like the folowing in the [README](../README.md):
     - [x] add link to [midPoint](https://midpoint.iam-demo.test)
     - [x] add link to [Terrakube UI](https://terrakube-ui.iam-demo.test)
     - [x] update link to [Kubernetes Dashboard](https://localhost:8443)
+  - Configure shell
+    - [ ] export `KUBECONFIG`
+    - [ ] setup `kubectl` completion
+    - [ ] setup `kustomize` completion
+    - [ ] setup `helm` completion
 
 ### Compliance As Code
 
@@ -228,39 +225,8 @@ Add a warning like the folowing in the [README](../README.md):
 
 ### Kubernetes resources labels and annotations
 
-Add proper labels and annotations to kubernetes resources.
-
-Exanmple:
-
-```yaml
-metadata:
-  labels:
-    app.kubernetes.io/name: postgres
-    app.kubernetes.io/instance: gitea-potgres
-    app.kubernetes.io/version: "14.4"
-    app.kubernetes.io/component: database
-    app.kubernetes.io/part-of: gitea
-  annotations:
-    a8r.io/chat: "#gitops-team-on-call"
-    a8r.io/owner: "gitops-team@example.com"
-```
-
-For more annotations examples, check [Annotating Kubernetes Services for Humans][ambassador-k8s-annotations].
-
-Note that you can query `labels` to select resources, but you cannot query|
-`annotations`, which are just arbitrary key/value information and are not
-intended to be used to filter resources.
-
-It is still possible to query annotations using [JSONPath][k8s-jsonpath], but
-it will be slower and less practical.
-
-```sh
-# Return the name metadata for services that have the annotation 'prometheus.io/scrape' set to 'true'
-kubectl get service -A -o jsonpath='{.items[?(@.metadata.annotations.prometheus\.io/scrape=="true")].metadata.name}'
-# Return the namespace, name, and creationTimestamp metadata for pods that have the annotation 'checksum/config' set.
-# We use 'range' to print each entry on its own line in the format "<namespace>/<name>[tab]<creationTimestamp>".
-kubectl get pods -A -o jsonpath='{range .items[?(@.metadata.annotations.checksum/config)]}{.metadata.namespace}{"/"}{.metadata.name}{"\t"}{.metadata.creationTimestamp}{"\n"}{end}'
-```
+See [Labels and Annotations](development/kubernetes.md#labels-and-annotations)
+section in [Kubernetes development tips](development/kubernetes.md).
 
 ## Future changes and alternatives
 
@@ -476,7 +442,6 @@ virtual machine.
 
 [age]: <https://github.com/FiloSottile/age> "age"
 [alertmanager]: <https://github.com/prometheus/alertmanager> "Alertmanager"
-[ambassador-k8s-annotations]: <https://ambassadorlabs.github.io/k8s-for-humans/> "Annotating Kubernetes"
 [ansible-dev-dynamic-inventory]: <https://docs.ansible.com/ansible/latest/dev_guide/developing_inventory.html> "Developing dynamic inventory for Ansible"
 [ansible-good-practices]: <https://redhat-cop.github.io/automation-good-practices/> "Good Practices for Ansible"
 [ansible]: <https://ansible.readthedocs.io/> "Ansible"
@@ -524,7 +489,6 @@ virtual machine.
 [jsonnet]: <https://jsonnet.org> "Jsonnet"
 [k3s-custom-ca]: <https://raw.githubusercontent.com/k3s-io/k3s/master/contrib/util/generate-custom-ca-certs.sh> "k3s custom CA certs"
 [k3s-server-doc]: <https://docs.k3s.io/cli/server> "k3s server documentation"
-[k8s-jsonpath]: <https://kubernetes.io/docs/reference/kubectl/jsonpath/> "Kubernetes JSONPath documentation"
 [keycloak]: <https://www.keycloak.org/> "Keycloak"
 [kubernetes-managing-tls]: <https://kubernetes.io/docs/tasks/tls/managing-tls-in-a-cluster/> "Kubernetes Manage TLS Certificates in a Cluster"
 [kubernetes-multi-tenancy]: <https://kubernetes.io/docs/concepts/security/multi-tenancy/> "Kubernetes multi-tenancy"
@@ -537,6 +501,7 @@ virtual machine.
 [mattermost]: <https://mattermost.com/> "Mattermost"
 [metallb]: <https://github.com/metallb/metallb> "MetalLB"
 [microsoft-remote-desktop]: <https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/remote-desktop-clients> "Microsoft Remote Desktop"
+[microsoft-windows-app]: <https://learn.microsoft.com/windows-app> "Windows App"
 [midpoint]: <https://evolveum.com/midpoint/> "midPoint"
 [minio]: <https://min.io/> "MinIO"
 [mkcert]: <https://github.com/FiloSottile/mkcert> "mkcert"
