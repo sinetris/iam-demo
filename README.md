@@ -7,11 +7,10 @@ Identity and Access Management (IAM) demo infrastructure.
   - [⚙️ Setup](#️-setup)
     - [Dependencies](#dependencies)
     - [Run](#run)
-  - [🔧 Development](#-development)
-  - [💻 Linux desktop VM](#-linux-desktop-vm)
+  - [💻 Linux desktop Instance](#-linux-desktop-instance)
     - [Connect using Remote Desktop](#connect-using-remote-desktop)
     - [Test self-signed certificates](#test-self-signed-certificates)
-    - [Complete Setup (required to run only once)](#complete-setup-required-to-run-only-once)
+    - [Complete Setup](#complete-setup)
       - [Configure environment variables and shell completion](#configure-environment-variables-and-shell-completion)
       - [Configure Forgejo ssh keys](#configure-forgejo-ssh-keys)
   - [🧑‍💻 Access Kubernetes cluster](#-access-kubernetes-cluster)
@@ -20,15 +19,32 @@ Identity and Access Management (IAM) demo infrastructure.
       - [Traefik Dashboard](#traefik-dashboard)
       - [Kubernetes Dashboard](#kubernetes-dashboard)
 - [Troubleshooting](#troubleshooting)
-- [Screenshots](#screenshots)
-- [TODO](#todo)
+- [🔧 Development](#-development)
 - [📄 License](#-license)
 
 ## 📜 Introduction
 
-Use [Multipass][multipass] to start an [ansible][ansible] controller
-instance, a [Kubernetes][kubernetes] cluster, and a linux desktop with
-[Xfce Desktop Environment][xfce].
+This project will create and provision 3 instances:
+
+- an [ansible][ansible] controller (also used for the internal DNS server)
+- a [Kubernetes][kubernetes] cluster (a single instance for now)
+- a Linux desktop with [Xfce Desktop Environment][xfce]
+
+You can view [screenshots](docs/screenshots.md) of some of the applications
+already installed.
+
+This project is ambitious and constantly evolving.\
+In the [To Do](docs/TODO.md) document I try to keep track of what has been
+implemented and what is planned to be added.
+
+> **Warning**
+>
+> This project, for the time being, is not intended to have any backward
+> compatibility.
+>
+> Instances are often destroyed and recreated.\
+> Kubernetes resources are renamed, removed, modified, in ways that could
+> compromise previous deployments.
 
 ## 🐣 Getting started
 
@@ -45,16 +61,13 @@ instance, a [Kubernetes][kubernetes] cluster, and a linux desktop with
 ./bunch-up -a
 ```
 
-### 🔧 Development
-
-See [development](docs/development/) documentation.
-
-### 💻 Linux desktop VM
+### 💻 Linux desktop Instance
 
 #### Connect using Remote Desktop
 
-Use any RDP client (like [Microsoft Remote Desktop][microsoft-remote-desktop]
-or [FreeRDP][freerdp]) to connect to the `linux-desktop` virtual machine.
+Use any RDP client, such as [Windows App][microsoft-windows-app] (formerly known
+as [Microsoft Remote Desktop][microsoft-remote-desktop]) or [FreeRDP][freerdp],
+to connect to the `linux-desktop` instance.
 
 - user: **iamadmin**
 - password: **iamadmin**
@@ -68,16 +81,21 @@ The IP Address is the first entry from `ipv4` when running the following command
 #### Test self-signed certificates
 
 The ansible scripts should have installed the self-signed root certificate
-inside the linux-desktop virtual machine.
+inside the linux-desktop instance.
 
-To test that the services are running and using the proper DNS and certificates,
-open a terminal in the `linux-desktop` VM and type:
+To test that the services are using the proper DNS and certificates, open a
+terminal in `linux-desktop` and type:
 
 ```sh
 ~/bin/check-vm-config.sh
 ```
 
-#### Complete Setup (required to run only once)
+The result should be similar to the [OpenSSL Checks](./docs/screenshots.md#openssl-checks)
+screenshot.
+
+#### Complete Setup
+
+> **Note:** required to run only once
 
 ##### Configure environment variables and shell completion
 
@@ -172,8 +190,10 @@ under `/kubernetes`.
 
 Connect to `linux-desktop` [using Remote Desktop](#connect-using-remote-desktop).
 
-Open Firefox inside the VM, and use the following URLs:
-(**Note:** you can find them in Firefox bookmarks)
+Open Firefox inside the instance, and use the following URLs:
+
+> **Note:** You can also find them in the Firefox Bookmarks Toolbar under
+> "Managed bookmarks".
 
 - Grafana: <https://grafana.iam-demo.test>
   - user: admin
@@ -228,13 +248,9 @@ Access the kubernetes-dashboard in a web broser opening:
 
 - [Troubleshooting](docs/troubleshooting/README.md)
 
-## Screenshots
+## 🔧 Development
 
-- [Screenshots](docs/screenshots.md)
-
-## TODO
-
-- [TODO](docs/TODO.md)
+See [development](docs/development/) documentation.
 
 ## 📄 License
 
@@ -247,5 +263,6 @@ See [LICENSE](LICENSE) for details.
 [jsonnet]: <https://jsonnet.org> "Jsonnet"
 [kubernetes]: <https://kubernetes.io> "Kubernetes CLI"
 [microsoft-remote-desktop]: <https://learn.microsoft.com/en-us/windows-server/remote/remote-desktop-services/clients/remote-desktop-clients> "Microsoft Remote Desktop"
+[microsoft-windows-app]: <https://learn.microsoft.com/windows-app> "Windows App"
 [multipass]: <https://multipass.run/> "Canonical Multipass"
 [xfce]: <https://www.xfce.org/> "Xfce Desktop Environment"
