@@ -34,9 +34,9 @@
         cmd: /usr/local/bin/generate-custom-ca-certs.sh
       register: custom_ca_result
       changed_when: false
-      failed_when:
-        - custom_ca_result.rc != 0
-        - "'CA certificate generation complete.' not in custom_ca_result.stdout_lines"
+      failed_when: >
+        (custom_ca_result.rc != 0) or
+        ('CA certificate generation complete.' not in custom_ca_result.stdout_lines)
       environment:
         PROJECT: "{{ project_domain }}"
         DATA_DIR: "{{ ca_root_certs_path }}"
