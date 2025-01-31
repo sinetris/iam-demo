@@ -3,6 +3,7 @@
     "Certificates": {
       "ImportEnterpriseRoots": true,
       "Install": {{ custom_ca_paths | to_json }}
-    }
+    },
+    "ManagedBookmarks": {{ firefox_managed_bookmarks | default([]) | to_json }}
   }
 }
