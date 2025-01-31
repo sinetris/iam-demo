@@ -1,0 +1,25 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: keycloak-env-cm
+data:
+  KC_DB: postgres
+  KC_DB_SCHEMA: public
+  KC_DB_URL_HOST: keycloak-postgres-svc-headless.tools
+  KC_DB_URL_PORT: "5432"
+  KC_LOG: console,file
+  # KC_LOG_FILE: data/log/keycloak.log
+  # KC_LOG_CONSOLE_OUTPUT: json
+  # KC_LOG_FILE_OUTPUT: default
+  # LOG LEVELS: fatal, error, warn, info, debug, trace, all
+  KC_LOG_LEVEL: debug
+  KC_HEALTH_ENABLED: 'true'
+  KC_METRICS_ENABLED: 'true'
+  KC_PROXY_HEADERS: xforwarded
+  # KC_PROXY_PROTOCOL_ENABLED: 'true'
+  KC_HTTP_ENABLED: 'true'
+  KC_HOSTNAME: https://keycloak.iam-demo.test
+  KC_HOSTNAME_ADMIN: https://keycloak-admin.iam-demo.test
+  # KC_HTTPS_CERTIFICATE_FILE: /var/local/keycloak-certs/tls.crt
+  # KC_HTTPS_CERTIFICATE_KEY_FILE: /var/local/keycloak-certs/tls.key

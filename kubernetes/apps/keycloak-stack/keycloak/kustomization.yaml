@@ -5,36 +5,25 @@ kind: Kustomization
 labels:
 - includeSelectors: true
   pairs:
-    app: keycloak
+    app.kubernetes.io/name: keycloak
     app.kubernetes.io/component: application
+    app.kubernetes.io/instance: keycloak
 
 resources:
+- configmap.yaml
 - data-pvc.yaml
-- deployment.yaml
+- ingress-admin.yaml
 - ingress.yaml
+- service-headless.yaml
 - service.yaml
-
-configMapGenerator:
-- name: keycloak-env-cm
-  literals:
-  - KC_HEALTH_ENABLED='true'
-  - KC_HOSTNAME_STRICT='true'
-  - KC_HOSTNAME_STRICT_HTTPS='true'
-  - KC_HTTP_ENABLED='true'
-  - KC_LOG=console,file
-  - KC_LOG_CONSOLE_OUTPUT=json
-  - KC_LOG_LEVEL=debug
-  - KC_METRICS_ENABLED='true'
-  - KC_PROXY=passthrough
-  - KC_HOSTNAME_URL=https://keycloak.iam-demo.test
+- serviceaccount.yaml
+- statefulset.yaml
 
 secretGenerator:
 - name: keycloak-env-secret
   literals:
-  - KEYCLOAK_ADMIN=keycloak
-  - KEYCLOAK_ADMIN_PASSWORD=password1234
+  - KC_BOOTSTRAP_ADMIN_USERNAME=keycloak
+  - KC_BOOTSTRAP_ADMIN_PASSWORD=password1234
 
 generatorOptions:
   disableNameSuffixHash: true
-  labels:
-    app: keycloak
