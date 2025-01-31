@@ -7,14 +7,11 @@ namespace: tools
 labels:
 - includeSelectors: true
   pairs:
-    app.kubernetes.io/part-of: keycloak
+    app.kubernetes.io/part-of: keycloak-stack
 
 resources:
 - keycloak
 - postgres
-
-patches:
-- path: patches/keycloak-env-cm.yaml
 
 replacements:
 - path: patches/keycloak-db-name.yaml

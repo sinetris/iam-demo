@@ -1,0 +1,94 @@
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: keycloak
+spec:
+  replicas: 1
+  revisionHistoryLimit: 10
+  serviceName: keycloak-headless
+  updateStrategy:
+    type: RollingUpdate
+  template:
+    spec:
+      serviceAccountName: keycloak
+      automountServiceAccountToken: true
+      enableServiceLinks: true
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:26.1
+        args:
+        - start
+        - --verbose
+        imagePullPolicy: Always
+        env:
+        - name: JAVA_OPTS_APPEND
+          value: "-Djgroups.dns.query=keycloak-headless"
+        envFrom:
+        - configMapRef:
+            name: keycloak-env-cm
+        - secretRef:
+            name: keycloak-env-secret
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        - name: https
+          containerPort: 8443
+          protocol: TCP
+        - name: metrics
+          containerPort: 9000
+          protocol: TCP
+        - name: discovery
+          containerPort: 7800
+        resources:
+          limits:
+            cpu: 750m
+            ephemeral-storage: 2Gi
+            memory: 768Mi
+          requests:
+            cpu: 500m
+            ephemeral-storage: 50Mi
+            memory: 512Mi
+        livenessProbe:
+          failureThreshold: 150
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          httpGet:
+            path: /health/live
+            port: metrics
+            scheme: HTTP
+        readinessProbe:
+          failureThreshold: 250
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          httpGet:
+            path: /health/ready
+            port: metrics
+            scheme: HTTP
+        startupProbe:
+          failureThreshold: 250
+          initialDelaySeconds: 120
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 5
+          httpGet:
+            path: /health/started
+            port: metrics
+            scheme: HTTP
+        volumeMounts:
+        - name: data-volume
+          mountPath: /opt/keycloak/data
+        - name: empty-dir
+          mountPath: /tmp
+          subPath: tmp-dir
+      volumes:
+      - name: empty-dir
+        emptyDir: {}
+      - name: data-volume
+        persistentVolumeClaim:
+          claimName: keycloak-data-pvc
