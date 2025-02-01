@@ -240,7 +240,7 @@ Start the proxy:
 kubectl -n kubernetes-dashboard port-forward svc/kubernetes-dashboard-kong-proxy 8443:443
 ```
 
-Access the kubernetes-dashboard in a web broser opening:
+Access the kubernetes-dashboard in a web browser opening:
 
 <https://localhost:8443/>
 

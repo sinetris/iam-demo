@@ -49,7 +49,7 @@ kubectl exec  --stdin --tty -n "${pod_namespace:?}" "${pod_name:?}" --container=
 ## Test Loki
 
 To test that Loki is working correctly, run the following command from one of the
-machines (e.g. `ansible-controller`).
+instances (e.g. `ansible-controller`).
 
 ```sh
 # Send test data to Loki
@@ -81,13 +81,20 @@ spec:
 ## Start a throw away pod
 
 ```sh
-kubectl run postgres-tmp -n tools --rm -i --tty --image "postgres:16.2" -- /bin/bash
-```
-
-In case the pod isn't automatically deleted, delete it using:
-
-```sh
-kubectl delete -n tools pod postgres-tmp
+temporary_pod_name=postgres-tmp-debug
+temporary_pod_image=postgres:16
+temporary_pod_namespace=tools
+# You can try 'sh' or 'ash' if 'bash' is not available
+temporary_pod_shell=bash
+kubectl run "${temporary_pod_name:?}" \
+  --namespace "${temporary_pod_namespace:?}" \
+  --restart=Never --rm -i --tty \
+  --image "${temporary_pod_image:?}" \
+  -- ${temporary_pod_shell:?}
+# In case the pod isn't automatically deleted, you can use:
+kubectl delete \
+  --namespace "${temporary_pod_namespace:?}" \
+  pod "${temporary_pod_name:?}"
 ```
 
 ## Helm
