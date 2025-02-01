@@ -295,7 +295,7 @@ local virtualmachine_command(config, command) =
       echo "Generating machines_config.json for ansible"
       multipass list --format json | \
         jq --argjson vms_names_json "${vms_names_json}" \
-        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms, nic: "default"}' \
+        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms, network_interface: "default"}' \
         > "${generated_files_path}/"%(ansible_inventory_path)s/machines_config.json
       echo "VMs basic provisioning"
       %(vms_provision)s

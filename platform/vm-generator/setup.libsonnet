@@ -134,8 +134,8 @@ local add_default_machine_data(setup, vm) =
                 | jq '.list | {named_hosts: map({(.name|tostring): .ipv4[0]}) | add}' \
                 | yq -P > inventory/group_vars/all/10-hosts
               cat inventory/machines_config.json \
-                | jq '.nic as $n | {network_interface: $n}' \
-                | yq -P > inventory/group_vars/all/20-config
+                | jq '.network_interface as $n | {network_interface_name: $n}' \
+                | yq -P > inventory/group_vars/all/90-config
               ansible 'all' -m ping
             |||,
         },

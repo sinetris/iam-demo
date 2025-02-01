@@ -2,7 +2,7 @@
 /inventory/machines_config.json
 /inventory/machines_ips
 /inventory/group_vars/all/10-hosts
-/inventory/group_vars/all/20-config
+/inventory/group_vars/all/90-config
 
 # ---> Ansible
 /tmp
