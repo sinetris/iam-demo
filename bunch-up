@@ -6,7 +6,7 @@ architecture=amd64
 
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 generated_path=generated
-project_generator_path="${project_path}/platform/vm-generator"
+project_generator_path="${project_path}/platform/instances-script-generator"
 generated_project_path="${project_generator_path}/${generated_path}"
 valid_architectures=( amd64 arm64 )
 valid_orchestrators=( fake multipass vbox )
