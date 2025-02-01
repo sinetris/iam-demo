@@ -88,6 +88,10 @@ bind9_zones:
         ttl: 1m
         type: CNAME
         content: iam-control-plane
+      - label: keycloak-admin
+        ttl: 1m
+        type: CNAME
+        content: iam-control-plane
       - label: kubernetes
         ttl: 1m
         type: CNAME
