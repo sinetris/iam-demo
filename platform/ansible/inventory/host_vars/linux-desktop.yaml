@@ -51,3 +51,9 @@ firefox_managed_bookmarks:
     children:
       - url: https://github.com/sinetris/iam-demo
         name: IAM Demo on GitHub
+
+firefox_preferences:
+  - name: geo.enabled
+    value: false
+  - name: mousewheel.default.delta_multiplier_y
+    value: 25
