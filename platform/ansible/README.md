@@ -2,9 +2,9 @@
 
 ## Running ansible
 
-Connect to the `ansible-controller` VM.
+Connect to the `ansible-controller` instance.
 
-Inside the VM, move to the `ansible` folder
+Inside the instance, move to the `ansible` folder
 
 ```bash
 cd /ansible
@@ -16,11 +16,13 @@ Check that ansible can connect to all hosts:
 ansible -m ping all
 ```
 
-Run all needed playbooks
+Run all needed playbooks:
 
 ```bash
+# There is a playbook that include all the others playbooks
+# in the order they are supposed to be executed.
 ansible-playbook playbooks/all-setup -vvv
-# Or run them one by one
+# If you prefer, you can run them one by one
 ansible-playbook playbooks/bootstrap-ansible-controller -vvv
 ansible-playbook playbooks/bootstrap-bind -vvv
 ansible-playbook playbooks/basic-bootstrap -vvv
@@ -30,9 +32,11 @@ ansible-playbook playbooks/k3s-base-provisioning -vvv
 ansible-playbook playbooks/k3s-apps-provisioning -vvv
 ```
 
-Examples of useful commands:
+### Examples of useful Ansible commands
 
-```bash
+#### Ansible Playbooks options
+
+```sh
 # you can use `--limit <group>` or `--limit <host>`
 ansible-playbook playbooks/distro-update --limit linux-desktop
 
@@ -48,11 +52,18 @@ ansible-playbook -vv playbooks/playground
 # check yaml syntax using `--syntax-check <playbook>`
 ansible-playbook --syntax-check <playbook>
 
-# List facts for an host
-ansible <host> -m setup
-
 # Run step by step
 ansible-playbook --step <playbook>
+```
+
+#### Generic useful Ansible commands
+
+```sh
+# List facts for Ansible inventory hosts or groups.
+#  Select a group (e.g. all, k3s_cluster, dns_servers) or host
+#  (e.g. ansible-controller, iam-control-plane, linux-desktop)
+ansible_target=k3s_cluster
+ansible "${ansible_target:?}" -m setup
 
 # Create an ansible vault string secret
 ansible-vault encrypt_string

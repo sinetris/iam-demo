@@ -14,7 +14,7 @@
   - [Install Applications](#install-applications)
   - [Basic setup](#basic-setup)
   - [Compliance As Code](#compliance-as-code)
-  - [Kubernetes resources labels and annotations](#kubernetes-resources-labels-and-annotations)
+  - [Kubernetes resources, labels, and annotations](#kubernetes-resources-labels-and-annotations)
 - [Future changes and alternatives](#future-changes-and-alternatives)
   - [Excluded Applications](#excluded-applications)
   - [Change configuration](#change-configuration)
@@ -25,7 +25,7 @@
       - [kubernetes directory layout](#kubernetes-directory-layout)
   - [Optional applications](#optional-applications)
     - [Interesting projects](#interesting-projects)
-  - [Alternative to linux-desktop virtual machine](#alternative-to-linux-desktop-virtual-machine)
+  - [Alternative to linux-desktop instance](#alternative-to-linux-desktop-instance)
     - [Browser from host machine](#browser-from-host-machine)
 
 ## Documentation
@@ -70,7 +70,7 @@ in some cases not the best tools for the job) to cover certain topics.
 
 - [ ] Linux Desktop
   - [x] Terminal execute `~/bin/check-vm-config.sh`
-  - [ ] Firefox bookmarks
+  - [x] Firefox bookmarks
   - [ ] Alertmanager
   - [x] Consul
   - [ ] Grafana
@@ -137,9 +137,9 @@ in some cases not the best tools for the job) to cover certain topics.
   - [x] use `StatefulSet`
   - [x] use [Redis base](../kubernetes/base/redis/) in services
 - [ ] Setup **Keycloak**
-  - [ ] update Keycloak to version `26.1`
-  - [ ] run Keycloak in production mode
-  - [ ] use separate domain for the Admin Console
+  - [x] update Keycloak to version `26.1`
+  - [x] run Keycloak in production mode
+  - [x] use separate domain for the Admin Console
   - [ ] create `employee` realm
   - [ ] create `customer` realm
 - [ ] setup **Forgejo**
@@ -170,15 +170,17 @@ in some cases not the best tools for the job) to cover certain topics.
         can be found in k3s
   - [ ] generate [Wazuh](../kubernetes/apps/wazuh/) certs using previously
         generated root CA certs
-  - [x] install CA certificates chain in VMs
+  - [x] install CA certificates chain in instances
   - [x] test generated CA certificates for installed applications domains from
-        the `linux-desktop` VM
+        the `linux-desktop` instance
 - [x] setup [pre-commit][pre-commit] for this project repository
 - [ ] configure [Loki][grafana-loki], [Prometheus][prometheus],
       [Grafana][grafana], [Tempo][grafana-tempo]
   - [x] ~~install [Grafana Agent Flow][grafana-agent-flow]~~ (DEPRECATED)
   - [x] replace [Grafana Agent Flow][grafana-agent-flow] with [Grafana Alloy][grafana-alloy]
-  - [ ] use [Promtail][promtail] agent to ships logs to Loki from VMs
+  - [ ] use [Promtail][promtail] agent to ships logs to Loki from instances
+    - [ ] install and setup [Promtail][promtail] agent in `ansible-controller` instance
+    - [ ] install and setup [Promtail][promtail] agent in `iam-control-plane` instance
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
   - [x] use MinIO credentials and endpoint from Secret in Tempo
@@ -223,10 +225,14 @@ in some cases not the best tools for the job) to cover certain topics.
   > Context-aware, Expressive, Fast, Portable
 - [ ] [OPAL][opal]: Open Policy Administration Layer
 
-### Kubernetes resources labels and annotations
+### Kubernetes resources, labels, and annotations
 
 See [Labels and Annotations](development/kubernetes.md#labels-and-annotations)
 section in [Kubernetes development tips](development/kubernetes.md).
+
+- [ ] replace labels `app` and `app.kubernetes.io/app` with `app.kubernetes.io/name`
+- [ ] remove name suffix `-svc` from `kind: Service`
+- [ ] use named ports in `kind: Service`
 
 ## Future changes and alternatives
 
@@ -285,7 +291,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
 
 #### Restructure Ansible code
 
-The project use [Ansible][ansible] to manage VMs and [bootsrap kubernetes](../kubernetes/).
+The project use [Ansible][ansible] to manage instances and [bootsrap kubernetes](../kubernetes/).
 The [Ansible code](../platform/ansible/) for the custom_roles and playbooks
 needs to be restructured (add label, move tasks in the proper place, etc)
 and would be better to move the custom roles in Ansible collections and use a
@@ -417,12 +423,12 @@ different platforms.
 - [ ] [PacBot][pacbot]: Policy as Code Bot (by T-Mobile)
 - [ ] [MagTape][magtape]: Policy-as-Code for Kubernetes (by T-Mobile)
 
-### Alternative to linux-desktop virtual machine
+### Alternative to linux-desktop instance
 
 #### Browser from host machine
 
 You can use the host machine (e.g. your laptop) instead of the `linux-desktop`
-virtual machine.
+instance.
 
 **Pros:**
 
@@ -431,7 +437,7 @@ virtual machine.
 
 **Cons:**
 
-- virtual machine IPs must be reachable from the host machine
+- Instances IPs must be reachable from the host machine
 - internal DNS server must be used for DNS resolution on the host machine
 - self-signed CA root certificate must be installed on the host machine
 - VPNs are likely to interfere with the previous steps
