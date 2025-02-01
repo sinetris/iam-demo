@@ -64,10 +64,10 @@
     mode: u=rwx,g=rwx,o=rx
     owner: "{{ desktop_user }}"
     group: "{{ desktop_user }}"
-- name: Copy script to check vm config for desktop_user
+- name: Copy script to check instance config for desktop_user
   ansible.builtin.copy:
     src: check-linux-desktop-config.sh
-    dest: /home/{{ desktop_user }}/bin/check-vm-config.sh
+    dest: /home/{{ desktop_user }}/bin/check-instance-config.sh
     owner: "{{ desktop_user }}"
     group: "{{ desktop_user }}"
     mode: u=rwx,g=rx,o=

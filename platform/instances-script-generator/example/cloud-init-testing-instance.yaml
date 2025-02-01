@@ -32,13 +32,13 @@ autoinstall:
       timestamp: {{timestamp}}
       datasource: {{datasource}}
       uptime: {{uptime}}
-    fqdn: "testing-vm.iam-demo.test"
+    fqdn: "testing-instance.iam-demo.test"
     growpart:
       devices:
         - "/"
       ignore_growroot_disabled: false
       mode: "auto"
-    hostname: "testing-vm"
+    hostname: "testing-instance"
     package_reboot_if_required: true
     package_update: true
     package_upgrade: true

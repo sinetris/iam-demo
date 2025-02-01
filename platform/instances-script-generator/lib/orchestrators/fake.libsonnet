@@ -3,13 +3,13 @@
     |||
       #!/usr/bin/env bash
 
-      echo "- VMs %(action)s -"
-      %(vms)s
+      echo "- Instances %(action)s -"
+      %(instances)s
     ||| % {
       action: action,
-      vms: std.join('\n', [
-        'echo ' + std.escapeStringBash(vm.hostname)
-        for vm in config.virtual_machines
+      instances: std.join('\n', [
+        'echo ' + std.escapeStringBash(instance.hostname)
+        for instance in config.virtual_machines
       ]),
     },
   virtualmachines_bootstrap(config)::

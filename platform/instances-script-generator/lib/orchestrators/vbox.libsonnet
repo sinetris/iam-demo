@@ -10,26 +10,26 @@ local indent(string, pre) =
     std.split(std.rstripChars(string, '\n'), '\n')
   );
 
-local check_vm_exist_do(config, vm, action_code) =
+local check_instance_exist_do(config, instance, action_code) =
   |||
-    vm_name=%(hostname)s
-    echo "Checking '${vm_name}'..."
-    vm_status=$(VBoxManage showvminfo "${vm_name}" --machinereadable 2>&1) && exit_code=$? || exit_code=$?
-    if [ $exit_code -eq 0 ] && [[ $vm_status =~ 'VMState="started"' ]]; then
-      echo "✅ VM '${vm_name}' found!"
-    elif [ $exit_code -eq 0 ] && [[ $vm_status =~ 'VMState="poweroff"' ]]; then
-      echo "✅ VM '%(hostname)s' already exist but the state us 'poweroff'!"
+    instance_name=%(hostname)s
+    echo "Checking '${instance_name}'..."
+    instance_status=$(VBoxManage showvminfo "${instance_name}" --machinereadable 2>&1) && exit_code=$? || exit_code=$?
+    if [ $exit_code -eq 0 ] && [[ $instance_status =~ 'VMState="started"' ]]; then
+      echo "✅ Instance '${instance_name}' found!"
+    elif [ $exit_code -eq 0 ] && [[ $instance_status =~ 'VMState="poweroff"' ]]; then
+      echo "✅ Instance '%(hostname)s' already exist but the state us 'poweroff'!"
     elif [ $exit_code -eq 0 ]; then
-      echo "❌ VM '%(hostname)s' already exist but in UNMANAGED state!"
-    elif  [ $exit_code -eq 1 ] && [[ $vm_status =~ 'Could not find a registered machine' ]]; then
+      echo "❌ Instance '%(hostname)s' already exist but in UNMANAGED state!"
+    elif  [ $exit_code -eq 1 ] && [[ $instance_status =~ 'Could not find a registered machine' ]]; then
       %(action_code)s
     else
-      echo "❌ VM '${vm_name}' - exit code '${exit_code}'"
-      echo ${vm_status}
+      echo "❌ Instance '${instance_name}' - exit code '${exit_code}'"
+      echo ${instance_status}
       exit 2
     fi
   ||| % {
-    hostname: vm.hostname,
+    hostname: instance.hostname,
     action_code: action_code,
   };
 
@@ -44,11 +44,11 @@ local create_network(config) =
   assert std.objectHas(network, 'upper_ip');
   |||
     echo "Checking Network '%(network_name)s'..."
-    vm_network_status=$(VBoxManage hostonlynet modify \
+    instances_network_status=$(VBoxManage hostonlynet modify \
       --name %(network_name)s --enable 2>&1) && exit_code=$? || exit_code=$?
     if [ $exit_code -eq 0 ]; then
-      echo "✅ VM Network '%(network_name)s' already exist!"
-    elif [ $exit_code -eq 1 ] && [[ $vm_network_status =~ 'does not exist' ]]; then
+      echo "✅ Instances Network '%(network_name)s' already exist!"
+    elif [ $exit_code -eq 1 ] && [[ $instances_network_status =~ 'does not exist' ]]; then
       echo "Creating Network '%(network_name)s'..."
       VBoxManage hostonlynet add \
         --name %(network_name)s \
@@ -57,8 +57,8 @@ local create_network(config) =
         --upper-ip %(network_upper_ip)s \
         --enable
     else
-      echo "❌ VM Network '%(network_name)s' - exit code '${exit_code}'"
-      echo ${vm_network_status}
+      echo "❌ Instances Network '%(network_name)s' - exit code '${exit_code}'"
+      echo ${instances_network_status}
       exit 2
     fi
   ||| % {
@@ -68,17 +68,17 @@ local create_network(config) =
     network_upper_ip: config.network.upper_ip,
   };
 
-local create_vm(config, vm) =
+local create_instance(config, instance) =
   assert std.isObject(config);
   assert std.objectHas(config, 'project_name');
   assert std.objectHas(config, 'base_domain');
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
-  assert std.objectHas(vm, 'project_host_path');
-  local cpus = std.get(vm, 'cpus', '1');
-  local storage_space = std.get(vm, 'storage_space', '5000');
-  local memory = std.get(vm, 'memory', '1024');
-  local vram = std.get(vm, 'vram', '64');
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
+  assert std.objectHas(instance, 'project_host_path');
+  local cpus = std.get(instance, 'cpus', '1');
+  local storage_space = std.get(instance, 'storage_space', '5000');
+  local memory = std.get(instance, 'memory', '1024');
+  local vram = std.get(instance, 'vram', '64');
   local mount_opt(host_path, guest_path) =
     |||
       VBoxManage sharedfolder add \
@@ -93,42 +93,42 @@ local create_vm(config, vm) =
       guest_path: guest_path,
     };
   local mounts =
-    if std.objectHas(vm, 'mounts') then
-      assert std.isArray(vm.mounts);
+    if std.objectHas(instance, 'mounts') then
+      assert std.isArray(instance.mounts);
       [
         assert std.isObject(mount);
         assert std.objectHas(mount, 'host_path');
         assert std.objectHas(mount, 'guest_path');
         mount_opt(mount.host_path, mount.guest_path)
-        for mount in vm.mounts
+        for mount in instance.mounts
       ]
     else [];
   |||
     vbox_architecture=arm
-    vbox_vm_ostype=Ubuntu24_LTS_arm64
+    vbox_instance_ostype=Ubuntu24_LTS_arm64
     vbox_basefolder=%(project_host_path)s
     vbox_machine_name=%(hostname)s
-    vbox_vm_cidata_iso="${vbox_basefolder:?}/disks/seed.iso"
-    vbox_vm_disk_file="${vbox_basefolder:?}/disks/boot-disk.vdi"
+    vbox_instance_cidata_iso="${vbox_basefolder:?}/disks/seed.iso"
+    vbox_instance_disk_file="${vbox_basefolder:?}/disks/boot-disk.vdi"
     vbox_iso_installer_file=~/virtualization/iso/ubuntu-24.04.1-live-server-arm64.iso
     vbox_guest_additions_iso=/Applications/VirtualBox.app/Contents/MacOS/VBoxGuestAdditions.iso
-    vbox_vm_cidata_origin_path=${vbox_basefolder:?}/cidata
+    vbox_instance_cidata_origin_path=${vbox_basefolder:?}/cidata
     mkdir -p "${vbox_basefolder:?}"/{cidata,disks,shared}
-    _generated_vm_mac_address=$(dd bs=1 count=3 if=/dev/random 2>/dev/null |  hexdump -vn3 -e '/3 "02:42:00"' -e '/1 ":%%02X"')
+    _generated_instance_mac_address=$(dd bs=1 count=3 if=/dev/random 2>/dev/null |  hexdump -vn3 -e '/3 "02:42:00"' -e '/1 ":%%02X"')
     # MAC Address in cloud-init network config is lowercase separated by colon
-    vbox_vm_mac_address_cloud_init=$(awk -v mac_address="${_generated_vm_mac_address}" 'BEGIN {print tolower(mac_address)}')
+    vbox_instance_mac_address_cloud_init=$(awk -v mac_address="${_generated_instance_mac_address}" 'BEGIN {print tolower(mac_address)}')
     # MAC Address in VirtualBox configuration is uppercase and without colon separator
-    vbox_vm_mac_address=$(awk -v mac_address="${_generated_vm_mac_address}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
-    cp "assets/cloud-init-%(hostname)s.yaml" "${vbox_vm_cidata_origin_path:?}/user-data"
+    vbox_instance_mac_address=$(awk -v mac_address="${_generated_instance_mac_address}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
+    cp "assets/cloud-init-%(hostname)s.yaml" "${vbox_instance_cidata_origin_path:?}/user-data"
     # Create cloud-init network configuration
-    tee "${vbox_vm_cidata_origin_path:?}/network-config" > /dev/null <<-EOT
+    tee "${vbox_instance_cidata_origin_path:?}/network-config" > /dev/null <<-EOT
     version: 2
     ethernets:
       lab:
         dhcp4: true
         dhcp6: false
         match:
-          macaddress: ${vbox_vm_mac_address_cloud_init}
+          macaddress: ${vbox_instance_mac_address_cloud_init}
         set-name: lab
         nameservers:
           search:
@@ -140,7 +140,7 @@ local create_vm(config, vm) =
       --name "%(hostname)s" \
       --platform-architecture ${vbox_architecture:?} \
       --basefolder ${vbox_basefolder:?} \
-      --ostype ${vbox_vm_ostype:?} \
+      --ostype ${vbox_instance_ostype:?} \
       --register
     # Configure network
     VBoxManage modifyvm \
@@ -151,19 +151,19 @@ local create_vm(config, vm) =
       --cable-connected1 on \
       --nic2 hostonlynet \
       --host-only-net2 %(network_name)s \
-      --mac-address2=${vbox_vm_mac_address} \
+      --mac-address2=${vbox_instance_mac_address} \
       --nic-type2 82540EM \
       --cable-connected2 on \
       --nic-promisc2 allow-all
     # Create storage controllers
-    _vbox_vm_scsi_controller_name="SCSI Controller"
+    _vbox_instance_scsi_controller_name="SCSI Controller"
     VBoxManage storagectl \
       "%(hostname)s" \
-      --name "${_vbox_vm_scsi_controller_name:?}" \
+      --name "${_vbox_instance_scsi_controller_name:?}" \
       --add virtio \
       --controller VirtIO \
       --bootable on
-    # Configure the VM
+    # Configure the instance
     VBoxManage modifyvm \
       "%(hostname)s" \
       --cpus "%(cpus)s" \
@@ -174,39 +174,39 @@ local create_vm(config, vm) =
       --ioapic on \
       --usbohci on \
       --cpu-profile host
-    # Create VM main disk
+    # Create instance main disk
     VBoxManage createmedium disk \
-      --filename "${vbox_vm_disk_file:?}" \
+      --filename "${vbox_instance_disk_file:?}" \
       --size %(storage_space)s
     # Create cloud-init iso
     hdiutil makehybrid \
-      -o "${vbox_vm_cidata_iso:?}" \
+      -o "${vbox_instance_cidata_iso:?}" \
       -default-volume-name cidata \
       -hfs \
       -iso \
       -joliet \
-      "${vbox_vm_cidata_origin_path:?}"
+      "${vbox_instance_cidata_origin_path:?}"
     # Attach main disk
     VBoxManage storageattach \
       "%(hostname)s" \
-      --storagectl "${_vbox_vm_scsi_controller_name:?}" \
+      --storagectl "${_vbox_instance_scsi_controller_name:?}" \
       --port 0 \
       --device 0 \
       --type hdd \
-      --medium "${vbox_vm_disk_file:?}"
-    # Attach cloud-init iso to VM
+      --medium "${vbox_instance_disk_file:?}"
+    # Attach cloud-init iso to instance
     VBoxManage storageattach \
       "%(hostname)s" \
-      --storagectl "${_vbox_vm_scsi_controller_name:?}" \
+      --storagectl "${_vbox_instance_scsi_controller_name:?}" \
       --port 1 \
       --device 0 \
       --type dvddrive \
-      --medium "${vbox_vm_cidata_iso:?}" \
+      --medium "${vbox_instance_cidata_iso:?}" \
       --comment "cloud-init data for %(hostname)s"
     # Attach Ubuntu iso installer
     VBoxManage storageattach  \
       "%(hostname)s" \
-      --storagectl "${_vbox_vm_scsi_controller_name:?}" \
+      --storagectl "${_vbox_instance_scsi_controller_name:?}" \
       --port 2 \
       --device 0 \
       --type dvddrive \
@@ -214,12 +214,12 @@ local create_vm(config, vm) =
     # Attach Guest Addition iso installer
     VBoxManage storageattach  \
       "%(hostname)s" \
-      --storagectl "${_vbox_vm_scsi_controller_name:?}" \
+      --storagectl "${_vbox_instance_scsi_controller_name:?}" \
       --port 3 \
       --device 0 \
       --type dvddrive \
       --medium "${vbox_guest_additions_iso:?}"
-    # Configure the VM boot order
+    # Configure the instance boot order
     VBoxManage modifyvm \
       "%(hostname)s" \
       --boot1 disk \
@@ -232,11 +232,11 @@ local create_vm(config, vm) =
   ||| % {
     base_domain: config.base_domain,
     project_name: config.project_name,
-    hostname: vm.hostname,
-    project_host_path: vm.project_host_path,
-    cpus: vm.cpus,
-    storage_space: vm.storage_space,
-    timeout: vm.timeout,
+    hostname: instance.hostname,
+    project_host_path: instance.project_host_path,
+    cpus: instance.cpus,
+    storage_space: instance.storage_space,
+    timeout: instance.timeout,
     memory: memory,
     vram: vram,
     mounts: shell_lines(mounts),
@@ -244,12 +244,12 @@ local create_vm(config, vm) =
     dns_servers: std.join(',', config.dns_servers),
   };
 
-local info_vm(config, vm) =
+local info_instance(config, instance) =
   assert std.isObject(config);
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
   |||
-    vm_ip_output=$(\
+    instance_ip_output=$(\
       VBoxManage guestproperty \
       enumerate "%(hostname)s" \
       --no-flags \
@@ -257,26 +257,26 @@ local info_vm(config, vm) =
       '/VirtualBox/GuestInfo/Net/0/V4/IP' \
       | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+') && exit_code=$? || exit_code=$?
   ||| % {
-    hostname: vm.hostname,
+    hostname: instance.hostname,
   };
 
-local destroy_vm(config, vm) =
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
+local destroy_instance(config, instance) =
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
 
   |||
     vbox_basefolder=%(project_host_path)s
-    vbox_vm_cidata_iso="${vbox_basefolder:?}/disks/seed.iso"
-    vbox_vm_disk_file="${vbox_basefolder:?}/disks/boot-disk.vdi"
+    vbox_instance_cidata_iso="${vbox_basefolder:?}/disks/seed.iso"
+    vbox_instance_disk_file="${vbox_basefolder:?}/disks/boot-disk.vdi"
     VBoxManage unregistervm "%(hostname)s" --delete-all
-    VBoxManage closemedium dvd "${vbox_vm_cidata_iso:?}" --delete
-    VBoxManage closemedium disk "${vbox_vm_disk_file:?}" --delete
+    VBoxManage closemedium dvd "${vbox_instance_cidata_iso:?}" --delete
+    VBoxManage closemedium disk "${vbox_instance_disk_file:?}" --delete
   ||| % {
-    project_host_path: vm.project_host_path,
-    hostname: vm.hostname,
+    project_host_path: instance.project_host_path,
+    hostname: instance.hostname,
   };
 
-local provision_vms(config, provisionings) =
+local provision_instances(config, provisionings) =
   if std.isArray(provisionings) then
     local file_provisioning(opts) =
       assert std.objectHas(opts, 'destination');
@@ -389,23 +389,23 @@ local provision_vms(config, provisionings) =
       echo "Creating Network"
       %(network_creation)s
 
-      echo "Creating VMs"
-      %(vms_creation)s
+      echo "Creating instances"
+      %(instances_creation)s
     ||| % {
       network_creation: create_network(config),
-      vms_creation: shell_lines([
-        check_vm_exist_do(config, vm, indent(create_vm(config, vm), '\t'))
-        for vm in config.virtual_machines
+      instances_creation: shell_lines([
+        check_instance_exist_do(config, instance, indent(create_instance(config, instance), '\t'))
+        for instance in config.virtual_machines
       ]),
     },
   virtualmachines_setup(config)::
-    local vms = [vm.hostname for vm in config.virtual_machines];
+    local instances = [instance.hostname for instance in config.virtual_machines];
     local provisionings =
       if std.objectHas(config, 'base_provisionings') then
         config.base_provisionings
       else [];
     local action_code = |||
-      echo "❌ VM '${vm_name}' not mamama found!"
+      echo "❌ Instance '${instance_name}' not found!"
       exit 1
     |||;
     |||
@@ -413,25 +413,25 @@ local provision_vms(config, provisionings) =
       set -Eeuo pipefail
 
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      vms_names_json=%(vms_names_json)s
+      instances_names_json=%(instances_names_json)s
 
-      echo "Checking VMs"
-      %(vms_check)s
+      echo "Checking instances"
+      %(instances_check)s
       echo "Generating machines_config.json for ansible"
       multipass list --format json | \
-        jq --argjson vms_names_json "${vms_names_json}" \
-        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms}' \
+        jq --argjson instances_names_json "${instances_names_json}" \
+        '.list | [.[] | select(.name as $n | $instances_names_json | index($n))] as $instances | {list: $instances}' \
         > %(ansible_inventory_path)s/machines_config.json
-      %(vms_provision)s
+      %(instances_provision)s
     ||| % {
       ansible_inventory_path: config.ansible_inventory_path,
-      vms_check: shell_lines([
-        check_vm_exist_do(config, vm, indent(action_code, '  '))
-        for vm in config.virtual_machines
+      instances_check: shell_lines([
+        check_instance_exist_do(config, instance, indent(action_code, '  '))
+        for instance in config.virtual_machines
       ]),
-      vms_provision: provision_vms(config, provisionings),
-      vms_names_json: std.escapeStringBash(
-        std.manifestJsonMinified(vms)
+      instances_provision: provision_instances(config, provisionings),
+      instances_names_json: std.escapeStringBash(
+        std.manifestJsonMinified(instances)
       ),
     },
   virtualmachines_provisioning(config)::
@@ -445,23 +445,23 @@ local provision_vms(config, provisionings) =
 
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-      echo "Provisioning VMs"
-      %(vms_provision)s
+      echo "Provisioning instances"
+      %(instances_provision)s
     ||| % {
-      vms_provision: provision_vms(config, provisionings),
+      instances_provision: provision_instances(config, provisionings),
     },
   virtualmachines_destroy(config)::
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
-      echo "Destroying VMs"
+      echo "Destroying instances"
 
-      %(vms_destroy)s
+      %(instances_destroy)s
     ||| % {
-      vms_destroy: shell_lines([
-        destroy_vm(config, vm)
-        for vm in config.virtual_machines
+      instances_destroy: shell_lines([
+        destroy_instance(config, instance)
+        for instance in config.virtual_machines
       ]),
     },
   virtualmachines_list(config)::
@@ -469,21 +469,21 @@ local provision_vms(config, provisionings) =
     assert std.objectHas(config, 'virtual_machines');
     assert std.isArray(config.virtual_machines);
 
-    local vms = [vm.hostname for vm in config.virtual_machines];
+    local instances = [instance.hostname for instance in config.virtual_machines];
 
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
       if [ $# -lt 1 ]; then
-        machine_list="%(vms)s"
+        machine_list="%(instances)s"
       else
         machine_list=$@
       fi
       multipass info \
         --format yaml ${machine_list}
     ||| % {
-      vms: std.join(' ', vms),
+      instances: std.join(' ', instances),
     },
   virtualmachine_shell(_config)::
     |||
@@ -504,7 +504,7 @@ local provision_vms(config, provisionings) =
     assert std.objectHas(config, 'virtual_machines');
     assert std.isArray(config.virtual_machines);
 
-    local vms = [vm.hostname for vm in config.virtual_machines];
+    local instances = [instance.hostname for instance in config.virtual_machines];
 
     |||
       #!/usr/bin/env bash
@@ -515,9 +515,9 @@ local provision_vms(config, provisionings) =
         exit 1
       fi
 
-      vm_ip_output=$(VBoxManage guestproperty enumerate "$1" --no-flags --no-timestamp '/VirtualBox/GuestInfo/Net/0/V4/IP' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
+      instance_ip_output=$(VBoxManage guestproperty enumerate "$1" --no-flags --no-timestamp '/VirtualBox/GuestInfo/Net/0/V4/IP' | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+')
     ||| % {
-      vms: std.join(' ', vms),
+      instances: std.join(' ', instances),
     },
 
 }
