@@ -104,4 +104,3 @@ k3s_ensure_directories_exist:
 k3s_drain_command:
   true: delete-emptydir-data
   false: delete-local-data
-k3s_sysctl_inotify_file: /etc/sysctl.d/90-inotify.conf
