@@ -1,0 +1,4 @@
+// Firefox preferences
+{% for preference in firefox_preferences -%}
+pref({{ preference.name | to_json }}, {{ preference.value | to_json }});
+{% endfor %}

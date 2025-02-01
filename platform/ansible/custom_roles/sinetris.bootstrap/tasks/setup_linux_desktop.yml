@@ -47,6 +47,16 @@
     custom_ca_paths:
       - /etc/firefox/certificates/{{ project_name }}-root-ca.crt
       - /etc/firefox/certificates/{{ project_name }}-intermediate-ca.crt
+- name: Ensures Firefox global preferences folder exists
+  ansible.builtin.file:
+    path: "{{ firefox_global_preferences_path }}"
+    state: directory
+    mode: u=rwx,g=rwx,o=rx
+- name: Setup Firefox golobal preferences
+  ansible.builtin.template:
+    src: firefox-preferences.js.j2
+    dest: "{{ firefox_global_preferences_file }}"
+    mode: u=rw,g=r,o=r
 - name: Ensures bin directory exist in user home
   ansible.builtin.file:
     path: /home/{{ desktop_user }}/bin

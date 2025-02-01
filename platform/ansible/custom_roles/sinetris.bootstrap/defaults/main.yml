@@ -2,6 +2,8 @@
 use_selfsigned_root_ca: true
 system_ca_root_path: /usr/local/share/ca-certificates
 cloud_init_netplan_file_path: /etc/netplan/50-cloud-init.yaml
+firefox_global_preferences_path: /etc/firefox/defaults/pref
+firefox_global_preferences_file: "{{ firefox_global_preferences_path }}/config-prefs.js"
 # Network interface name in netplan
 network_interface_name: ens3
 # Network interface used for default routing
