@@ -15,23 +15,23 @@ local indent(string, pre) =
   );
 // END - Utilities functions
 
-local check_vm(vm) =
+local check_instance(instance) =
   |||
-    _vm_name=%(hostname)s
-    echo "Checking '${_vm_name}'..."
-    _vm_status=$(multipass info --format yaml ${_vm_name} 2>&1) && _exit_code=$? || _exit_code=$?
+    _instance_name=%(hostname)s
+    echo "Checking '${_instance_name}'..."
+    _instance_status=$(multipass info --format yaml ${_instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
-      echo "✅ VM '${_vm_name}' found!"
-    elif [[ $_exit_code -eq 2 ]] && [[ $_vm_status =~ 'does not exist' ]]; then
-      echo "❌ VM '${_vm_name}' not found!"
+      echo "✅ Instance '${_instance_name}' found!"
+    elif [[ $_exit_code -eq 2 ]] && [[ $_instance_status =~ 'does not exist' ]]; then
+      echo "❌ Instance '${_instance_name}' not found!"
       exit 1
     else
-      echo "❌ VM '${_vm_name}' - exit code '${_exit_code}'"
-      echo ${_vm_status}
+      echo "❌ Instance '${_instance_name}' - exit code '${_exit_code}'"
+      echo ${_instance_status}
       exit 2
     fi
   ||| % {
-    hostname: vm.hostname,
+    hostname: instance.hostname,
   };
 
 local file_provisioning(opts) =
@@ -126,113 +126,113 @@ local generate_provisioning(opts) =
     inline_shell_provisioning(opts)
   else error 'Invalid provisioning: %(opts.type)s';
 
-local provision_vm(vm) =
-  if std.objectHas(vm, 'base_provisionings') && std.isArray(vm.base_provisionings) then
-    local provisionings = [v { destination_host: vm.hostname } for v in vm.base_provisionings];
+local provision_instance(instance) =
+  if std.objectHas(instance, 'base_provisionings') && std.isArray(instance.base_provisionings) then
+    local provisionings = [i { destination_host: instance.hostname } for i in instance.base_provisionings];
     shell_lines(std.map(
       func=generate_provisioning,
       arr=provisionings
     ))
   else '';
 
-local create_vm(config, vm) =
+local create_instance(config, instance) =
   assert std.isObject(config);
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
-  assert std.objectHas(vm, 'project_host_path');
-  local cpus = std.get(vm, 'cpus', '1');
-  local storage_space = std.get(vm, 'storage_space', '5000');
-  local memory = std.get(vm, 'memory', '1024');
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
+  assert std.objectHas(instance, 'project_host_path');
+  local cpus = std.get(instance, 'cpus', '1');
+  local storage_space = std.get(instance, 'storage_space', '5000');
+  local memory = std.get(instance, 'memory', '1024');
   local mount_opt(host_path, guest_path) =
     '--mount "%(host_path)s":"%(guest_path)s"' % {
       host_path: host_path,
       guest_path: guest_path,
     };
   local mounts =
-    if std.objectHas(vm, 'mounts') then
-      assert std.isArray(vm.mounts);
+    if std.objectHas(instance, 'mounts') then
+      assert std.isArray(instance.mounts);
       [
         assert std.isObject(mount);
         assert std.objectHas(mount, 'host_path');
         assert std.objectHas(mount, 'guest_path');
         mount_opt(mount.host_path, mount.guest_path)
-        for mount in vm.mounts
+        for mount in instance.mounts
       ]
     else [];
   |||
-    _vm_name=%(hostname)s
-    echo "Checking '${_vm_name}'..."
-    _vm_status=$(multipass info --format yaml ${_vm_name} 2>&1) && _exit_code=$? || _exit_code=$?
+    _instance_name=%(hostname)s
+    echo "Checking '${_instance_name}'..."
+    _instance_status=$(multipass info --format yaml ${_instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
-      echo "✅ VM '${_vm_name}' already exist!"
-    elif [[ $_exit_code -eq 2 ]] && [[ $_vm_status =~ 'does not exist' ]]; then
+      echo "✅ Instance '${_instance_name}' already exist!"
+    elif [[ $_exit_code -eq 2 ]] && [[ $_instance_status =~ 'does not exist' ]]; then
       echo 'Creating "%(project_host_path)s"'
       mkdir -p "%(project_host_path)s/shared"
       multipass launch --cpus %(cpus)s \
         --disk %(storage_space)sM \
         --memory %(memory)sM \
-        --name "${_vm_name}" \
-        --cloud-init "assets/cloud-init-${_vm_name}.yaml" \
+        --name "${_instance_name}" \
+        --cloud-init "assets/cloud-init-${_instance_name}.yaml" \
         --timeout %(timeout)s \
         %(mounts)s release:%(guest_os_release)s
     else
-      echo "❌ VM '${_vm_name}' - exit code '${_exit_code}'"
-      echo ${_vm_status}
+      echo "❌ Instance '${_instance_name}' - exit code '${_exit_code}'"
+      echo ${_instance_status}
       exit 2
     fi
   ||| % {
-    hostname: vm.hostname,
-    project_host_path: vm.project_host_path,
-    cpus: vm.cpus,
-    storage_space: vm.storage_space,
-    timeout: vm.timeout,
-    memory: vm.memory,
+    hostname: instance.hostname,
+    project_host_path: instance.project_host_path,
+    cpus: instance.cpus,
+    storage_space: instance.storage_space,
+    timeout: instance.timeout,
+    memory: instance.memory,
     mounts: indent(std.join(' \\\n', mounts), '    '),
     guest_os_release: guest_os_release,
   };
 
-local destroy_vm(config, vm) =
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
+local destroy_instance(config, instance) =
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
 
   |||
-    _vm_name=%(hostname)s
-    multipass delete --purge "${_vm_name}"
+    _instance_name=%(hostname)s
+    multipass delete --purge "${_instance_name}"
   ||| % {
-    hostname: vm.hostname,
+    hostname: instance.hostname,
   };
 
-local snapshot_vm(vm) =
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
+local snapshot_instance(instance) =
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
   |||
-    _vm_name=%(hostname)s
-    echo "Check '${_vm_name}' snapshot"
-    _vm_status=$(multipass info ${_vm_name} --snapshots 2>&1) && _exit_code=$? || _exit_code=$?
+    _instance_name=%(hostname)s
+    echo "Check '${_instance_name}' snapshot"
+    _instance_status=$(multipass info ${_instance_name} --snapshots 2>&1) && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -ne 0 ]]; then
-      echo "❌ VM snapshots for '${_vm_name}' - exit code '${_exit_code}'"
-      echo ${_vm_status}
+      echo "❌ Instance snapshots for '${_instance_name}' - exit code '${_exit_code}'"
+      echo ${_instance_status}
       exit 2
-    elif [[ $_vm_status =~ 'No snapshots found.' ]]; then
+    elif [[ $_instance_status =~ 'No snapshots found.' ]]; then
       echo "No snapshots found!"
       echo "Wait for cloud-init..."
-      multipass exec ${_vm_name} -- cloud-init status --wait --long
-      echo "Stopping '${_vm_name}' to take a snapshot..."
-      multipass stop ${_vm_name} -vv
-      echo "Create snapshot for '${_vm_name}'..."
+      multipass exec ${_instance_name} -- cloud-init status --wait --long
+      echo "Stopping '${_instance_name}' to take a snapshot..."
+      multipass stop ${_instance_name} -vv
+      echo "Create snapshot for '${_instance_name}'..."
       multipass snapshot --name base-snapshot \
-        --comment "First snapshot for '${_vm_name}'" \
-        ${_vm_name}
-      echo "Restarting '${_vm_name}' ..."
-      multipass start ${_vm_name} -vv
+        --comment "First snapshot for '${_instance_name}'" \
+        ${_instance_name}
+      echo "Restarting '${_instance_name}' ..."
+      multipass start ${_instance_name} -vv
     else
-      echo "✅ Snapshot for '${_vm_name}' already present!"
+      echo "✅ Snapshot for '${_instance_name}' already present!"
     fi
   ||| % {
-    hostname: vm.hostname,
+    hostname: instance.hostname,
   };
 
-local provision_vms(config) =
+local provision_instances(config) =
   if std.objectHas(config, 'provisionings') then
     shell_lines(std.map(
       func=generate_provisioning,
@@ -244,7 +244,7 @@ local virtualmachine_command(config, command) =
   assert std.isObject(config);
   assert std.objectHas(config, 'virtual_machines');
   assert std.isArray(config.virtual_machines);
-  local vms = [vm.hostname for vm in config.virtual_machines];
+  local instances = [instance.hostname for instance in config.virtual_machines];
 
   |||
     #!/usr/bin/env bash
@@ -252,13 +252,13 @@ local virtualmachine_command(config, command) =
 
     if [[ $# -lt 1 ]]; then
       echo "$(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 <name>$(tput sgr0)"
-      echo "$(tput setaf 3)  Where <name> is one of:$(tput sgr0) $(tput bold)%(vms)s$(tput sgr0)"
+      echo "$(tput setaf 3)  Where <name> is one of:$(tput sgr0) $(tput bold)%(instances)s$(tput sgr0)"
       exit 1
     fi
 
     multipass %(command)s $1
   ||| % {
-    vms: std.join(' ', vms),
+    instances: std.join(' ', instances),
     command: command,
   };
 
@@ -272,51 +272,51 @@ local virtualmachine_command(config, command) =
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
       generated_files_path="${this_file_path}"
 
-      echo "Creating VMs"
-      %(vms_creation)s
+      echo "Creating instances"
+      %(instances_creation)s
     ||| % {
-      vms_creation: shell_lines([
-        create_vm(config, vm)
-        for vm in config.virtual_machines
+      instances_creation: shell_lines([
+        create_instance(config, instance)
+        for instance in config.virtual_machines
       ]),
     },
   virtualmachines_setup(config)::
-    local vms = [vm.hostname for vm in config.virtual_machines];
+    local instances = [instance.hostname for instance in config.virtual_machines];
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
       generated_files_path="${this_file_path}"
-      vms_names_json=%(vms_names_json)s
+      instances_names_json=%(instances_names_json)s
 
-      echo "Checking VMs"
-      %(vms_check)s
+      echo "Checking instances"
+      %(instances_check)s
       echo "Generating machines_config.json for ansible"
       multipass list --format json | \
-        jq --argjson vms_names_json "${vms_names_json}" \
-        '.list | [.[] | select(.name as $n | $vms_names_json | index($n))] as $vms | {list: $vms, network_interface: "default"}' \
+        jq --argjson instances_names_json "${instances_names_json}" \
+        '.list | [.[] | select(.name as $n | $instances_names_json | index($n))] as $instances | {list: $instances, network_interface: "default"}' \
         > "${generated_files_path}/"%(ansible_inventory_path)s/machines_config.json
-      echo "VMs basic provisioning"
-      %(vms_provision)s
-      echo "Check snapshots for VMs"
-      %(vms_snapshot)s
+      echo "Instances basic provisioning"
+      %(instances_provision)s
+      echo "Check snapshots for instances"
+      %(instances_snapshot)s
     ||| % {
       ansible_inventory_path: config.ansible_inventory_path,
-      vms_check: shell_lines([
-        check_vm(vm)
-        for vm in config.virtual_machines
+      instances_check: shell_lines([
+        check_instance(instance)
+        for instance in config.virtual_machines
       ]),
-      vms_provision: shell_lines([
-        provision_vm(vm)
-        for vm in config.virtual_machines
+      instances_provision: shell_lines([
+        provision_instance(instance)
+        for instance in config.virtual_machines
       ]),
-      vms_snapshot: shell_lines([
-        snapshot_vm(vm)
-        for vm in config.virtual_machines
+      instances_snapshot: shell_lines([
+        snapshot_instance(instance)
+        for instance in config.virtual_machines
       ]),
-      vms_names_json: std.escapeStringBash(
-        std.manifestJsonMinified(vms)
+      instances_names_json: std.escapeStringBash(
+        std.manifestJsonMinified(instances)
       ),
     },
   virtualmachines_provisioning(config)::
@@ -330,10 +330,10 @@ local virtualmachine_command(config, command) =
 
       this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-      echo "Provisioning VMs"
-      %(vms_provision)s
+      echo "Provisioning instances"
+      %(instances_provision)s
     ||| % {
-      vms_provision: provision_vms(config),
+      instances_provision: provision_instances(config),
     },
   virtualmachines_destroy(config)::
     assert std.isObject(config);
@@ -341,14 +341,14 @@ local virtualmachine_command(config, command) =
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
-      echo "Destroying VMs and Project data"
-      %(vms_destroy)s
+      echo "Destroying instances and project data"
+      %(instances_destroy)s
       echo "Deleting %(project_dir)s'"
       rm -rfv %(project_dir)s
     ||| % {
-      vms_destroy: shell_lines([
-        destroy_vm(config, vm)
-        for vm in config.virtual_machines
+      instances_destroy: shell_lines([
+        destroy_instance(config, instance)
+        for instance in config.virtual_machines
       ]),
       project_dir: config.project_dir,
     },
@@ -356,21 +356,21 @@ local virtualmachine_command(config, command) =
     assert std.isObject(config);
     assert std.objectHas(config, 'virtual_machines');
     assert std.isArray(config.virtual_machines);
-    local vms = [vm.hostname for vm in config.virtual_machines];
+    local instances = [instance.hostname for instance in config.virtual_machines];
 
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
       if [[ $# -lt 1 ]]; then
-        machine_list="%(vms)s"
+        machine_list="%(instances)s"
       else
         machine_list=$@
       fi
       multipass info \
         --format yaml ${machine_list}
     ||| % {
-      vms: std.join(' ', vms),
+      instances: std.join(' ', instances),
     },
   virtualmachine_shell(config)::
     virtualmachine_command(config, 'shell'),

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-vm_generator_orchestrator=multipass
+instances_generator_orchestrator=multipass
 architecture=amd64
 
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
@@ -15,15 +15,15 @@ __usage=$(
 	cat <<-HELPMSG
 		$(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 [OPTIONS]$(tput sgr0)
 
-		$(tput setaf 3)$(tput bold)Manage machines provisioning.$(tput sgr0)
+		$(tput setaf 3)$(tput bold)Manage instances provisioning.$(tput sgr0)
 
 		Options:
-		  -a, --all             $(tput setaf 8)Run all tasks to setup virtual machines (in order: generate create setup provision)$(tput sgr0)
+		  -a, --all             $(tput setaf 8)Run all tasks to setup instances (in order: generate create setup provision)$(tput sgr0)
 		  -g, --generate        $(tput setaf 8)Generate setup scripts$(tput sgr0)
-		  -c, --create          $(tput setaf 8)Create virtual machines$(tput sgr0)
-		  -s, --setup           $(tput setaf 8)Setup virtual machines$(tput sgr0)
-		  -p, --provision       $(tput setaf 8)Provision virtual machines$(tput sgr0)
-		  -d, --delete          $(tput setaf 8)Delete virtual machines$(tput sgr0)
+		  -c, --create          $(tput setaf 8)Create instances$(tput sgr0)
+		  -s, --setup           $(tput setaf 8)Setup instances$(tput sgr0)
+		  -p, --provision       $(tput setaf 8)Provision instances$(tput sgr0)
+		  -d, --delete          $(tput setaf 8)Delete instances and local project data$(tput sgr0)
 		  -h, --help            $(tput setaf 8)This help$(tput sgr0)
 	HELPMSG
 )
@@ -62,37 +62,37 @@ generate_bootstrap_scripts() {
   else
     echo "Missing config.libsonnet"
     echo "Copying config.libsonnet.example to config.libsonnet"
-    cp "${project_generator_path}/config.libsonnet.${vm_generator_orchestrator}.example" "${project_generator_path}/config.libsonnet"
+    cp "${project_generator_path}/config.libsonnet.${instances_generator_orchestrator}.example" "${project_generator_path}/config.libsonnet"
   fi
-  echo "Using orchestrator: $(tput bold)${vm_generator_orchestrator}$(tput sgr0)"
+  echo "Using orchestrator: $(tput bold)${instances_generator_orchestrator}$(tput sgr0)"
   echo "Using architecture: $(tput bold)${architecture}$(tput sgr0)"
   cd "${project_generator_path}"
   jsonnet --create-output-dirs \
     --multi "${generated_project_path}" \
-    --tla-str orchestrator_name="${vm_generator_orchestrator}" \
+    --tla-str orchestrator_name="${instances_generator_orchestrator}" \
     --ext-str architecture="${architecture}" \
-    --string virtual-machines.jsonnet
+    --string instances.jsonnet
   chmod u+x "${generated_project_path}"/*.sh
 }
 
-machines_creations() {
+instances_creations() {
   cd "${generated_project_path}"
-  ./vms-create.sh
+  ./instances-create.sh
 }
 
-machines_setup() {
+instances_setup() {
   cd "${generated_project_path}"
-  ./vms-setup.sh
+  ./instances-setup.sh
 }
 
-machines_provisioning() {
+instances_provisioning() {
   cd "${generated_project_path}"
-  ./vms-provisioning.sh
+  ./instances-provisioning.sh
 }
 
-machines_delete() {
+instances_delete() {
   cd "${generated_project_path}"
-  ./vms-destroy.sh
+  ./instances-destroy.sh
 }
 
 create=false
@@ -110,7 +110,7 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       provision=true
       ;;
     -o | --orchestrator)
-      vm_generator_orchestrator=( "${2?Missing argument for  -o | --orchestrator}" ) ;
+      instances_generator_orchestrator=( "${2?Missing argument for  -o | --orchestrator}" ) ;
       shift
       shift
       ;;
@@ -157,36 +157,36 @@ if [[ ! " ${valid_architectures[*]} " =~ " ${architecture} " ]]; then
   exit 1
 fi
 
-if [[ ! " ${valid_orchestrators[*]} " =~ " ${vm_generator_orchestrator} " ]]; then
+if [[ ! " ${valid_orchestrators[*]} " =~ " ${instances_generator_orchestrator} " ]]; then
   printf "$(tput setaf 1)Error: 'orchestrator' must be one of: $(tput bold)${valid_orchestrators[*]}$(tput sgr0)\n" >&2
   exit 1
 fi
 
 if $delete; then
-  machines_delete
+  instances_delete
   exit 0
 fi
 
 if $generate; then
-  echo "$(tput bold)$(tput setaf 2) - Creating virtual machines setup scripts ... - $(tput sgr0)"
+  echo "$(tput bold)$(tput setaf 2) - Creating instances setup scripts ... - $(tput sgr0)"
   generate_ansible_ssh_keys
   generate_bootstrap_scripts
-  echo "$(tput bold)$(tput setaf 2) - VMs setup scripts generated ✅ - $(tput sgr0)"
+  echo "$(tput bold)$(tput setaf 2) - Instances setup scripts generated ✅ - $(tput sgr0)"
 fi
 if $create; then
-  echo "$(tput bold)$(tput setaf 2) - Starting virtual machines creation ... - $(tput sgr0)"
-  machines_creations
-  echo "$(tput bold)$(tput setaf 2) - VMs creation done ✅ - $(tput sgr0)"
+  echo "$(tput bold)$(tput setaf 2) - Starting instances creation ... - $(tput sgr0)"
+  instances_creations
+  echo "$(tput bold)$(tput setaf 2) - Instances creation done ✅ - $(tput sgr0)"
 fi
 if $setup; then
-  echo "$(tput bold)$(tput setaf 2) - Running virtual machines setup ... - $(tput sgr0)"
-  machines_setup
-  echo "$(tput bold)$(tput setaf 2) - VMs setup done ✅ - $(tput sgr0)"
+  echo "$(tput bold)$(tput setaf 2) - Running instances setup ... - $(tput sgr0)"
+  instances_setup
+  echo "$(tput bold)$(tput setaf 2) - Instances setup done ✅ - $(tput sgr0)"
 fi
 if $provision; then
-  echo "$(tput bold)$(tput setaf 2) - Starting virtual machine provisioning ... - $(tput sgr0)"
-  machines_provisioning
-  echo "$(tput bold)$(tput setaf 2) - VMs provisioning done ✅ - $(tput sgr0)"
+  echo "$(tput bold)$(tput setaf 2) - Starting instances provisioning ... - $(tput sgr0)"
+  instances_provisioning
+  echo "$(tput bold)$(tput setaf 2) - Instances provisioning done ✅ - $(tput sgr0)"
 fi
 
 echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"
@@ -195,9 +195,8 @@ echo "$(tput setaf 3)Project path: $(tput bold)${project_path}$(tput sgr0)"
 
 if $create || $setup || $provision; then
   echo
-  echo "$(tput setaf 3)To ssh into a virtual machine use $(tput bold)vm-shell.sh <vm-name>$(tput sgr0) from generated the project path."
+  echo "$(tput setaf 3)To ssh into an instance use $(tput bold)./instance-shell.sh <instance-name>$(tput sgr0) from the generated folder."
   echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
   echo "  $(tput bold)cd ${generated_project_path}$(tput sgr0)"
-  echo "  $(tput bold)./vm-shell.sh ansible-controller$(tput sgr0)"
+  echo "  $(tput bold)./instance-shell.sh ansible-controller$(tput sgr0)"
 fi
-exit 0

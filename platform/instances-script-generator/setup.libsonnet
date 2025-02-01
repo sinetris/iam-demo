@@ -37,13 +37,13 @@ local ansible_user =
       config.ansible_ssh_import_ids,
   };
 
-local add_default_machine_data(setup, vm) =
+local add_default_machine_data(setup, instance) =
   assert std.isObject(setup);
-  assert std.objectHas(vm, 'hostname');
-  assert std.isObject(vm);
-  assert std.objectHas(vm, 'hostname');
+  assert std.objectHas(instance, 'hostname');
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
   {
-    project_host_path: setup.project_dir + '/instances/' + vm.hostname,
+    project_host_path: setup.project_dir + '/instances/' + instance.hostname,
     cpus: 1,
     architecture: std.extVar('prefix'),
     memory: '1024',
@@ -67,7 +67,7 @@ local add_default_machine_data(setup, vm) =
           |||,
       },
     ],
-  } + vm;
+  } + instance;
 
 {
   local setup = self,
