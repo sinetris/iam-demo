@@ -11,6 +11,7 @@ check_hostnames_on_port=(
   'Alertmanager alertmanager 443'
   'Consul consul 443'
   'Keycloak keycloak 443'
+  'Keycloak-Admin keycloak-admin 443'
   'Hashicorp-Vault vault 443'
   'MinIO-S3-API s3 443'
   'Minio-Web-Console minio 443'
