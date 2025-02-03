@@ -1,8 +1,8 @@
 #cloud-config
 chpasswd:
   expire: false
-fqdn: "${vbox_instance_name}.${project_domain}"
-hostname: "${vbox_instance_name}"
+fqdn: "${_hostname}.${_domain}"
+hostname: "${_hostname}"
 manage_etc_hosts: true
 package_reboot_if_required: true
 package_update: true
@@ -31,7 +31,7 @@ snap:
     - ["install", "yq"]
 users:
   - "default"
-  - name: "${vbox_instance_username}"
+  - name: "${_username}"
     groups:
       - "adm"
       - "audio"
@@ -50,11 +50,11 @@ users:
       - "rdptest"
       - "vboxsf"
     lock_passwd: false
-    passwd: "${vbox_instance_password_hash}"
+    passwd: "${_password_hash}"
     shell: "/bin/bash"
     ssh_import_id: [gh:sinetris]
     ssh_authorized_keys:
-      - "${vbox_instance_public_key}"
+      - "${_public_key}"
     sudo: "ALL=(ALL) NOPASSWD:ALL"
 write_files:
   - content: |
@@ -64,7 +64,7 @@ write_files:
 runcmd:
   - mkdir -p /mnt/additions
   - mount -t iso9660 -o ro /dev/sr1 /mnt/additions
-  - /mnt/additions/${vbox_additions_file}
+  - /mnt/additions/${_additions_file}
 power_state:
   mode: reboot
   timeout: 30
