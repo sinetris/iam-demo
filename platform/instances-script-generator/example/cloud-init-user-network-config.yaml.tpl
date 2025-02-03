@@ -5,7 +5,7 @@ network:
       dhcp4: true
       dhcp6: false
       match:
-        macaddress: ${vbox_instance_mac_address_nat_cloud_init}
+        macaddress: ${_mac_address_nat_cloud_init}
       set-name: ethnat
       nameservers:
         addresses: [1.1.1.1]
@@ -13,9 +13,9 @@ network:
       dhcp4: true
       dhcp6: false
       match:
-        macaddress: ${vbox_instance_mac_address_lab_cloud_init}
+        macaddress: ${_mac_address_lab_cloud_init}
       set-name: ethlab
       nameservers:
         search:
-          - '${project_domain}'
+          - '${_domain}'
         addresses: [1.1.1.1]

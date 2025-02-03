@@ -1,0 +1,28 @@
+{
+  "architectures": {
+    "arm": {
+      "os_releases": {
+        "jammy": {
+          "os_type": "Ubuntu22_LTS_arm64",
+          "os_release_file": "jammy-server-cloudimg-arm64.img"
+        },
+        "noble": {
+          "os_type": "Ubuntu24_LTS_arm64",
+          "os_release_file": "noble-server-cloudimg-arm64.img"
+        }
+      }
+    },
+    "x86": {
+      "os_releases": {
+        "jammy": {
+          "os_type": "Ubuntu22_LTS_64",
+          "os_release_file": "jammy-server-cloudimg-arm64.img"
+        },
+        "noble": {
+          "os_type": "Ubuntu24_LTS_64",
+          "os_release_file": "noble-server-cloudimg-amd64.img"
+        }
+      }
+    }
+  }
+}

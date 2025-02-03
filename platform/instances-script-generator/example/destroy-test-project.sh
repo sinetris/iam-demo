@@ -3,7 +3,7 @@ set -Eeuo pipefail
 
 this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
-source "${this_file_path}/configuration.sh"
+. "${this_file_path}/configuration.sh"
 
 instance_status=$(VBoxManage showvminfo "${vbox_instance_name:?}" --machinereadable 2>&1) \
   && exit_code=$? || exit_code=$?
@@ -35,8 +35,8 @@ else
   exit 2
 fi
 
-VBoxManage closemedium dvd "${vbox_instance_cidata_iso:?}" --delete 2>/dev/null \
-  || echo "✅ Disk '${vbox_instance_cidata_iso}' does not exist!"
+VBoxManage closemedium dvd "${vbox_instance_cidata_disk_file:?}" --delete 2>/dev/null \
+  || echo "✅ Disk '${vbox_instance_cidata_disk_file}' does not exist!"
 
 if [[ -d "${vbox_project_basefolder:?}" ]]; then
   echo "⚙️ Deleting project data folder '${vbox_project_basefolder:?}'"
