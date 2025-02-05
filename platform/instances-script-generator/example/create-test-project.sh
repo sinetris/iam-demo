@@ -34,21 +34,12 @@ if [[ $_exit_code -eq 0 ]] && ( \
 ); then
 	echo "✅ Instance '${instance_name:?}' found!"
 elif [[ $_exit_code -eq 0 ]] && [[ $_instance_status =~ 'VMState="poweroff"' ]]; then
-	echo "✅ Instance '${instance_name:?}' already exist but the state us 'poweroff'!"
+	echo "⚠️ Skipping instance '${instance_name:?}' - Already exist but in state 'poweroff'!"
 elif [[ $_exit_code -eq 0 ]]; then
 	echo "❌ Instance '${instance_name:?}' already exist but in UNMANAGED state!" >&2
 	echo ${_instance_status} >&2
 	exit 1
 elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a registered machine' ]]; then
-	echo "⚙️ Instance '${instance_name:?}' will be created!"
-	_create_instance='true'
-else
-	echo "❌ Instance '${instance_name:?}' - exit code '${_exit_code}'"
-	echo ${_instance_status}
-	exit 2
-fi
-
-if [ "${_create_instance}" == 'true' ]; then
 	echo "⚙️ Creating Instance '${instance_name:?}' ..."
 	vbox_os_mapping_file="${_this_file_path}/../assets/vbox_os_mapping.json"
 	vbox_instance_ostype=$(jq -L "${_this_file_path}/../lib/jq/modules" \
@@ -109,7 +100,7 @@ if [ "${_create_instance}" == 'true' ]; then
 	_mac_address_nat_cloud_init="${_instance_mac_address_nat_cloud_init}" \
 	_mac_address_lab_cloud_init="${_instance_mac_address_lab_cloud_init}" \
 	envsubst '$_domain,$_mac_address_nat_cloud_init,$_mac_address_lab_cloud_init' \
-		<"cloud-init-user-network-config.yaml.tpl" | tee "${instance_cidata_files_path:?}/network-config"
+		<"cloud-init-user-network-config.yaml.tpl" | tee "${instance_cidata_files_path:?}/network-config" >/dev/null
 	echo "   - Create cloud-init 'meta-data'"
 	tee "${instance_cidata_files_path:?}/meta-data" > /dev/null <<-EOT
 	instance-id: i-${instance_name:?}
@@ -123,7 +114,7 @@ if [ "${_create_instance}" == 'true' ]; then
 	_public_key=${_instance_public_key} \
 	_additions_file=${vbox_additions_installer_file} \
 	envsubst '$_domain,$_hostname,$_username,$_password_hash,$_public_key,$_additions_file' \
-		<"cloud-init-user-data.yaml.tpl" | tee "${instance_cidata_files_path:?}/user-data"
+		<"cloud-init-user-data.yaml.tpl" | tee "${instance_cidata_files_path:?}/user-data" >/dev/null
 	echo " - Create VirtualMachine"
 	VBoxManage createvm \
 		--name "${instance_name:?}" \
@@ -241,48 +232,64 @@ if [ "${_create_instance}" == 'true' ]; then
 	fi
 	echo " - Starting instance '${instance_name:?}' in mode '${vbox_instance_start_type:?}'"
 	VBoxManage startvm "${instance_name:?}" --type "${vbox_instance_start_type:?}"
+
+	_ipv4_regex='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
+	# Note: GuestInfo Net properies start from 0 while 'modifyvm --nicN' start from 1.
+	#       So '--nic2' is 'Net/1'.
+	_vbox_lab_nic_id=1
+	_vbox_lab_ipv4_property="/VirtualBox/GuestInfo/Net/${_vbox_lab_nic_id:?}/V4/IP"
+
+	echo "Wait for instance IPv4 or error on timeout after ${instance_check_timeout_seconds} seconds..."
+
+	_start_time=$SECONDS
+	_instance_ipv4=""
+	_command_success=false
+	until $_command_success; do
+		if (( SECONDS > _start_time + instance_check_timeout_seconds )); then
+			echo "VirtualBox instance network check timeout!"  >&2
+			exit 1
+		fi
+		_cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
+		if [[ $_exit_code -ne 0 ]]; then
+			echo "Error in VBoxManage for 'guestproperty get'!"  >&2
+			exit 2
+		fi
+		_cmd_status=$(echo "${_cmd_status}" | grep --extended-regexp "${_ipv4_regex}" --only-matching --color=never 2>&1) && _exit_code=$? || _exit_code=$?
+		if [[ $_exit_code -eq 0 ]]; then
+			_command_success=true
+			_instance_ipv4="${_cmd_status}"
+		else
+			(( seconds_to_timeout = instance_check_timeout_seconds - SECONDS))
+			echo "💤 Not ready yet!"
+			echo " - retry in: ${instance_check_sleep_time_seconds} seconds"
+			echo " - passed time: $SECONDS seconds"
+			echo " - will timeout in: ${seconds_to_timeout} seconds"
+			sleep ${instance_check_sleep_time_seconds}
+		fi
+	done
+
+	echo "Instance IPv4: ${_instance_ipv4:?}"
+
+	echo "Wait for cloud-init to complete..."
+
+	_instance_command='sudo cloud-init status --wait --long'
+	for retry_counter in $(seq $instance_check_ssh_retries 1); do
+		ssh \
+			-o UserKnownHostsFile=/dev/null \
+			-o StrictHostKeyChecking=no \
+			-o IdentitiesOnly=yes \
+			-t ${instance_username:?}@${_instance_ipv4:?} \
+			"${_instance_command:?}" && _exit_code=$? || _exit_code=$?
+		if [[ $_exit_code -eq 0 ]]; then
+			echo "✅ SSH command ran successfully!"
+			break
+		else
+			echo "💤 Will retry command in ${instance_check_sleep_time_seconds} seconds. Retry left: ${retry_counter}"
+			sleep ${instance_check_sleep_time_seconds}
+		fi
+	done
+else
+	echo "❌ Instance '${instance_name:?}' - exit code '${_exit_code}'"
+	echo ${_instance_status}
+	exit 2
 fi
-
-_ipv4_regex='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
-# Note: GuestInfo Net properies start from 0 while 'modifyvm --nicN' start from 1.
-#       So '--nic2' is 'Net/1'.
-_vbox_lan_nic=1
-_vbox_lan_ipv4_property="/VirtualBox/GuestInfo/Net/${_vbox_lan_nic:?}/V4/IP"
-
-echo "Wait for instance IPv4 or error on timeout..."
-
-_start_time=$SECONDS
-_instance_ipv4=""
-_command_success=false
-until $_command_success; do
-	$instance_check_debug && echo "timeout_seconds=${instance_check_timeout_seconds}"
-	$instance_check_debug && echo "seconds=$SECONDS"
-	if (( SECONDS > _start_time + instance_check_timeout_seconds )); then
-		echo "VirtualBox instance network check timeout!"  >&2
-		exit 1
-	fi
-	_cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lan_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
-	if [[ $_exit_code -ne 0 ]]; then
-		echo "Error in VBoxManage for 'guestproperty get'!"  >&2
-		exit 2
-	fi
-	_cmd_status=$(echo "${_cmd_status}" | grep --extended-regexp "${_ipv4_regex}" --only-matching --color=never 2>&1) && _exit_code=$? || _exit_code=$?
-	if [[ $_exit_code -eq 0 ]]; then
-		_command_success=true
-		_instance_ipv4="${_cmd_status}"
-	else
-		sleep ${instance_check_sleep_time_seconds}
-	fi
-done
-
-echo "Instance IPv4: ${_instance_ipv4:?}"
-
-echo "Wait for cloud-init to complete..."
-
-_instance_command='sudo cloud-init status --wait --long'
-ssh \
-	-o UserKnownHostsFile=/dev/null \
-	-o StrictHostKeyChecking=no \
-	-o IdentitiesOnly=yes \
-	-t ${instance_username:?}@${_instance_ipv4:?} \
-	"${_instance_command:?}"

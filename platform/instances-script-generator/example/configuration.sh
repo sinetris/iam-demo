@@ -20,6 +20,7 @@ vbox_architecture=arm
 
 instance_check_timeout_seconds=300
 instance_check_sleep_time_seconds=2
+instance_check_ssh_retries=5
 instance_check_debug=true
 # Start type: gui | headless | sdl | separate
 vbox_instance_start_type=headless
