@@ -25,31 +25,31 @@ else
 fi
 
 echo "Creating instances"
-echo "Checking '${vbox_instance_name:?}'..."
-_instance_status=$(VBoxManage showvminfo "${vbox_instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
+echo "Checking '${instance_name:?}'..."
+_instance_status=$(VBoxManage showvminfo "${instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
 _create_instance=false
 if [[ $_exit_code -eq 0 ]] && ( \
 	[[ $_instance_status =~ 'VMState="started"' ]] \
 	|| [[ $_instance_status =~ 'VMState="running"' ]] \
 ); then
-	echo "✅ Instance '${vbox_instance_name:?}' found!"
+	echo "✅ Instance '${instance_name:?}' found!"
 elif [[ $_exit_code -eq 0 ]] && [[ $_instance_status =~ 'VMState="poweroff"' ]]; then
-	echo "✅ Instance '${vbox_instance_name:?}' already exist but the state us 'poweroff'!"
+	echo "✅ Instance '${instance_name:?}' already exist but the state us 'poweroff'!"
 elif [[ $_exit_code -eq 0 ]]; then
-	echo "❌ Instance '${vbox_instance_name:?}' already exist but in UNMANAGED state!" >&2
+	echo "❌ Instance '${instance_name:?}' already exist but in UNMANAGED state!" >&2
 	echo ${_instance_status} >&2
 	exit 1
 elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a registered machine' ]]; then
-	echo "⚙️ Instance '${vbox_instance_name:?}' will be created!"
+	echo "⚙️ Instance '${instance_name:?}' will be created!"
 	_create_instance='true'
 else
-	echo "❌ Instance '${vbox_instance_name:?}' - exit code '${_exit_code}'"
+	echo "❌ Instance '${instance_name:?}' - exit code '${_exit_code}'"
 	echo ${_instance_status}
 	exit 2
 fi
 
 if [ "${_create_instance}" == 'true' ]; then
-	echo "⚙️ Creating Instance '${vbox_instance_name:?}' ..."
+	echo "⚙️ Creating Instance '${instance_name:?}' ..."
 	vbox_os_mapping_file="${_this_file_path}/../assets/vbox_os_mapping.json"
 	vbox_instance_ostype=$(jq -L "${_this_file_path}/../lib/jq/modules" \
 		--arg architecture "${vbox_architecture:?}" \
@@ -82,8 +82,8 @@ if [ "${_create_instance}" == 'true' ]; then
 	os_image_url="${os_images_url:?}/${os_release_codename:?}/current/${os_release_file:?}"
 
 	os_image_path="${os_images_path}/${os_release_file:?}"
-	echo " - Create Project data folder (and required subfolders): '${vbox_project_basefolder:?}'"
-	mkdir -p "${vbox_instance_basefolder:?}"/{cidata,disks,shared,tmp,assets}
+	echo " - Create Project data folder (and required subfolders): '${project_basefolder:?}'"
+	mkdir -p "${instance_basefolder:?}"/{cidata,disks,shared,tmp,assets}
 	if [ -f "${os_image_path:?}" ]; then
 		echo "✅ Using existing '${os_release_file:?}' from '${os_image_path:?}'!"
 	else
@@ -91,10 +91,10 @@ if [ "${_create_instance}" == 'true' ]; then
 		mkdir -pv "${os_images_path:?}"
 		curl --output "${os_image_path:?}" "${os_image_url:?}"
 	fi
-	echo "${vbox_instance_password:?}" > "${vbox_instance_password_file:?}"
-	openssl passwd -6 -salt $(openssl rand -base64 8) "${vbox_instance_password}" > "${vbox_instance_password_hash_file:?}"
-	_instance_password_hash=$(cat "${vbox_instance_password_hash_file:?}")
-	_instance_public_key=$(cat "${vbox_instance_public_key_file:?}")
+	echo "${instance_password:?}" > "${instance_password_file:?}"
+	openssl passwd -6 -salt $(openssl rand -base64 8) "${instance_password}" > "${instance_password_hash_file:?}"
+	_instance_password_hash=$(cat "${instance_password_hash_file:?}")
+	_instance_public_key=$(cat "${host_public_key_file:?}")
 	echo " - Create cloud-init configuration"
 	_generated_instance_mac_address_nat=$(dd bs=1 count=3 if=/dev/random 2>/dev/null |  hexdump -vn3 -e '/3 "02:42:00"' -e '/1 ":%02X"')
 	_generated_instance_mac_address_lab=$(dd bs=1 count=3 if=/dev/random 2>/dev/null |  hexdump -vn3 -e '/3 "02:42:00"' -e '/1 ":%02X"')
@@ -109,35 +109,35 @@ if [ "${_create_instance}" == 'true' ]; then
 	_mac_address_nat_cloud_init="${_instance_mac_address_nat_cloud_init}" \
 	_mac_address_lab_cloud_init="${_instance_mac_address_lab_cloud_init}" \
 	envsubst '$_domain,$_mac_address_nat_cloud_init,$_mac_address_lab_cloud_init' \
-		<"cloud-init-user-network-config.yaml.tpl" | tee "${vbox_instance_cidata_files_path:?}/network-config"
+		<"cloud-init-user-network-config.yaml.tpl" | tee "${instance_cidata_files_path:?}/network-config"
 	echo "   - Create cloud-init 'meta-data'"
-	tee "${vbox_instance_cidata_files_path:?}/meta-data" > /dev/null <<-EOT
-	instance-id: i-${vbox_instance_name:?}
-	local-hostname: ${vbox_instance_name:?}
+	tee "${instance_cidata_files_path:?}/meta-data" > /dev/null <<-EOT
+	instance-id: i-${instance_name:?}
+	local-hostname: ${instance_name:?}
 	EOT
 	echo "   - Create cloud-init 'user-data'"
 	_domain="${project_domain}" \
-	_hostname="${vbox_instance_name}" \
-	_username=${vbox_instance_username} \
+	_hostname="${instance_name}" \
+	_username=${instance_username} \
 	_password_hash=${_instance_password_hash} \
 	_public_key=${_instance_public_key} \
 	_additions_file=${vbox_additions_installer_file} \
 	envsubst '$_domain,$_hostname,$_username,$_password_hash,$_public_key,$_additions_file' \
-		<"cloud-init-user-data.yaml.tpl" | tee "${vbox_instance_cidata_files_path:?}/user-data"
+		<"cloud-init-user-data.yaml.tpl" | tee "${instance_cidata_files_path:?}/user-data"
 	echo " - Create VirtualMachine"
 	VBoxManage createvm \
-		--name "${vbox_instance_name:?}" \
+		--name "${instance_name:?}" \
 		--platform-architecture ${vbox_architecture:?} \
 		--basefolder "${vbox_basefolder:?}" \
 		--ostype ${vbox_instance_ostype:?} \
 		--register
 	echo " - Set Screen scale to 200%"
 	VBoxManage setextradata \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		'GUI/ScaleFactor' 2
 	echo " - Configure network for instance"
 	VBoxManage modifyvm \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--groups "/${project_name:?}" \
 		--nic1 nat \
 		--mac-address1=${_instance_mac_address_nat} \
@@ -152,14 +152,14 @@ if [ "${_create_instance}" == 'true' ]; then
 	echo " - Create storage controllers"
 	_scsi_controller_name="SCSI Controller"
 	VBoxManage storagectl \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--name "${_scsi_controller_name:?}" \
 		--add virtio \
 		--controller VirtIO \
 		--bootable on
 	echo " - Configure the instance"
 	VBoxManage modifyvm \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--cpus "1" \
 		--memory "1024" \
 		--vram "64" \
@@ -174,13 +174,13 @@ if [ "${_create_instance}" == 'true' ]; then
 		"${vbox_instance_disk_file:?}" \
 		--format VDI \
 		--variant Standard
-	echo " - Resize instance main disk to '${vbox_instance_disk_size:?} MB'"
+	echo " - Resize instance main disk to '${instance_disk_size:?} MB'"
 	VBoxManage modifymedium disk \
 		"${vbox_instance_disk_file:?}" \
-		--resize ${vbox_instance_disk_size:?}
+		--resize ${instance_disk_size:?}
 	echo " - Attach main disk to instance"
 	VBoxManage storageattach \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--storagectl "${_scsi_controller_name:?}" \
 		--port 0 \
 		--device 0 \
@@ -188,32 +188,32 @@ if [ "${_create_instance}" == 'true' ]; then
 		--medium "${vbox_instance_disk_file:?}"
 	echo " - Create cloud-init iso (set label as CIDATA)"
 	hdiutil makehybrid \
-		-o "${vbox_instance_cidata_disk_file:?}" \
+		-o "${instance_cidata_iso_file:?}" \
 		-default-volume-name CIDATA \
 		-hfs \
 		-iso \
 		-joliet \
-		"${vbox_instance_cidata_files_path:?}"
+		"${instance_cidata_files_path:?}"
 	echo " - Attach cloud-init iso to instance"
 	VBoxManage storageattach \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--storagectl "${_scsi_controller_name:?}" \
 		--port 1 \
 		--device 0 \
 		--type dvddrive \
-		--medium "${vbox_instance_cidata_disk_file:?}" \
-		--comment "cloud-init data for ${vbox_instance_name:?}"
+		--medium "${instance_cidata_iso_file:?}" \
+		--comment "cloud-init data for ${instance_name:?}"
 	echo " - Attach Guest Addition iso installer to instance"
 	# (Note: need to attach 'emptydrive' before 'additions' becuse VBOX is full of bugs)
 	VBoxManage storageattach  \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--storagectl "${_scsi_controller_name:?}" \
 		--port 2 \
 		--device 0 \
 		--type dvddrive \
 		--medium emptydrive
 	VBoxManage storageattach  \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--storagectl "${_scsi_controller_name:?}" \
 		--port 2 \
 		--device 0 \
@@ -221,26 +221,26 @@ if [ "${_create_instance}" == 'true' ]; then
 		--medium additions
 	echo " - Configure the VM boot order"
 	VBoxManage modifyvm \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 		--boot1 disk \
 		--boot2 dvd
 	if [ "${vbox_instance_uart_mode}" == "file" ]; then
-		_uart_file="${vbox_instance_basefolder:?}/tmp/tty0.log"
+		_uart_file="${instance_basefolder:?}/tmp/tty0.log"
 		echo " - Set Serial Port to log boot sequence"
 		touch "${_uart_file:?}"
 		echo "   - To see log file:"
 		echo "    tail -f -n +1 '${_uart_file:?}'"
 		echo
 		VBoxManage modifyvm \
-		"${vbox_instance_name:?}" \
+		"${instance_name:?}" \
 			--uart1 0x3F8 4 \
 			--uartmode1 "${vbox_instance_uart_mode}" \
 			"${_uart_file:?}"
 	else
 		echo " - Ignore Serial Port settings"
 	fi
-	echo " - Starting instance '${vbox_instance_name:?}' in mode '${vbox_instance_start_type:?}'"
-	VBoxManage startvm "${vbox_instance_name:?}" --type "${vbox_instance_start_type:?}"
+	echo " - Starting instance '${instance_name:?}' in mode '${vbox_instance_start_type:?}'"
+	VBoxManage startvm "${instance_name:?}" --type "${vbox_instance_start_type:?}"
 fi
 
 _ipv4_regex='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
@@ -261,7 +261,7 @@ until $_command_success; do
 		echo "VirtualBox instance network check timeout!"  >&2
 		exit 1
 	fi
-	_cmd_status=$(VBoxManage guestproperty get "${vbox_instance_name:?}" "${_vbox_lan_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
+	_cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lan_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
 	if [[ $_exit_code -ne 0 ]]; then
 		echo "Error in VBoxManage for 'guestproperty get'!"  >&2
 		exit 2
@@ -284,5 +284,5 @@ ssh \
 	-o UserKnownHostsFile=/dev/null \
 	-o StrictHostKeyChecking=no \
 	-o IdentitiesOnly=yes \
-	-t ${vbox_instance_username:?}@${_instance_ipv4:?} \
+	-t ${instance_username:?}@${_instance_ipv4:?} \
 	"${_instance_command:?}"
