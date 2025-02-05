@@ -22,7 +22,7 @@ until $_command_success; do
 		echo "VirtualBox instance network check timeout!"  >&2
 		exit 1
 	fi
-	_cmd_status=$(VBoxManage guestproperty get "${vbox_instance_name:?}" "${_vbox_lan_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
+	_cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lan_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
 	if [[ $_exit_code -ne 0 ]]; then
 		echo "Error in VBoxManage for 'guestproperty get'!"  >&2
 		exit 2
@@ -42,15 +42,15 @@ echo "VirtualBoz guest additions should be installed now."
 _instance_command=whoami
 echo "Run '${_instance_command}' command on instance..."
 _instance_status=$(VBoxManage guestcontrol \
-	${vbox_instance_name:?} run \
-	--username ${vbox_instance_username:?} \
-	--passwordfile ${vbox_instance_password_file:?} \
+	${instance_name:?} run \
+	--username ${instance_username:?} \
+	--passwordfile ${instance_password_file:?} \
 	--exe "/bin/bash" \
 	--wait-stdout --wait-stderr \
 	-- -c "${_instance_command}" 2>&1) && _exit_code=$? || _exit_code=$?
 
 if [[ $_exit_code -eq 0 ]]; then
-	echo " ✅ Command '${_instance_command}' run on instance '${vbox_instance_name}' shows: '${_instance_status}'!"
+	echo " ✅ Command '${_instance_command}' run on instance '${instance_name}' shows: '${_instance_status}'!"
 elif [[ $_exit_code -eq 1 ]] && [[ "${_instance_status}" =~ 'Guest Additions are not installed' ]]; then
 	echo " ⚠️ Guest Additions are not installed or not ready (yet)."
 	echo "  Try in few minutes!"
@@ -66,5 +66,5 @@ ssh \
 	-o UserKnownHostsFile=/dev/null \
 	-o StrictHostKeyChecking=no \
 	-o IdentitiesOnly=yes \
-	-t ${vbox_instance_username:?}@${_instance_ipv4:?} \
+	-t ${instance_username:?}@${_instance_ipv4:?} \
 	"${_instance_command:?}"
