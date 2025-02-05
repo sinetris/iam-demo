@@ -7,17 +7,17 @@ _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 echo "Checking Network '${project_network_name}'..."
 _project_network_status=$(VBoxManage hostonlynet modify \
-  --name ${project_network_name} --enable 2>&1) && _exit_code=$? || _exit_code=$?
+	--name ${project_network_name} --enable 2>&1) && _exit_code=$? || _exit_code=$?
 if [[ $_exit_code -eq 0 ]]; then
 	echo " ✅ Project Network '${project_network_name}' already exist!"
 elif [[ $_exit_code -eq 1 ]] && [[ $_project_network_status =~ 'does not exist' ]]; then
 	echo " ⚙️ Creating Project Network '${project_network_name}'..."
 	VBoxManage hostonlynet add \
-	  --name ${project_network_name} \
-	  --netmask ${project_network_netmask:?} \
-	  --lower-ip ${project_network_lower_ip:?} \
-	  --upper-ip ${project_network_upper_ip:?} \
-	  --enable
+		--name ${project_network_name} \
+		--netmask ${project_network_netmask:?} \
+		--lower-ip ${project_network_lower_ip:?} \
+		--upper-ip ${project_network_upper_ip:?} \
+		--enable
 else
 	echo " ❌ Project Network '${project_network_name}' - exit code '${_exit_code}'"
 	echo ${_project_network_status}
@@ -126,104 +126,104 @@ if [ "${_create_instance}" == 'true' ]; then
 		<"cloud-init-user-data.yaml.tpl" | tee "${vbox_instance_cidata_files_path:?}/user-data"
 	echo " - Create VirtualMachine"
 	VBoxManage createvm \
-	  --name "${vbox_instance_name:?}" \
-	  --platform-architecture ${vbox_architecture:?} \
-	  --basefolder "${vbox_basefolder:?}" \
-	  --ostype ${vbox_instance_ostype:?} \
-	  --register
+		--name "${vbox_instance_name:?}" \
+		--platform-architecture ${vbox_architecture:?} \
+		--basefolder "${vbox_basefolder:?}" \
+		--ostype ${vbox_instance_ostype:?} \
+		--register
 	echo " - Set Screen scale to 200%"
 	VBoxManage setextradata \
-	  "${vbox_instance_name:?}" \
-	  'GUI/ScaleFactor' 2
+		"${vbox_instance_name:?}" \
+		'GUI/ScaleFactor' 2
 	echo " - Configure network for instance"
 	VBoxManage modifyvm \
-	  "${vbox_instance_name:?}" \
-	  --groups "/${project_name:?}" \
-	  --nic1 nat \
-	  --mac-address1=${_instance_mac_address_nat} \
-	  --nic-type1 82540EM \
-	  --cable-connected1 on \
-	  --nic2 hostonlynet \
-	  --host-only-net2 ${project_network_name} \
-	  --mac-address2=${_instance_mac_address_lab} \
-	  --nic-type2 82540EM \
-	  --cable-connected2 on \
-	  --nic-promisc2 allow-all
+		"${vbox_instance_name:?}" \
+		--groups "/${project_name:?}" \
+		--nic1 nat \
+		--mac-address1=${_instance_mac_address_nat} \
+		--nic-type1 82540EM \
+		--cable-connected1 on \
+		--nic2 hostonlynet \
+		--host-only-net2 ${project_network_name} \
+		--mac-address2=${_instance_mac_address_lab} \
+		--nic-type2 82540EM \
+		--cable-connected2 on \
+		--nic-promisc2 allow-all
 	echo " - Create storage controllers"
 	_scsi_controller_name="SCSI Controller"
 	VBoxManage storagectl \
-	  "${vbox_instance_name:?}" \
-	  --name "${_scsi_controller_name:?}" \
-	  --add virtio \
-	  --controller VirtIO \
-	  --bootable on
+		"${vbox_instance_name:?}" \
+		--name "${_scsi_controller_name:?}" \
+		--add virtio \
+		--controller VirtIO \
+		--bootable on
 	echo " - Configure the instance"
 	VBoxManage modifyvm \
-	  "${vbox_instance_name:?}" \
-	  --cpus "1" \
-	  --memory "1024" \
-	  --vram "64" \
-	  --graphicscontroller vmsvga \
-	  --audio-driver none \
-	  --ioapic on \
-	  --usbohci on \
-	  --cpu-profile host
+		"${vbox_instance_name:?}" \
+		--cpus "1" \
+		--memory "1024" \
+		--vram "64" \
+		--graphicscontroller vmsvga \
+		--audio-driver none \
+		--ioapic on \
+		--usbohci on \
+		--cpu-profile host
 	echo " - Create instance main disk cloning ${os_release_file:?}"
 	VBoxManage clonemedium disk \
-	  "${os_images_path}/${os_release_file:?}" \
-	  "${vbox_instance_disk_file:?}" \
-	  --format VDI \
-	  --variant Standard
+		"${os_images_path}/${os_release_file:?}" \
+		"${vbox_instance_disk_file:?}" \
+		--format VDI \
+		--variant Standard
 	echo " - Resize instance main disk to '${vbox_instance_disk_size:?} MB'"
 	VBoxManage modifymedium disk \
-	  "${vbox_instance_disk_file:?}" \
-	  --resize ${vbox_instance_disk_size:?}
+		"${vbox_instance_disk_file:?}" \
+		--resize ${vbox_instance_disk_size:?}
 	echo " - Attach main disk to instance"
 	VBoxManage storageattach \
-	  "${vbox_instance_name:?}" \
-	  --storagectl "${_scsi_controller_name:?}" \
-	  --port 0 \
-	  --device 0 \
-	  --type hdd \
-	  --medium "${vbox_instance_disk_file:?}"
+		"${vbox_instance_name:?}" \
+		--storagectl "${_scsi_controller_name:?}" \
+		--port 0 \
+		--device 0 \
+		--type hdd \
+		--medium "${vbox_instance_disk_file:?}"
 	echo " - Create cloud-init iso (set label as CIDATA)"
 	hdiutil makehybrid \
-	  -o "${vbox_instance_cidata_disk_file:?}" \
-	  -default-volume-name CIDATA \
-	  -hfs \
-	  -iso \
-	  -joliet \
-	  "${vbox_instance_cidata_files_path:?}"
+		-o "${vbox_instance_cidata_disk_file:?}" \
+		-default-volume-name CIDATA \
+		-hfs \
+		-iso \
+		-joliet \
+		"${vbox_instance_cidata_files_path:?}"
 	echo " - Attach cloud-init iso to instance"
 	VBoxManage storageattach \
-	  "${vbox_instance_name:?}" \
-	  --storagectl "${_scsi_controller_name:?}" \
-	  --port 1 \
-	  --device 0 \
-	  --type dvddrive \
-	  --medium "${vbox_instance_cidata_disk_file:?}" \
-	  --comment "cloud-init data for ${vbox_instance_name:?}"
+		"${vbox_instance_name:?}" \
+		--storagectl "${_scsi_controller_name:?}" \
+		--port 1 \
+		--device 0 \
+		--type dvddrive \
+		--medium "${vbox_instance_cidata_disk_file:?}" \
+		--comment "cloud-init data for ${vbox_instance_name:?}"
 	echo " - Attach Guest Addition iso installer to instance"
 	# (Note: need to attach 'emptydrive' before 'additions' becuse VBOX is full of bugs)
 	VBoxManage storageattach  \
-	  "${vbox_instance_name:?}" \
-	  --storagectl "${_scsi_controller_name:?}" \
-	  --port 2 \
-	  --device 0 \
-	  --type dvddrive \
-	  --medium emptydrive
+		"${vbox_instance_name:?}" \
+		--storagectl "${_scsi_controller_name:?}" \
+		--port 2 \
+		--device 0 \
+		--type dvddrive \
+		--medium emptydrive
 	VBoxManage storageattach  \
-	  "${vbox_instance_name:?}" \
-	  --storagectl "${_scsi_controller_name:?}" \
-	  --port 2 \
-	  --device 0 \
-	  --type dvddrive \
-	  --medium additions
+		"${vbox_instance_name:?}" \
+		--storagectl "${_scsi_controller_name:?}" \
+		--port 2 \
+		--device 0 \
+		--type dvddrive \
+		--medium additions
 	echo " - Configure the VM boot order"
 	VBoxManage modifyvm \
-	  "${vbox_instance_name:?}" \
-	  --boot1 disk \
-	  --boot2 dvd
+		"${vbox_instance_name:?}" \
+		--boot1 disk \
+		--boot2 dvd
 	if [ "${vbox_instance_uart_mode}" == "file" ]; then
 		_uart_file="${vbox_instance_basefolder:?}/tmp/tty0.log"
 		echo " - Set Serial Port to log boot sequence"
@@ -233,12 +233,56 @@ if [ "${_create_instance}" == 'true' ]; then
 		echo
 		VBoxManage modifyvm \
 		"${vbox_instance_name:?}" \
-		  --uart1 0x3F8 4 \
-		  --uartmode1 "${vbox_instance_uart_mode}" \
-		  "${_uart_file:?}"
+			--uart1 0x3F8 4 \
+			--uartmode1 "${vbox_instance_uart_mode}" \
+			"${_uart_file:?}"
 	else
 		echo " - Ignore Serial Port settings"
 	fi
 	echo " - Starting instance '${vbox_instance_name:?}' in mode '${vbox_instance_start_type:?}'"
 	VBoxManage startvm "${vbox_instance_name:?}" --type "${vbox_instance_start_type:?}"
 fi
+
+_ipv4_regex='[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}'
+# Note: GuestInfo Net properies start from 0 while 'modifyvm --nicN' start from 1.
+#       So '--nic2' is 'Net/1'.
+_vbox_lan_nic=1
+_vbox_lan_ipv4_property="/VirtualBox/GuestInfo/Net/${_vbox_lan_nic:?}/V4/IP"
+
+echo "Wait for instance IPv4 or error on timeout..."
+
+_start_time=$SECONDS
+_instance_ipv4=""
+_command_success=false
+until $_command_success; do
+	$instance_check_debug && echo "timeout_seconds=${instance_check_timeout_seconds}"
+	$instance_check_debug && echo "seconds=$SECONDS"
+	if (( SECONDS > _start_time + instance_check_timeout_seconds )); then
+		echo "VirtualBox instance network check timeout!"  >&2
+		exit 1
+	fi
+	_cmd_status=$(VBoxManage guestproperty get "${vbox_instance_name:?}" "${_vbox_lan_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
+	if [[ $_exit_code -ne 0 ]]; then
+		echo "Error in VBoxManage for 'guestproperty get'!"  >&2
+		exit 2
+	fi
+	_cmd_status=$(echo "${_cmd_status}" | grep --extended-regexp "${_ipv4_regex}" --only-matching --color=never 2>&1) && _exit_code=$? || _exit_code=$?
+	if [[ $_exit_code -eq 0 ]]; then
+		_command_success=true
+		_instance_ipv4="${_cmd_status}"
+	else
+		sleep ${instance_check_sleep_time_seconds}
+	fi
+done
+
+echo "Instance IPv4: ${_instance_ipv4:?}"
+
+echo "Wait for cloud-init to complete..."
+
+_instance_command='sudo cloud-init status --wait --long'
+ssh \
+	-o UserKnownHostsFile=/dev/null \
+	-o StrictHostKeyChecking=no \
+	-o IdentitiesOnly=yes \
+	-t ${vbox_instance_username:?}@${_instance_ipv4:?} \
+	"${_instance_command:?}"

@@ -4,7 +4,6 @@ chpasswd:
 fqdn: "${_hostname}.${_domain}"
 hostname: "${_hostname}"
 manage_etc_hosts: true
-package_reboot_if_required: true
 package_update: true
 package_upgrade: true
 packages:

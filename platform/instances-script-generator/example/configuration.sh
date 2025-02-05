@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-_this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-
-vbox_os_mapping_file="${_this_file_path}/vbox_os_mapping.json"
-
 project_name=iam-demo-test
 project_domain="${project_name:?}.test"
 vbox_instance_name=testing-instance
@@ -22,6 +18,9 @@ vbox_instance_public_key_file=~/.ssh/id_ed25519.pub
 # VirtualBox platform architecture: x86 | arm
 vbox_architecture=arm
 
+instance_check_timeout_seconds=300
+instance_check_sleep_time_seconds=2
+instance_check_debug=true
 # Start type: gui | headless | sdl | separate
 vbox_instance_start_type=headless
 
