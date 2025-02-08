@@ -15,6 +15,7 @@ echo "Wait for instance IPv4 or error on timeout..."
 _start_time=$SECONDS
 _instance_ipv4=""
 _command_success=false
+instance_check_debug=true
 until $_command_success; do
 	$instance_check_debug && echo "timeout_seconds=${instance_check_timeout_seconds}"
 	$instance_check_debug && echo "seconds=$SECONDS"

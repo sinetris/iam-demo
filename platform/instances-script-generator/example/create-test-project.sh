@@ -5,6 +5,37 @@ _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 
 . "${_this_file_path}/configuration.sh"
 
+# == Generate MAC Address - Locally Administered Address (LAA) ==
+# Format:
+#   - IEEE 802c standard
+#   - six octects (one octect is represented by two hexadecimal digits)
+#   - YANG type: mac-address from RFC-699 (lowercase and separated by colon `:`)
+#   - unicast Administratively Assigned Identifier (AAI) local identifier type
+#     from Structured Local Address Plan (SLAP) (second hex digit is `2`)
+# Input: "X2:XX" in variable `mac_address_prefix` (default "02:12")
+# Output: "X2:XX:XX:XX:XX:XX"
+# Return: 0 on success - 1 on invalid mac_address_prefix - 2 on invalid generated MAC address
+# Note for Input and Output: `X` is a lowercase hexadecimal digit
+function generate_mac_address {
+	: ${mac_address_prefix:="02:12"}
+	if ! [[ "${mac_address_prefix}" =~ ^[0-9a-f]2:[0-9a-f]{2}$ ]]; then
+		echo "Invalid MAC address prefix: '${mac_address_prefix}'" >&2
+		return 1
+	fi
+	local _generated_mac_address=$(dd bs=1 count=4 if=/dev/random 2>/dev/null \
+		| hexdump -v \
+			-n 4 \
+			-e '/2 "'"${mac_address_prefix}"'" 4/1 ":%02X"' \
+		| awk '{print tolower($0)}')
+	if [[ "${_generated_mac_address}" =~ ^[0-9a-f]2(:[0-9a-f]{2}){5}$ ]]; then
+		echo "${_generated_mac_address}"
+	else
+		echo "Generated invalid MAC address: '${_generated_mac_address}'" >&2
+		return 2
+	fi
+	return 0
+}
+
 echo "Checking Network '${project_network_name}'..."
 _project_network_status=$(VBoxManage hostonlynet modify \
 	--name ${project_network_name} --enable 2>&1) && _exit_code=$? || _exit_code=$?
@@ -19,15 +50,14 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_project_network_status =~ 'does not exist' 
 		--upper-ip ${project_network_upper_ip:?} \
 		--enable
 else
-	echo " ❌ Project Network '${project_network_name}' - exit code '${_exit_code}'"
-	echo ${_project_network_status}
+	echo " ❌ Project Network '${project_network_name}' - exit code '${_exit_code}'" >&2
+	echo ${_project_network_status} >&2
 	exit 2
 fi
 
 echo "Creating instances"
 echo "Checking '${instance_name:?}'..."
 _instance_status=$(VBoxManage showvminfo "${instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
-_create_instance=false
 if [[ $_exit_code -eq 0 ]] && ( \
 	[[ $_instance_status =~ 'VMState="started"' ]] \
 	|| [[ $_instance_status =~ 'VMState="running"' ]] \
@@ -87,14 +117,12 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 	_instance_password_hash=$(cat "${instance_password_hash_file:?}")
 	_instance_public_key=$(cat "${host_public_key_file:?}")
 	echo " - Create cloud-init configuration"
-	_generated_instance_mac_address_nat=$(dd bs=1 count=3 if=/dev/random 2>/dev/null |  hexdump -vn3 -e '/3 "02:42:00"' -e '/1 ":%02X"')
-	_generated_instance_mac_address_lab=$(dd bs=1 count=3 if=/dev/random 2>/dev/null |  hexdump -vn3 -e '/3 "02:42:00"' -e '/1 ":%02X"')
-	# MAC Address in cloud-init network config is lowercase separated by colon
-	_instance_mac_address_nat_cloud_init=$(awk -v mac_address="${_generated_instance_mac_address_nat}" 'BEGIN {print tolower(mac_address)}')
-	_instance_mac_address_lab_cloud_init=$(awk -v mac_address="${_generated_instance_mac_address_lab}" 'BEGIN {print tolower(mac_address)}')
-	# MAC Address in VirtualBox configuration is uppercase and without colon separator
-	_instance_mac_address_nat=$(awk -v mac_address="${_generated_instance_mac_address_nat}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
-	_instance_mac_address_lab=$(awk -v mac_address="${_generated_instance_mac_address_lab}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
+	# MAC Addresses in cloud-init network config (six octects, lowercase, separated by colon)
+	_instance_mac_address_nat_cloud_init=$(generate_mac_address)
+	_instance_mac_address_lab_cloud_init=$(generate_mac_address)
+	# MAC Addresses in VirtualBox configuration (six octects, uppercase, no separators)
+	_instance_mac_address_nat=$(awk -v mac_address="${_instance_mac_address_nat_cloud_init}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
+	_instance_mac_address_lab=$(awk -v mac_address="${_instance_mac_address_lab_cloud_init}" 'BEGIN { gsub(/:/, "", mac_address); print toupper(mac_address) }')
 	echo "   - Create cloud-init 'network-config'"
 	_domain="${project_domain}" \
 	_mac_address_nat_cloud_init="${_instance_mac_address_nat_cloud_init}" \
@@ -151,9 +179,9 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 	echo " - Configure the instance"
 	VBoxManage modifyvm \
 		"${instance_name:?}" \
-		--cpus "1" \
-		--memory "1024" \
-		--vram "64" \
+		--cpus "${instance_cpus:?}" \
+		--memory "${instance_memory:?}" \
+		--vram "${instance_vram:?}" \
 		--graphicscontroller vmsvga \
 		--audio-driver none \
 		--ioapic on \
@@ -230,6 +258,12 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 	else
 		echo " - Ignore Serial Port settings"
 	fi
+	VBoxManage sharedfolder add \
+		"${instance_name:?}" \
+		--name "${instance_name:?}--var-local-data" \
+		--hostpath "${_this_file_path}/shared" \
+		--auto-mount-point="/var/local/data" \
+		--automount
 	echo " - Starting instance '${instance_name:?}' in mode '${vbox_instance_start_type:?}'"
 	VBoxManage startvm "${instance_name:?}" --type "${vbox_instance_start_type:?}"
 
@@ -246,7 +280,7 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 	_command_success=false
 	until $_command_success; do
 		if (( SECONDS > _start_time + instance_check_timeout_seconds )); then
-			echo "VirtualBox instance network check timeout!"  >&2
+			echo "⚠️ VirtualBox instance network check timeout!"  >&2
 			exit 1
 		fi
 		_cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
@@ -273,6 +307,7 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 	echo "Wait for cloud-init to complete..."
 
 	_instance_command='sudo cloud-init status --wait --long'
+	_instance_check_ssh_success=false
 	for retry_counter in $(seq $instance_check_ssh_retries 1); do
 		ssh \
 			-o UserKnownHostsFile=/dev/null \
@@ -282,12 +317,18 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 			"${_instance_command:?}" && _exit_code=$? || _exit_code=$?
 		if [[ $_exit_code -eq 0 ]]; then
 			echo "✅ SSH command ran successfully!"
+			_instance_check_ssh_success=true
 			break
 		else
 			echo "💤 Will retry command in ${instance_check_sleep_time_seconds} seconds. Retry left: ${retry_counter}"
 			sleep ${instance_check_sleep_time_seconds}
 		fi
 	done
+	if ${_instance_check_ssh_success}; then
+		echo "✅ Instance is ready!"
+	else
+		echo "⚠️ Instance not ready. - Skipping mount!"
+	fi
 else
 	echo "❌ Instance '${instance_name:?}' - exit code '${_exit_code}'"
 	echo ${_instance_status}
