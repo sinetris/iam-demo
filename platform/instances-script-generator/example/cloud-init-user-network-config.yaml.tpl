@@ -4,6 +4,7 @@ network:
     ethnat:
       dhcp4: true
       dhcp6: false
+      dhcp-identifier: mac
       match:
         macaddress: ${_mac_address_nat_cloud_init}
       set-name: ethnat
@@ -12,6 +13,7 @@ network:
     ethlab:
       dhcp4: true
       dhcp6: false
+      dhcp-identifier: mac
       match:
         macaddress: ${_mac_address_lab_cloud_init}
       set-name: ethlab
