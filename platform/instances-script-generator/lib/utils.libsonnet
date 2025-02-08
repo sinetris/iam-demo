@@ -17,6 +17,6 @@ local cloud_init = import 'cloud_init.libsonnet';
       prefix: 'cloud-init',
       extension: 'yaml',
     }),
-  cloud_config(config, vm)::
-    cloud_init.cloud_config(config, vm),
+  cloud_config(config, instance)::
+    cloud_init.cloud_config(config, instance),
 }

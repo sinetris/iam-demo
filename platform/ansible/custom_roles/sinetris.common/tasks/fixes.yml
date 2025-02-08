@@ -1,8 +1,8 @@
 ---
-# When running VMs on your laptop, the time can easily go out of sync (e.g.
-# when your computer goes to sleep or a VM is suspended).
-# It's not really a problem in development, but we sync the time to avoid
-# errors (for example, from apt).
+# When running instances on your laptop, the time can easily go out of sync (e.g.
+# when your computer goes to sleep or a instances is suspended).
+# It's not really a problem in development, but we sync the time to avoid errors
+# (for example, from apt).
 - name: Restart chrony to ensure datetime sync
   ansible.builtin.systemd_service:
     name: chrony.service

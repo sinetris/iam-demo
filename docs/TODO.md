@@ -69,7 +69,7 @@ in some cases not the best tools for the job) to cover certain topics.
 ### Add screenshots
 
 - [ ] Linux Desktop
-  - [x] Terminal execute `~/bin/check-vm-config.sh`
+  - [x] Terminal execute `~/bin/check-instance-config.sh`
   - [x] Firefox bookmarks
   - [ ] Alertmanager
   - [x] Consul
