@@ -9,8 +9,8 @@ local orchestrator = import 'lib/orchestrator.libsonnet';
 
 local utils = import 'lib/utils.libsonnet';
 
-function(orchestrator_name='fake') {
-  local orchestrator_implementation = orchestrator.get(orchestrator_name),
+function() {
+  local orchestrator_implementation = orchestrator.get(setup.orchestrator_name),
   'instances-status.sh': orchestrator_implementation.use.virtualmachines_list(setup),
   'instances-create.sh': orchestrator_implementation.use.virtualmachines_bootstrap(setup),
   'instances-setup.sh': orchestrator_implementation.use.virtualmachines_setup(setup),

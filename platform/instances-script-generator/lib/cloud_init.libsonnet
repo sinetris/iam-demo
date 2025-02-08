@@ -16,6 +16,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     local is_vnc_server = std.member(tags, 'vnc-server');
     local is_rdp_server = std.member(tags, 'rdpserver');
     local is_ansible_controller = std.member(tags, 'ansible-controller');
+    local is_vbox = config.orchestrator_name == 'vbox';
     local code_pkg = 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-' + instance.architecture;
     local user_mapping(user) =
       assert std.isObject(user);
@@ -45,15 +46,17 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
           'users',
         ]) + addArrayIf(is_rdp_server, [
           'xrdp',
+        ]) + addArrayIf(is_vbox, [
+          'vboxsf',
         ]),
         [if is_admin then 'sudo']: 'ALL=(ALL) NOPASSWD:ALL',
         [if std.objectHas(user, 'password') then 'passwd']: user.password,
         [if std.objectHas(user, 'plain_text_passwd') then 'plain_text_passwd']: user.plain_text_passwd,
         lock_passwd: if std.objectHas(user, 'password') ||
                         std.objectHas(user, 'plain_text_passwd') then false else true,
-        [if std.objectHas(user, 'ssh_import_ids')
-            && std.isArray(user.ssh_import_ids) then 'ssh_import_ids']:
-          user.ssh_import_ids,
+        [if std.objectHas(user, 'ssh_import_id')
+            && std.isArray(user.ssh_import_id) then 'ssh_import_id']:
+          user.ssh_import_id,
         [if std.objectHas(user, 'ssh_authorized_keys')
             && std.isArray(user.ssh_authorized_keys) then 'ssh_authorized_keys']:
           user.ssh_authorized_keys,
@@ -160,13 +163,22 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'xclip',
       ]) + addArrayIf(is_rdp_server, [
         'xrdp',
+      ]) + addArrayIf(is_vbox, [
+        'linux-headers-generic',
+        'perl',
+        'make',
       ]) + addArrayIf(is_vnc_server, [
         'lightdm',
         'xvfb',
         'novnc',
         'x11vnc',
       ]),
-      runcmd: addArrayIf(is_rdp_server, [
+      runcmd: addArrayIf(is_vbox, [
+        ['mkdir', '-p', '/mnt/additions'],
+        ['mount', '-t', 'iso9660', '-o', 'ro', '/dev/sr1', '/mnt/additions'],
+        // ['/mnt/additions/${_additions_file}'],
+        ['/mnt/additions/VBoxLinuxAdditions-arm64.run'],
+      ]) + addArrayIf(is_rdp_server, [
         ['systemctl', 'enable', 'xrdp'],
         ['service', 'xrdp', 'restart'],
       ]) + addArrayIf(is_vnc_server, [
@@ -197,8 +209,15 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         install_method: 'distro',
         run_user: instance.admin_username,
       },
+    } else {} + if is_vbox then {
+      power_state: {
+        mode: 'reboot',
+        timeout: 30,
+        condition: true,
+      },
     } else {};
 
+    // Result
     '#cloud-config\n'
     + std.manifestYamlDoc(
       manifest,

@@ -7,6 +7,6 @@
   admin_username: 'admin',
   admin_password: 'admin password',
   admin_ssh_authorized_keys: [],
-  ansible_ssh_import_ids: [],
-  admin_ssh_import_ids: [],
+  ansible_ssh_import_id: [],
+  admin_ssh_import_id: [],
 }

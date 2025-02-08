@@ -59,19 +59,6 @@ local file_provisioning(opts) =
       destination: destination,
       parents: parents,
     }
-  else if std.objectHas(opts, 'source_inline') then
-    |||
-      content=$(cat <<-'END'
-      %(source)s
-      END
-      )
-      echo "${content}" | multipass transfer %(parents)s \
-        - %(destination)s
-    ||| % {
-      source: opts.source_inline,
-      destination: destination,
-      parents: parents,
-    }
   else '';
 
 local inline_shell_provisioning(opts) =
@@ -337,20 +324,20 @@ local virtualmachine_command(config, command) =
     },
   virtualmachines_destroy(config)::
     assert std.isObject(config);
-    assert std.objectHas(config, 'project_dir');
+    assert std.objectHas(config, 'project_basefolder');
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
       echo "Destroying instances and project data"
       %(instances_destroy)s
-      echo "Deleting %(project_dir)s'"
-      rm -rfv %(project_dir)s
+      echo "Deleting %(project_basefolder)s'"
+      rm -rfv %(project_basefolder)s
     ||| % {
       instances_destroy: shell_lines([
         destroy_instance(config, instance)
         for instance in config.virtual_machines
       ]),
-      project_dir: config.project_dir,
+      project_basefolder: config.project_basefolder,
     },
   virtualmachines_list(config)::
     assert std.isObject(config);
