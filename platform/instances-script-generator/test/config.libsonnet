@@ -12,8 +12,8 @@
   admin_username: 'iamadmin',
   admin_password: std.stripChars(importstr 'admin_password', '\n'),
   admin_ssh_authorized_keys: self.ansible_ssh_authorized_keys,
-  ansible_ssh_import_ids: [
+  ansible_ssh_import_id: [
     'gh:octocat',
   ],
-  admin_ssh_import_ids: self.ansible_ssh_import_ids,
+  admin_ssh_import_id: self.ansible_ssh_import_id,
 }
