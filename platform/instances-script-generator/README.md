@@ -8,6 +8,8 @@
 - [Generate instances configuration files](#generate-instances-configuration-files)
 - [Manage instances](#manage-instances)
 - [Ubuntu ISO](#ubuntu-iso)
+- [Development](#development)
+  - [Troubleshooting](#troubleshooting)
 
 ## Multipass
 
@@ -110,3 +112,55 @@ To destroy all instances and the generated project folder:
 
 [Live Server](https://cdimage.ubuntu.com/releases/24.04/release/ubuntu-24.04.1-live-server-arm64.iso)
 [Cloud Image](https://cloud-images.ubuntu.com/noble/current/noble-server-cloudimg-arm64.img)
+
+## Development
+
+### Troubleshooting
+
+This script uses jsonnet.
+
+Remember to check the correct use of `%` when using with string formatting or
+interpolation (e.g. escape `%` using `%%`).
+
+Examples:
+
+```jsonnet
+{
+  my_float: 5.432,
+  my_string: "something",
+  string1: "my_float truncated is %(my_float)0.2f, my_string is %(my_string)s, and %% is escaped" % self,
+  string2: "Concatenate to " + self.my_string + " without templates, and no need to escape %.",
+  string3: |||
+    When using templates in text blocks, like for %s or %d, we need to escape %%.
+  ||| % ["some text", 5+10],
+  string4: |||
+    Text block and no templates?
+    No need to escape %!
+  |||,
+}
+```
+
+```json
+{
+  "my_float": 5.432,
+  "my_string": "something",
+  "string1": "my_float truncated is 5.43, my_string is something, and % is escaped",
+  "string2": "Concatenate to something without templates, and no need to escape %.",
+  "string3": "When using templates in text blocks, like for some text or 15, we need to escape %.\n",
+  "string4": "Text block and no templates?\nNo need to escape %!\n"
+}
+```
+
+If you see a message like `RUNTIME ERROR: Unrecognised conversion type` and a stack
+trace hard to debug, it's likely that you're missing a conversion type specifier
+for `%` (see Python documentation for [printf-style String Formatting][python-printf-style]).
+
+To reduce the number of lines to check, we can use `awk` to get all the lines
+containing `%` and filter out those that should be correct.
+
+```sh
+file_to_check=lib/orchestrators/vbox.libsonnet
+awk '/%/ && !/\|\|\| %|%(\([a-zA-Z0-9_]+\)){0,1}(0| |-|\+){0,1}[0-9]*(\.[0-9]+){0,1}(h|l|L){0,1}[diouxXeEfFgGcrs]/ {print NR, $0}' "${file_to_check:?}
+```
+
+[python-printf-style]: <https://docs.python.org/3/library/stdtypes.html#printf-style-string-formatting> "printf-style String Formatting"

@@ -15,6 +15,10 @@
   - [Basic setup](#basic-setup)
   - [Compliance As Code](#compliance-as-code)
   - [Kubernetes resources, labels, and annotations](#kubernetes-resources-labels-and-annotations)
+  - [Project and instances management](#project-and-instances-management)
+    - [VirtualBox](#virtualbox)
+    - [Track boot process state](#track-boot-process-state)
+      - [VirtualBox instance boot state](#virtualbox-instance-boot-state)
 - [Future changes and alternatives](#future-changes-and-alternatives)
   - [Excluded Applications](#excluded-applications)
   - [Change configuration](#change-configuration)
@@ -27,19 +31,22 @@
     - [Interesting projects](#interesting-projects)
   - [Alternative to linux-desktop instance](#alternative-to-linux-desktop-instance)
     - [Browser from host machine](#browser-from-host-machine)
+      - [Pros](#pros)
+      - [Cons](#cons)
+      - [Example that could work](#example-that-could-work)
 
 ## Documentation
 
 The README should:
 
-- [ ] be concise
 - [x] include a warning
-- [ ] have a better description of the [project scope](#project-scope)
 - [x] include a link to the TODO (this document)
-- [ ] include links to the main topics covered in the project documentation folder
+- [ ] have a better description of the [project scope](#project-scope)
+- [ ] include links to the main topics covered in the project documentation
+- [ ] be concise
 - [ ] include [FOSSA badge on GitHub][fossa-github-badge-pr]
 
-The documentation folder should:
+The documentation should:
 
 - [ ] have an [infrastructure overview](#add-an-infrastructure-overview)
 - [ ] include [development instructions](#add-development-instructions)
@@ -184,7 +191,7 @@ in some cases not the best tools for the job) to cover certain topics.
   - [ ] configure dashboards in Grafana
   - [x] use MinIO credentials and endpoint from Secret in Loki
   - [x] use MinIO credentials and endpoint from Secret in Tempo
-- [ ] configure [Wazuh][wazuh]
+- [ ] configure [Wazuh][wazuh] (postponed)
 - [ ] configure [Consul][consul]
   - [ ] configure [Consul Service Mesh][consul-service-mesh]
   - [ ] configure [Consul API Gateway][consul-api-gateway]
@@ -209,7 +216,7 @@ in some cases not the best tools for the job) to cover certain topics.
     - [x] add link to [midPoint](https://midpoint.iam-demo.test)
     - [x] add link to [Terrakube UI](https://terrakube-ui.iam-demo.test)
     - [x] update link to [Kubernetes Dashboard](https://localhost:8443)
-  - Configure shell
+  - Configure shell with ansible
     - [ ] export `KUBECONFIG`
     - [ ] setup `kubectl` completion
     - [ ] setup `kustomize` completion
@@ -233,6 +240,166 @@ section in [Kubernetes development tips](development/kubernetes.md).
 - [ ] replace labels `app` and `app.kubernetes.io/app` with `app.kubernetes.io/name`
 - [ ] remove name suffix `-svc` from `kind: Service`
 - [ ] use named ports in `kind: Service`
+
+### Project and instances management
+
+- [ ] rename `bunch-up` to `project-management`
+- [ ] change `instances-script-generator`
+  - [ ] rename folder to `project-script-generator`
+  - [ ] move generated scripts default path to project root
+  - [ ] generate `config/project.sh` (or `.env` file)
+  - [ ] add script to show project generator config (`project-generator-config.sh`)
+  - [ ] change `virtualmachines_destroy`
+    - [ ] rename to `project_delete`
+    - [ ] rename `instances-destroy.sh` to `project-delete.sh`
+    - [ ] delete (keep config)
+      - [ ] remove instances
+      - [ ] delete `${project_basefolder:?}/${instance_name:?}/disks`
+      - [ ] delete files in `${project_basefolder:?}/${instance_name:?}/tmp`
+    - [ ] add `--purge` option (destroy project)
+      - [ ] all in `delete` + remove `${project_basefolder:?}`
+  - [ ] add `project_snapshot_restore` (create file `project-snapshots-restore.sh`)
+  - [ ] split `virtualmachines_bootstrap`
+    - [ ] `project_prepare_config` (create file `project-prepare-config.sh`)
+    - [ ] `project_bootstrap` (create file `project-bootstrap.sh`)
+  - [ ] rename `virtualmachines_setup` to `project_wrap_up` (create file `project-wrap-up.sh`)
+  - [ ] rename `virtualmachines_provisioning` to `project_provisioning`
+  - [ ] rename `instances-provisioning.sh` to `project-provisioning.sh`
+  - [ ] rename `virtualmachines_info` to `instance_info`
+  - [ ] change `instance_info` to show static instance info
+  - [ ] rename `virtualmachines_status` to `instances_status`
+  - [ ] use envsubst template for cloud-init `user-data`
+  - [ ] standardize scripts output
+  - [ ] modify `provisionings` to accept templating
+  - [ ] add optional `description` field to `provisionings`
+  - [ ] add `NO_COLOR` to generated scripts
+    - [ ] change `tput` calls to variables
+
+      ```sh
+      bold_text=$(tput bold)
+      bad_result_text=$(tput setaf 1)
+      good_result_text=$(tput setaf 2)
+      highlight_text=$(tput setaf 3)
+      info_text=$(tput setaf 4)
+      reset_text=$(tput sgr0)
+      ```
+
+    - [ ] use variables for Emoji
+
+      ```sh
+      status_success=✅
+      status_error=❌
+      status_warning=⚠️
+      status_info=ℹ️
+      status_waiting=💤
+      status_action=⚙️
+      ```
+
+    - [ ] when `NO_COLOR`, set variables as
+
+      ```sh
+      bold_text=''
+      bad_result_text=''
+      good_result_text=''
+      highlight_text=''
+      info_text=''
+      reset_text=''
+      status_success='[SUCCESS]'
+      status_error='[ERROR]'
+      status_warning='[WARNING]'
+      status_info='[INFO]'
+      status_waiting='[WAITING]'
+      status_action='[ACTION]'
+      ```
+
+  - Generic changes to `orchestrators`
+    - [ ] add `ansible_user` to `instances_catalog_file` for each instance
+  - `base_provisionings` for `ansible-controller` in `setup.jsonnet`
+    - [ ] rename `machines_ips` to `instances_config`
+    - [ ] add `ansible_controller_user` to `inventory/group_vars/all`
+    - [ ] add `ansible_user` to `inventory/instances_config`
+    - [ ] change occurrences of `iamadmin` to `%(admin_username)s` (requires templating)
+- [ ] disable automated suspend for `linux-desktop`
+  - [ ] modify `/etc/systemd/sleep.conf`
+
+    ```ini
+    [Sleep]
+    AllowSuspend=no
+    AllowHibernation=no
+    AllowSuspendThenHibernate=no
+    AllowHybridSleep=no
+    ```
+
+    To change in cloud-init:
+
+    ```sh
+    sed -i 's/^#\?AllowSuspend=.*/AllowSuspend=no/' /etc/systemd/sleep.conf
+    sed -i 's/^#\?AllowHibernation=.*/AllowHibernation=no/' /etc/systemd/sleep.conf
+    sed -i 's/^#\?AllowSuspendThenHibernate=.*/AllowSuspendThenHibernate=no/' /etc/systemd/sleep.conf
+    sed -i 's/^#\?AllowHybridSleep=.*/AllowHybridSleep=no/' /etc/systemd/sleep.conf
+    ```
+
+  - [ ] set `sleep-inactive-ac-timeout` to `0`
+
+    ```sh
+    sudo -u lightdm /bin/bash <<-'END'
+    DISPLAY=:0.0 \
+    DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$UID/bus \
+    gsettings set \
+      com.canonical.unity.settings-daemon.plugins.power \
+      sleep-inactive-ac-timeout 0
+    END
+    sudo -u lightdm /bin/bash <<-'END'
+    DISPLAY=:0.0 \
+    DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$UID/bus \
+    gsettings set \
+      org.gnome.settings-daemon.plugins.power \
+      sleep-inactive-ac-timeout 0
+    END
+    # To verify changes
+    sudo -u lightdm gsettings get \
+      com.canonical.unity.settings-daemon.plugins.power sleep-inactive-ac-timeout
+    sudo -u lightdm gsettings get \
+      org.gnome.settings-daemon.plugins.power sleep-inactive-ac-timeout
+    ```
+
+#### VirtualBox
+
+- [x] generate empty instances catalog json file in project assets folder
+- [x] add hostname and IPv4 in instances catalog json file
+- [x] add username and MAC address in instances catalog json file
+- [x] use `VBoxManage guestproperty wait` instead of `until` in instances creation
+- [ ] add all network interfaces in instances catalog json file
+- [ ] create instances snapshots
+- [ ] use previous MAC addressses, if presents
+- [ ] use `os_images_path` from config
+- [ ] use `os_images_url` from config
+- [ ] use `vbox_basefolder` from config
+- [ ] use `config.network.name` if exists
+- [ ] do not create network if `config.network.skip_creation` exists
+- [ ] move `instances_catalog_file` to `${project_basefolder:?}\assets\instances_catalog.json`
+- [ ] add tags to instances using `guestproperty`
+
+#### Track boot process state
+
+Use systemd to track boot state.
+
+##### VirtualBox instance boot state
+
+Set `instance:state` guest property on start, shutdown, reboot, etc
+
+On instance:
+
+```sh
+VBoxControl --nologo guestproperty set "instance:state" "STARTING"
+```
+
+On host:
+
+```sh
+instance_name=ansible-controller
+VBoxManage guestproperty get "${instance_name:?}" "instance:state"
+```
 
 ## Future changes and alternatives
 
@@ -427,24 +594,47 @@ different platforms.
 
 #### Browser from host machine
 
-You can use the host machine (e.g. your laptop) instead of the `linux-desktop`
-instance.
+We could use a browser installed in the operating system of our laptop
+(the host machine) instead of the `linux-desktop` instance.
 
-**Pros:**
+##### Pros
 
+- Easier to use than a remote desktop
 - Less resources used
 - Probably faster
 
-**Cons:**
+##### Cons
 
-- Instances IPs must be reachable from the host machine
-- internal DNS server must be used for DNS resolution on the host machine
-- self-signed CA root certificate must be installed on the host machine
-- VPNs are likely to interfere with the previous steps
-- most of the previous steps require administrative privileges, which are usually
-  not allowed (whether it is an enforced policy or not) on company owned laptops
-- configuration of the users' host machines will likely be very different (OS,
-  network configuration, etc.)
+- Instances IPs might need to be reachable from the host machine
+- We need to use the internal DNS server to resolve the project domains and subdomains
+- We need to add the self-signed CA root certificate to the browser
+- VPNs could interfere with the configuration
+- Some of the steps could require administrative privileges, which are
+  usually not allowed (whether enforced or not) on company-owned laptops.
+- Configuration steps must be performed on the host machine (the `ansible-controller`
+  isn't supposed to make changes to the host machine)
+- The steps required to configure users' host machines may vary considerably
+  (OS, network configuration, apps installation, etc.)
+
+##### Example that could work
+
+We could use a [SOCKS Protocol Version 5][sock5-rfc1928] proxy server for IPs
+and DNS resolution and a browser that support socks5 proxy and custom CA certs
+like [Mozilla Firefox][mozilla-firefox].
+
+- [ ] Setup a [socks5 proxy server][sock5-catonmat-example] on an instance
+      (e.g. `ansible-controller`)
+- [ ] Require Firefox to be present on host
+- [ ] Add a [policies.json][mozilla-firefox-policy-templates] file for Firefox
+  - [ ] add root CA certificates ([Certificates | Install][mozilla-firefox-policy-templates-install-certs])
+  - [ ] optionally add project bookmarks ([ManagedBookmarks][mozilla-firefox-policy-templates-bookmarks])
+- [ ] Create a [new user profile][mozilla-firefox-cli-profile] for Firefox
+  - [ ] create [user.js][mozilla-firefox-user-js] file in user profile
+    - `network.proxy.type=1`
+    - `network.proxy.socks_remote_dns=true`
+    - `network.proxy.socks=<instance IP>`
+    - `network.proxy.socks_port=<sock5 PORT used>`
+    - `security.enterprise_roots.enabled=true`
 
 [age]: <https://github.com/FiloSottile/age> "age"
 [alertmanager]: <https://github.com/prometheus/alertmanager> "Alertmanager"
@@ -511,6 +701,12 @@ instance.
 [midpoint]: <https://evolveum.com/midpoint/> "midPoint"
 [minio]: <https://min.io/> "MinIO"
 [mkcert]: <https://github.com/FiloSottile/mkcert> "mkcert"
+[mozilla-firefox]: <https://www.mozilla.org/en/firefox/new/> "Mozilla Firefox for Desktop"
+[mozilla-firefox-cli-profile]: <https://wiki.mozilla.org/Firefox/CommandLineOptions#User_profile> "Mozilla Firefox CLI - User profile"
+[mozilla-firefox-policy-templates]: <https://mozilla.github.io/policy-templates/> "Mozilla Firefox policy-templates"
+[mozilla-firefox-policy-templates-bookmarks]: <https://mozilla.github.io/policy-templates/#managedbookmarks> "Mozilla Firefox policy-templates - ManagedBookmarks"
+[mozilla-firefox-policy-templates-install-certs]: <https://mozilla.github.io/policy-templates/#certificates--install> "Mozilla Firefox policy-templates - Certificates | Install"
+[mozilla-firefox-user-js]: <https://kb.mozillazine.org/User.js_file> "Mozilla Firefox - user.js"
 [multipass]: <https://multipass.run/> "Canonical Multipass"
 [notary]: <https://github.com/notaryproject/notary> "Notary"
 [opa]: <https://www.openpolicyagent.org/> "Open Policy Agent (OPA)"
@@ -527,6 +723,8 @@ instance.
 [renovate]: <https://github.com/renovatebot/renovate> "Renovate"
 [restic]: <https://restic.net/> "Restic"
 [scap]: <http://scap.nist.gov/> "Security Content Automation Protocol"
+[sock5-catonmat-example]: <https://catonmat.net/linux-socks5-proxy> "SOCK5 proxy server on Linux using SSH"
+[sock5-rfc1928]: <https://datatracker.ietf.org/doc/html/rfc1928> "SOCKS Protocol Version 5 - RFC 1928"
 [terrakube]: <https://github.com/AzBuilder/terrakube> "Terrakube: Open source IaC Automation and Collaboration Software"
 [tfsec]: <https://github.com/liamg/tfsec> "tfsec"
 [trestle]: <https://github.com/IBM/compliance-trestle> "Trestle"
