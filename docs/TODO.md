@@ -243,7 +243,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
 
 ### Project and instances management
 
-- [ ] rename `bunch-up` to `project-management`
+- [x] rename `bunch-up` to `project-management`
 - [ ] change `instances-script-generator`
   - [ ] rename folder to `project-script-generator`
   - [ ] move generated scripts default path to project root
