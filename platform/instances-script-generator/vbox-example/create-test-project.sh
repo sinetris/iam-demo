@@ -193,10 +193,10 @@ elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a regist
 		"${vbox_instance_disk_file:?}" \
 		--format VDI \
 		--variant Standard
-	echo " - Resize instance main disk to '${instance_disk_size:?} MB'"
+	echo " - Resize instance main disk to '${instance_storage_space:?} MB'"
 	VBoxManage modifymedium disk \
 		"${vbox_instance_disk_file:?}" \
-		--resize ${instance_disk_size:?}
+		--resize ${instance_storage_space:?}
 	echo " - Attach main disk to instance"
 	VBoxManage storageattach \
 		"${instance_name:?}" \

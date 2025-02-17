@@ -30,7 +30,7 @@ instance_name=testing-instance
 instance_username=iamadmin
 instance_password=iamadmin
 # Disk size in MB
-instance_disk_size=5120
+instance_storage_space=5120
 instance_cpus=1
 instance_memory=1024
 instance_vram=64
