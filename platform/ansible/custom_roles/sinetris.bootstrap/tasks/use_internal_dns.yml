@@ -27,25 +27,25 @@
 - name: Update the netplan fact
   ansible.utils.update_fact:
     updates:
-      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_name }}.dhcp4-overrides
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_netplan_name }}.dhcp4-overrides
         value:
           use-dns: false
           use-domains: false
-      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_name }}.dhcp6
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_netplan_name }}.dhcp6
         value: false
-      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_name }}.set-name
-        value: "{{ network_interface_default_name | default(ansible_default_ipv4.interface) }}"
-      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_name }}.nameservers
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_netplan_name }}.set-name
+        value: "{{ network_interface_name | default(ansible_default_ipv4.interface) }}"
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_netplan_name }}.nameservers
         value:
           addresses: "{{ bootstrap_network.dns }}"
           search: "{{ bootstrap_network.domains }}"
-      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_name }}.link-local
+      - path: cloudinit_netplan_data.network.ethernets.{{ network_interface_netplan_name }}.link-local
         value:
           - ipv4
   register: updated
 - name: Write back cloud-init netplan file
   ansible.builtin.copy:
-    content: "{{ updated.cloudinit_netplan_data | to_nice_yaml }}"
+    content: "{{ updated.cloudinit_netplan_data | to_nice_yaml(indent=2, sort_keys=false)}}"
     dest: "{{ cloud_init_netplan_file_path }}"
     mode: u=rw,g=r,o=
   when:

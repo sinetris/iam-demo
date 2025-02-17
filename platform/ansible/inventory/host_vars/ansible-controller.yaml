@@ -28,7 +28,7 @@ bind9_statistics:
   channels:
     - host: 127.0.0.1
       allow: 127.0.0.1
-    - host: "{{ named_hosts['ansible-controller'] }}"
+    - host: "{{ named_hosts['ansible-controller']['ipv4'] }}"
       allow: localnets
 bind9_zones:
   - name: "{{ project_domain }}"
@@ -51,23 +51,23 @@ bind9_zones:
       - label: ns
         ttl: 10m
         type: A
-        content: "{{ named_hosts['ansible-controller'] }}"
+        content: "{{ named_hosts['ansible-controller']['ipv4'] }}"
       - label: ansible-controller
         ttl: 10m
         type: A
-        content: "{{ named_hosts['ansible-controller'] }}"
+        content: "{{ named_hosts['ansible-controller']['ipv4'] }}"
       - label: iam-control-plane
         ttl: 10m
         type: A
-        content: "{{ named_hosts['iam-control-plane'] }}"
+        content: "{{ named_hosts['iam-control-plane']['ipv4'] }}"
       - label: linux-desktop
         ttl: 10m
         type: A
-        content: "{{ named_hosts['linux-desktop'] }}"
+        content: "{{ named_hosts['linux-desktop']['ipv4'] }}"
       - label: mail
         ttl: 1m
         type: A
-        content: "{{ named_hosts['iam-control-plane'] }}"
+        content: "{{ named_hosts['iam-control-plane']['ipv4'] }}"
       - label: alertmanager
         ttl: 1m
         type: CNAME

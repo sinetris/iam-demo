@@ -5,7 +5,7 @@ cloud_init_netplan_file_path: /etc/netplan/50-cloud-init.yaml
 firefox_global_preferences_path: /etc/firefox/defaults/pref
 firefox_global_preferences_file: "{{ firefox_global_preferences_path }}/config-prefs.js"
 # Network interface name in netplan
-network_interface_name: ens3
+network_interface_netplan_name: ens3
 # Network interface used for default routing
 #   e.g.: ip route get 1.1.1.1 | head -n1 | awk '{print $5}'
 # network_interface_default_name: enp0s1
