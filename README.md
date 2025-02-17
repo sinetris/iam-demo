@@ -58,7 +58,7 @@ implemented and what is planned to be added.
 #### Run
 
 ```sh
-./bunch-up -a
+./project-management -a
 ```
 
 ### 💻 Linux desktop Instance
