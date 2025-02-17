@@ -6,7 +6,7 @@ local shell_lines(lines) =
   );
 
 local indent(string, pre) =
-  std.join(
+  pre + std.join(
     '\n' + pre,
     std.split(std.rstripChars(string, '\n'), '\n')
   );
@@ -128,7 +128,41 @@ local generic_project_config(config) =
   };
 // end: bash-utils
 
+local ssh_exec(username, host, script, options='-q') =
+  |||
+    ssh %(options)s \
+      -o UserKnownHostsFile=/dev/null \
+      -o StrictHostKeyChecking=no \
+      -o IdentitiesOnly=yes \
+      -i "${generated_files_path}/assets/.ssh/id_ed25519" \
+      "%(instance_username)s"@"%(instance_host)s" \
+    %(script)s
+  ||| % {
+    instance_username: username,
+    instance_host: host,
+    script: script,
+    options: options,
+  };
+
+local scp_file(source, destination, options='-q') =
+  |||
+    scp %(options)s \
+      -o UserKnownHostsFile=/dev/null \
+      -o StrictHostKeyChecking=no \
+      -o IdentitiesOnly=yes \
+      -i "${generated_files_path}/assets/.ssh/id_ed25519" \
+      %(source)s \
+      %(destination)s
+  ||| % {
+    source: source,
+    destination: destination,
+    options: options,
+  };
+
 local cidata_network_config_template(config) =
+  assert std.isObject(config);
+  local dns_servers = std.get(config, 'dns_servers', []);
+  assert std.isArray(dns_servers);
   |||
     tee "${cidata_network_config_template_file:?}" > /dev/null <<-'EOT'
     network:
@@ -148,6 +182,7 @@ local cidata_network_config_template(config) =
           dhcp4-overrides:
             use-dns: false
             use-domains: false
+            route-metric: 100
           dhcp6: false
           dhcp-identifier: mac
           match:
@@ -159,7 +194,7 @@ local cidata_network_config_template(config) =
             addresses: [127.0.0.53]
     EOT
   ||| % {
-    dns_servers: std.join(',', config.dns_servers),
+    dns_servers: std.join(',', dns_servers),
   };
 
 // start: vbox-bash-utils
@@ -186,18 +221,17 @@ local vbox_bash_architecture_configs() =
 local vbox_project_config(config) =
   assert std.isObject(config);
   assert std.objectHas(config, 'network');
-  local network = std.get(config, 'network', {});
-  assert std.objectHas(network, 'name_suffix');
+  local network = std.get(config, 'network');
+  assert std.objectHas(network, 'name');
   assert std.objectHas(network, 'netmask');
   assert std.objectHas(network, 'lower_ip');
   assert std.objectHas(network, 'upper_ip');
   |||
     # -- start: vbox-project-config
-    project_network_name_suffix=%(network_name_suffix)s
     project_network_netmask=%(network_netmask)s
     project_network_lower_ip=%(network_lower_ip)s
     project_network_upper_ip=%(network_upper_ip)s
-    project_network_name=${project_name:?}-${project_network_name_suffix:?}
+    project_network_name=%(network_name)s
     os_images_path="$HOME/.cache/os-images"
     os_images_url=https://cloud-images.ubuntu.com
     # Serial Port mode:
@@ -208,7 +242,7 @@ local vbox_project_config(config) =
     vbox_instance_start_type=headless
     # -- end: vbox-project-config
   ||| % {
-    network_name_suffix: config.network.name_suffix,
+    network_name: config.network.name,
     network_netmask: config.network.netmask,
     network_lower_ip: config.network.lower_ip,
     network_upper_ip: config.network.upper_ip,
@@ -240,7 +274,9 @@ local bash_utils(config) =
   };
 
 
-local check_instance_exist_do(config, instance, action_code) =
+local check_instance_exist_do(_config, instance, action_code) =
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
   |||
     instance_name=%(hostname)s
     echo "Checking '${instance_name:?}'..."
@@ -268,7 +304,7 @@ local check_instance_exist_do(config, instance, action_code) =
     action_code: action_code,
   };
 
-local create_network(config) =
+local create_network(_config) =
   |||
     echo "Checking Network '${project_network_name}'..."
     _project_network_status=$(VBoxManage hostonlynet modify \
@@ -288,31 +324,53 @@ local create_network(config) =
       echo ${_project_network_status}
       exit 2
     fi
-  ||| % {
-  };
+  |||;
+
+local remove_network(_config) =
+  |||
+    _network_status=$(VBoxManage hostonlynet modify \
+      --name ${project_network_name} --disable 2>&1) && _exit_code=$? || _exit_code=$?
+    if [[ $_exit_code -eq 0 ]]; then
+      echo "⚙️ Project Network '${project_network_name}' will be removed!"
+      VBoxManage hostonlynet remove \
+        --name ${project_network_name}
+    elif [[ $_exit_code -eq 1 ]] && [[ $_network_status =~ 'does not exist' ]]; then
+      echo "✅ Project Network '${project_network_name}' does not exist!"
+    else
+      echo "❌ Project Network '${project_network_name}' - exit code '${_exit_code}'"
+      echo ${_network_status}
+      exit 2
+    fi
+  |||;
 
 local instance_config(config, instance) =
   assert std.isObject(config);
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
-  local cpus = std.get(instance, 'cpus', '1');
-  local storage_space = std.get(instance, 'storage_space', '5000');
-  local memory = std.get(instance, 'memory', '1024');
-  local vram = std.get(instance, 'vram', '64');
+  assert std.objectHas(instance, 'basefolder');
+  local instance_cpus = std.get(instance, 'cpus', '1');
+  local instance_storage_space = std.get(instance, 'storage_space', '5000');
+  local instence_memory = std.get(instance, 'memory', '1024');
+  local instance_vram = std.get(instance, 'vram', '64');
+  local instance_username = std.get(instance, 'admin_username', 'admin');
+  local instance_password = std.get(instance, 'admin_password_plain', 'password');
+  local instance_timeout = std.get(instance, 'timeout', '300');
+  local instance_check_ssh_retries = std.get(instance, 'check_ssh_retries', '10');
+  local instance_check_sleep_time_seconds = std.get(instance, 'check_sleep_time_seconds', '2');
   |||
     # - Instance settings -
-    instance_name=%(hostname)s
-    instance_username=iamadmin
-    instance_password=iamadmin
+    instance_name=%(instance_hostname)s
+    instance_username=%(instance_username)s
+    instance_password=%(instance_password)s
     # Disk size in MB
-    instance_disk_size=%(storage_space)s
-    instance_cpus=%(cpus)s
-    instance_memory=%(memory)s
-    instance_vram=%(vram)s
+    instance_storage_space=%(instance_storage_space)s
+    instance_cpus=%(instance_cpus)s
+    instance_memory=%(instance_memory)s
+    instance_vram=%(instance_vram)s
 
-    instance_check_timeout_seconds=%(timeout)s
-    instance_check_sleep_time_seconds=2
-    instance_check_ssh_retries=5
+    instance_check_timeout_seconds=%(instance_timeout)s
+    instance_check_sleep_time_seconds=%(instance_check_sleep_time_seconds)s
+    instance_check_ssh_retries=%(instance_check_ssh_retries)s
 
     instance_basefolder="%(instance_basefolder)s"
     instance_cidata_files_path=${instance_basefolder:?}/cidata
@@ -322,13 +380,17 @@ local instance_config(config, instance) =
     vbox_instance_disk_file="${instance_basefolder:?}/disks/${instance_name:?}-boot-disk.vdi"
     instance_config=${instance_basefolder:?}/assets/instance_config.json
   ||| % {
-    hostname: instance.hostname,
+    instance_hostname: instance.hostname,
+    instance_username: instance_username,
+    instance_password: instance_password,
     instance_basefolder: instance.basefolder,
-    cpus: cpus,
-    storage_space: storage_space,
-    timeout: instance.timeout,
-    memory: memory,
-    vram: vram,
+    instance_cpus: instance_cpus,
+    instance_storage_space: instance_storage_space,
+    instance_timeout: instance_timeout,
+    instance_check_sleep_time_seconds: instance_check_sleep_time_seconds,
+    instance_check_ssh_retries: instance_check_ssh_retries,
+    instance_memory: instence_memory,
+    instance_vram: instance_vram,
   };
 
 local create_instance(config, instance) =
@@ -336,17 +398,17 @@ local create_instance(config, instance) =
   assert std.isObject(instance);
   local mount_opt(host_path, guest_path) =
     |||
-      echo "   - name: '${instance_name:?}-%(name)s'"
+      echo "   - name: '${instance_name:?}-%(mount_name)s'"
       echo "     host_path: '%(host_path)s'"
       echo "     guest_path: '%(guest_path)s'"
       VBoxManage sharedfolder add \
         "${instance_name:?}" \
-        --name "${instance_name:?}-%(name)s" \
+        --name "${instance_name:?}-%(mount_name)s" \
         --hostpath "%(host_path)s" \
         --auto-mount-point="%(guest_path)s" \
         --automount
     ||| % {
-      name: std.strReplace(guest_path, '/', '-'),
+      mount_name: std.strReplace(guest_path, '/', '-'),
       host_path: host_path,
       guest_path: guest_path,
     };
@@ -487,10 +549,10 @@ local create_instance(config, instance) =
       "${vbox_instance_disk_file:?}" \
       --format VDI \
       --variant Standard
-    echo " - Resize instance main disk to '${instance_disk_size:?} MB'"
+    echo " - Resize instance main disk to '${instance_storage_space:?} MB'"
     VBoxManage modifymedium disk \
       "${vbox_instance_disk_file:?}" \
-      --resize ${instance_disk_size:?}
+      --resize ${instance_storage_space:?}
     echo " - Attach main disk to instance"
     VBoxManage storageattach \
       "${instance_name:?}" \
@@ -542,7 +604,7 @@ local create_instance(config, instance) =
       echo " - Set Serial Port to log boot sequence"
       touch "${_uart_file:?}"
       echo "   - To see log file:"
-      echo "    tail -f -n +1 '${_uart_file:?}'"
+      echo "    tail -f -n +1 '${_uart_file:?}' | cat -v"
       echo
       VBoxManage modifyvm \
       "${instance_name:?}" \
@@ -565,38 +627,23 @@ local create_instance(config, instance) =
 
     echo "Wait for instance IPv4 or error on timeout after ${instance_check_timeout_seconds} seconds..."
 
-    _start_time=$SECONDS
-    _instance_ipv4=""
-    _command_success=false
-    until $_command_success; do
-      if (( SECONDS >= _start_time + instance_check_timeout_seconds )); then
-        echo "⚠️ VirtualBox instance network check timeout!"  >&2
-        exit 1
-      fi
-      _cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_nic_ipv4_property:?}" 2>&1) && _exit_code=$? || _exit_code=$?
-      if [[ $_exit_code -ne 0 ]]; then
-        echo "Error in VBoxManage for 'guestproperty get'!"  >&2
-        exit 2
-      fi
-      _cmd_status=$(echo "${_cmd_status}" | grep --extended-regexp "${_ipv4_regex}" --only-matching --color=never 2>&1) && _exit_code=$? || _exit_code=$?
-      if [[ $_exit_code -eq 0 ]]; then
-        _command_success=true
-        _instance_ipv4="${_cmd_status}"
-      else
-        echo "💤 Not ready yet!"
-        echo " - retry in: ${instance_check_sleep_time_seconds} seconds"
-        echo " - passed time: $SECONDS seconds"
-        echo " - will timeout in: ${seconds_to_timeout} seconds"
-        sleep ${instance_check_sleep_time_seconds}
-      fi
-      (( seconds_to_timeout = instance_check_timeout_seconds - SECONDS))
-    done
+    _cmd_status=$(VBoxManage guestproperty wait \
+      "${instance_name:?}" \
+      "${_vbox_lab_nic_ipv4_property:?}" \
+      --timeout $((instance_check_timeout_seconds * 1000)) --fail-on-timeout 2>&1) && _exit_code=$? || _exit_code=$?
+
+    if [[ $_exit_code -ne 0 ]]; then
+      echo "Error: $_cmd_status!"  >&2
+      exit 2
+    else
+      _instance_ipv4=$(echo $_cmd_status | perl -nle'print for /value: \K.+(?=, flags:)/g')
+    fi
 
     echo "Instance IPv4: ${_instance_ipv4:?}"
     instance_config=${instance_basefolder:?}/assets/instance_config.json
 
     _vbox_lab_nic_name_property="/VirtualBox/GuestInfo/Net/${_vbox_lab_nic_id:?}/Name"
-    _instance_nic_name=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_nic_ipv4_property:?}" 2>&1)
+    _instance_nic_name=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_nic_name_property:?}" | awk '{print $2}' 2>&1)
 
     PROJECT_TMP_FILE="$(mktemp)"
     jq --indent 2 \
@@ -604,7 +651,8 @@ local create_instance(config, instance) =
       --arg ip "${_instance_ipv4:?}" \
       --arg nic "${_instance_nic_name:?}" \
       --arg macaddr "${_instance_mac_address_lab_cloud_init:?}" \
-      '.list += {($host): {ipv4: $ip, mac_address: $macaddr, network_interface: $nic}}' \
+      --arg admin_username "${instance_username:?}" \
+      '.list += {($host): {ipv4: $ip, mac_address: $macaddr, network_interface_name: $nic, network_interface_netplan_name: $nic, admin_username: $admin_username}}' \
       "${instances_catalog_file:?}" \
       > "$PROJECT_TMP_FILE" && mv "$PROJECT_TMP_FILE" "${instances_catalog_file:?}"
     echo "Wait for cloud-init to complete..."
@@ -647,122 +695,245 @@ local destroy_instance(config, instance) =
       && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
       echo "⚙️ Destroying instance '${instance_name:?}'!"
-      if [[ $_instance_status =~ 'VMState="started"' ]] || [[ $_instance_status =~ 'VMState="running"' ]]; then
-        VBoxManage controlvm "${instance_name:?}" poweroff
-      fi
+      # Try to stop instance and ignore errors
+      VBoxManage controlvm "${instance_name:?}" poweroff >/dev/null 2>&1 || true
       VBoxManage unregistervm "${instance_name:?}" --delete-all
     elif [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'Could not find a registered machine' ]]; then
       echo "✅ Instance '${instance_name:?}' not found!"
     else
-      echo "❌ Ignoring instance '${instance_name:?}' - exit code '${_exit_code}'"
+      echo "❌ Skipping instance '${instance_name:?}' - exit code '${_exit_code}'"
       echo ${_instance_status}
     fi
     VBoxManage closemedium dvd "${instance_cidata_iso_file:?}" --delete 2>/dev/null \
       || echo "✅ Disk '${instance_cidata_iso_file}' does not exist!"
-
   ||| % {
     instance_config: instance_config(config, instance),
     hostname: instance.hostname,
   };
 
-local provision_instances(config, provisionings) =
-  if std.isArray(provisionings) then
-    local file_provisioning(opts) =
-      assert std.objectHas(opts, 'destination');
-      local parents =
-        if std.objectHas(opts, 'create_parents_dir') then
-          assert std.isBoolean(opts.create_parents_dir);
-          if opts.create_parents_dir then '--parents' else ''
-        else '';
-      local destination =
-        if std.objectHas(opts, 'destination_host') && opts.destination_host != 'localhost' then
-          '${instance_username:?}@${_destintion_instance_ipv4:?}:%(file)s' % { host: opts.destination_host, file: opts.destination }
-        else opts.destination;
-      if std.objectHas(opts, 'source') then
-        local source =
-          if std.objectHas(opts, 'source_host') && opts.source_host != 'localhost' then
-            '${instance_username:?}@${_source_instance_ipv4:?}:%(file)s' % { host: opts.source_host, file: opts.source }
-          else opts.source;
-        |||
-          # create remote destination
-          ssh \
-          remote-host 'mkdir -p foo/bar/qux'
-          scp \
-            -o UserKnownHostsFile=/dev/null \
-            -o StrictHostKeyChecking=no \
-            -o IdentitiesOnly=yes \
-            -i "${generated_files_path}/assets/.ssh/id_ed25519" \
-            %(source)s \
-            %(destination)s
-        ||| % {
-          source: source,
-          destination: destination,
-          parents: parents,
-        }
-      else '';
-    local inline_shell_provisioning(opts) =
-      assert std.objectHas(opts, 'destination_host');
-      assert std.objectHas(opts, 'script');
-      local cwd =
-        if std.objectHas(opts, 'working_directory') then
-          "--working-directory '" + opts.working_directory + "'"
-        else '';
-      local pre_command =
-        if std.objectHas(opts, 'reboot_on_error') then
-          'set +e'
-        else '';
-      local post_command =
-        if std.objectHas(opts, 'reboot_on_error') then
-          |||
-            exit_code=$? || exit_code=$?
-
-            if [ $exit_code -eq 0 ]; then
-              echo "No need to reboot"
-            else
-              echo "Reboot"
-              VBoxManage controlvm %(destination_host)s reboot
-            fi
-            set -e
-          ||| % {
-            destination_host: opts.destination_host,
-          }
-        else '';
+local file_provisioning(opts) =
+  assert std.objectHas(opts, 'destination') : 'destination file is missing';
+  assert std.objectHas(opts, 'source') : 'source file is missing';
+  local is_remote_source = std.objectHas(opts, 'source_host') && opts.source_host != 'localhost';
+  local is_remote_destination = std.objectHas(opts, 'destination_host') && opts.destination_host != 'localhost';
+  local create_parents_destination_folder =
+    if std.objectHas(opts, 'create_parents_dir') && opts.create_parents_dir then
+      local script = 'mkdir -pv $(dirname "%s")' % opts.destination;
       |||
-        %(pre_command)s
-        ssh \
-          -o UserKnownHostsFile=/dev/null \
-          -o StrictHostKeyChecking=no \
-          -o IdentitiesOnly=yes \
-          -i "${generated_files_path}/assets/.ssh/id_ed25519" \
-          ${instance_username:?}@${_instance_ipv4:?} \
-        <<-'EOF'
-        %(script)s
-        EOF
-        %(post_command)s
+        echo " ⚙️ Create destination folder"
+        %(create_parents_destination_folder)s
       ||| % {
-        pre_command: std.stripChars(pre_command, '\n'),
-        working_directory: cwd,
-        script: indent(opts.script, '\t'),
+        create_parents_destination_folder:
+          if is_remote_destination then
+            ssh_exec(
+              '${destination_instance_username:?}',
+              '${destination_instance_host:?}',
+              std.escapeStringBash(if std.objectHas(opts, 'destination_owner') then
+                "sudo -i -u %(owner)s /bin/bash -c '%(script)s'" % { owner: std.escapeStringBash(opts.destination_owner), script: script }
+              else "sudo su -c '%s'" % script),
+              '-q'
+            )
+          else script,
+      }
+    else '';
+  local variables =
+    (if is_remote_source then
+       |||
+         source_hostname=%(host)s
+         source_instance_username=$(jq -r --arg host "${source_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+         if [[ $_exit_code -ne 0 ]]; then
+           echo " ❌ Could not get 'admin_username' for instance '${source_hostname:?}'"
+           exit 2
+         fi
+         source_instance_host=$(jq -r --arg host "${source_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+         if [[ $_exit_code -ne 0 ]]; then
+           echo " ❌ Could not get 'ipv4' for instance '${source_hostname:?}'"
+           exit 2
+         fi
+       ||| % { host: opts.source_host }
+     else '') + (if is_remote_destination then
+                   |||
+                     destination_hostname=%(host)s
+                     destination_instance_username=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+                     if [[ $_exit_code -ne 0 ]]; then
+                       echo " ❌ Could not get 'admin_username' for instance '${destination_hostname:?}'"
+                       exit 2
+                     fi
+                     destination_instance_host=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+                     if [[ $_exit_code -ne 0 ]]; then
+                       echo " ❌ Could not get 'ipv4' for instance '${destination_hostname:?}'"
+                       exit 2
+                     fi
+                   ||| % { host: opts.destination_host }
+                 else '');
+  local copy_file =
+    (if is_remote_source || is_remote_destination then
+       |||
+         %(destination_file)s
+         %(scp_file)s
+         %(remote_mv)s
+       ||| % {
+         destination_file:
+           if std.objectHas(opts, 'destination_owner') then
+             |||
+               # Use a temporary destination_file
+               destination_file=$(%s)
+             ||| % ssh_exec('${destination_instance_username:?}', '${destination_instance_host:?}', 'mktemp', '-q')
+           else 'destination_file="%s"' % opts.destination,
+         scp_file: scp_file(
+           if is_remote_source then
+             '"${source_instance_username:?}"@"${source_instance_host:?}":"%s"' % opts.source
+           else opts.source,
+           if is_remote_destination then
+             '"${destination_instance_username:?}"@"${destination_instance_host:?}":"${destination_file:?}"'
+           else '${destination_file:?}'
+         ),
+         remote_mv:
+           if is_remote_destination && std.objectHas(opts, 'destination_owner') then
+             ssh_exec(
+               '${destination_instance_username:?}',
+               '${destination_instance_host:?}',
+               |||
+                 bash <<-EOF
+                 sudo chown '%(destination_owner)s':'%(destination_owner)s' "${destination_file:?}"
+                 sudo --user='%(destination_owner)s' --login --non-interactive mv "${destination_file:?}" '%(destination_file)s'
+                 EOF
+               ||| % { destination_owner: opts.destination_owner, destination_file: opts.destination },
+               '-q'
+             )
+           else '',
+       }
+     else 'cp "%(source_file)s" "%(destination_file)s"' % { source_file: opts.source, destination_file: opts.destination });
+  |||
+    # - Start file provisioning -
+    %(variables)s
+    %(create_parents_destination_folder)s
+    %(copy_file)s
+    # - End file provisioning -
+  ||| % {
+    variables: variables,
+    create_parents_destination_folder: create_parents_destination_folder,
+    copy_file: copy_file,
+  };
+
+local inline_shell_provisioning(opts) =
+  assert std.objectHas(opts, 'destination_host');
+  assert std.objectHas(opts, 'script');
+
+  local variables =
+    |||
+      destination_hostname=%(host)s
+      destination_instance_username=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}")
+      destination_instance_host=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}")
+    ||| % { host: opts.destination_host };
+  local script =
+    "bash <<-'EOF'\n" +
+    (if std.objectHas(opts, 'working_directory') then
+       |||
+         cd '%(working_directory)s'
+       ||| % { working_directory: opts.working_directory }
+     else '') + opts.script + 'EOF';
+  local pre_command =
+    if std.objectHas(opts, 'reboot_on_error') then
+      'set +e'
+    else '';
+  local post_command =
+    if std.objectHas(opts, 'reboot_on_error') then
+      |||
+        _exit_code=$? || _exit_code=$?
+        set -e
+        _instance_name=%(destination_host)s
+        if [[ $_exit_code -eq 0 ]]; then
+          echo "No need to reboot '${_instance_name:?}'"
+        else
+          echo "⚙️ Reboot '${_instance_name:?}'..."
+          _instance_check_success=false
+          _instance_check_sleep_seconds=2
+          _instance_check_etries=10
+          for _retry_counter in $(seq ${_instance_check_etries:?} 1); do
+            _instance_status=$(VBoxManage showvminfo "${_instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
+            if [[ $_exit_code -eq 0 ]] && [[ $_instance_status =~ 'VMState="running"' ]]; then
+              echo " ✅ We can reboot '${_instance_name:?}'!"
+              _instance_check_success=true
+              break
+            else
+              echo "💤 Will retry command in ${_instance_check_sleep_seconds} seconds. Retry left: ${_retry_counter}"
+              sleep ${_instance_check_sleep_seconds}
+            fi
+          done
+          if ${_instance_check_success:?}; then
+            VBoxManage controlvm '${_instance_name:?}' reboot
+            _instance_check_success=false
+            for _retry_counter in $(seq ${_instance_check_etries:?} 1); do
+              _instance_status=$(VBoxManage showvminfo "${_instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
+              if [[ $_exit_code -eq 0 ]] && [[ $_instance_status =~ 'VMState="running"' ]]; then
+                echo " ✅ Instance '${_instance_name:?}' ready!"
+                _instance_check_success=true
+                break
+              else
+                echo "💤 Will retry command in ${_instance_check_sleep_seconds} seconds. Retry left: ${_retry_counter}"
+                sleep ${_instance_check_sleep_seconds}
+              fi
+            done
+          else
+            echo " ⚠️ Instance '${_instance_name:?}' not ready after reboot!"
+          fi
+        fi
+      ||| % {
         destination_host: opts.destination_host,
-        post_command: std.stripChars(post_command, '\n'),
-      };
-    local generate_provisioning(opts) =
-      assert std.objectHas(opts, 'type');
-      assert std.objectHas(opts, 'destination_host');
-      if opts.type == 'file' then
-        file_provisioning(opts)
-      else if opts.type == 'inline-shell' then
-        inline_shell_provisioning(opts)
-      else error 'Invalid provisioning: %(opts.type)s';
+      }
+    else '';
+  |||
+    # - Start inline provisioning -
+    %(variables)s
+    %(pre_command)s
+    %(remote_script)s
+    %(post_command)s
+    # - End inline provisioning -
+  ||| % {
+    variables: std.stripChars(variables, '\n'),
+    pre_command: std.stripChars(pre_command, '\n'),
+    remote_script: ssh_exec('${destination_instance_username:?}', '${destination_instance_host:?}', script, '-q'),
+    post_command: std.stripChars(post_command, '\n'),
+  };
+
+local generate_provisioning(provisioning) =
+  assert std.objectHas(provisioning, 'type');
+  if provisioning.type == 'file' then
+    file_provisioning(provisioning)
+  else if provisioning.type == 'inline-shell' then
+    inline_shell_provisioning(provisioning)
+  else error 'Invalid provisioning: %s' % provisioning.type;
+
+local provision_instance(instance) =
+  assert std.isObject(instance);
+  if std.objectHas(instance, 'base_provisionings') then
+    assert std.objectHas(instance, 'hostname');
+    assert std.isArray(instance.base_provisionings) : 'base_provisionings MUST be an array';
+    local provisionings = [
+      provisioning { destination_host: instance.hostname }
+      for provisioning in instance.base_provisionings
+    ];
     shell_lines(std.map(
       func=generate_provisioning,
       arr=provisionings
     ))
   else '';
 
+local provision_instances(config) =
+  if std.objectHas(config, 'provisionings') then
+    assert std.isArray(config.provisionings) : 'provisionings MUST be an array';
+    shell_lines(std.map(
+      func=generate_provisioning,
+      arr=config.provisionings
+    ))
+  else '';
+
 // Exported functions
 {
   virtualmachines_bootstrap(config)::
+    assert std.objectHas(config, 'virtual_machines');
+    assert std.isArray(config.virtual_machines);
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -794,55 +965,6 @@ local provision_instances(config, provisionings) =
       if std.objectHas(config, 'base_provisionings') then
         config.base_provisionings
       else [];
-    local action_code = |||
-      echo "❌ Instance '${instance_name}' not found!"
-      exit 1
-    |||;
-    |||
-      #!/usr/bin/env bash
-      set -Eeuo pipefail
-
-      this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      instances_names_json=%(instances_names_json)s
-
-      echo "Checking instances"
-      %(instances_check)s
-      echo "Generating machines_config.json for ansible"
-      cat "${instances_catalog_file:?}" | \
-        jq --argjson instances_names_json "${instances_names_json}" \
-        '.list | [.[] | select(.name as $n | $instances_names_json | index($n))] as $instances | {list: $instances, network_interface: "default"}' \
-        > "${generated_files_path}/"%(ansible_inventory_path)s/machines_config.json
-      %(instances_provision)s
-    ||| % {
-      ansible_inventory_path: config.ansible_inventory_path,
-      instances_check: shell_lines([
-        check_instance_exist_do(config, instance, indent(action_code, '  '))
-        for instance in config.virtual_machines
-      ]),
-      instances_provision: provision_instances(config, provisionings),
-      instances_names_json: std.escapeStringBash(
-        std.manifestJsonMinified(instances)
-      ),
-    },
-  virtualmachines_provisioning(config)::
-    local provisionings =
-      if std.objectHas(config, 'app_provisionings') then
-        config.app_provisionings
-      else [];
-    |||
-      #!/usr/bin/env bash
-      set -Eeuo pipefail
-
-      this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-
-      echo "Provisioning instances"
-      %(instances_provision)s
-    ||| % {
-      instances_provision: provision_instances(config, provisionings),
-    },
-  virtualmachines_destroy(config)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'project_basefolder');
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -850,12 +972,56 @@ local provision_instances(config, provisionings) =
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
       generated_files_path="${_this_file_path}"
 
-      echo "Destroying instances"
+      %(project_config)s
 
+      echo "Generating machines_config.json for ansible"
+      cat "${instances_catalog_file:?}" > "${generated_files_path}/"%(ansible_inventory_path)s/machines_config.json
+      echo "Instances basic provisioning"
+      %(instances_provision)s
+    ||| % {
+      ansible_inventory_path: config.ansible_inventory_path,
+      project_config: project_config(config),
+      instances_provision: shell_lines([
+        provision_instance(instance)
+        for instance in config.virtual_machines
+      ]),
+    },
+  virtualmachines_provisioning(config)::
+    assert std.isObject(config);
+    local provisionings =
+      if std.objectHas(config, 'app_provisionings') then
+        assert std.isArray(config.app_provisionings);
+        config.app_provisionings
+      else [];
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      generated_files_path="${_this_file_path}"
+      %(project_config)s
+
+      echo "Provisioning instances"
+      %(instances_provision)s
+    ||| % {
+      instances_provision: provision_instances(config),
+      project_config: project_config(config),
+    },
+  virtualmachines_destroy(config)::
+    assert std.isObject(config);
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      generated_files_path="${_this_file_path}"
+
+      echo "Check instances"
       %(project_config)s
       %(instances_destroy)s
       echo "Deleting '${project_basefolder:?}'"
       rm -rfv "${project_basefolder:?}"
+      %(remove_network)s
       echo "✅ Deleting project '${project_name:?}' completed!"
     ||| % {
       project_config: project_config(config),
@@ -863,6 +1029,7 @@ local provision_instances(config, provisionings) =
         destroy_instance(config, instance)
         for instance in config.virtual_machines
       ]),
+      remove_network: remove_network(config),
     },
   virtualmachines_list(config)::
     assert std.isObject(config);
@@ -896,18 +1063,26 @@ local provision_instances(config, provisionings) =
         exit 1
       fi
 
-      this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      generated_files_path="${_this_file_path}"
+      %(project_config)s
 
-      instance_config=${instance_basefolder:?}/assets/instance_config.json
-      instance_ipv4=$(jq '.ipv4' --raw-output "${instance_config}")
-      instance_username=$(jq '.admin_username' --raw-output "${instance_config}")
+      instance_hostname=${1:?}
+      instance_username=$(jq --exit-status -r --arg host "${instance_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+      if [[ $_exit_code -ne 0 ]]; then
+        echo " ❌ Could not get 'username' for instance '${instance_hostname:?}'"
+        exit 1
+      fi
+      instance_host=$(jq --exit-status -r --arg host "${instance_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}")
+
+      echo "Connecting to '${instance_username:?}@${instance_host:?}'..."
 
       ssh \
         -o UserKnownHostsFile=/dev/null \
         -o StrictHostKeyChecking=no \
         -o IdentitiesOnly=yes \
         -i "${generated_files_path}/assets/.ssh/id_ed25519" \
-        ${instance_username:?}@${instance_ipv4:?}
+        ${instance_username:?}@${instance_host:?}
     ||| % {
       project_config: project_config(config),
       bash_utils: bash_utils(config),

@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-instances_generator_orchestrator=multipass
-architecture=amd64
+generator_orchestrator=multipass
+host_architecture=$(uname -m)
 
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 generated_path=generated
 project_generator_path="${project_path}/platform/instances-script-generator"
 generated_project_path="${project_generator_path}/${generated_path}"
-valid_architectures=( amd64 arm64 )
+valid_architectures=( amd64 x86_64 arm64 aarch64 )
 valid_orchestrators=( fake multipass vbox )
 
 __usage=$(
@@ -18,13 +18,15 @@ __usage=$(
 		$(tput setaf 3)$(tput bold)Manage instances provisioning.$(tput sgr0)
 
 		Options:
-		  -a, --all             $(tput setaf 8)Run all tasks to setup instances (in order: generate create setup provision)$(tput sgr0)
-		  -g, --generate        $(tput setaf 8)Generate setup scripts$(tput sgr0)
-		  -c, --create          $(tput setaf 8)Create instances$(tput sgr0)
-		  -s, --setup           $(tput setaf 8)Setup instances$(tput sgr0)
-		  -p, --provision       $(tput setaf 8)Provision instances$(tput sgr0)
-		  -d, --delete          $(tput setaf 8)Delete instances and local project data$(tput sgr0)
-		  -h, --help            $(tput setaf 8)This help$(tput sgr0)
+		  -a, --all                   $(tput setaf 8)Run all tasks to setup instances (in order: generate create setup provision)$(tput sgr0)
+		  -o, --orchestrator          $(tput setaf 8)Select orchestrator for instances management scripts generator (default: '${generator_orchestrator}')$(tput sgr0)
+		  -m, --machine-architecture  $(tput setaf 8)Host architecture (default: '${host_architecture}' using 'uname -m')$(tput sgr0)
+		  -g, --generate              $(tput setaf 8)Generate instances management scripts$(tput sgr0)
+		  -c, --create                $(tput setaf 8)Create instances using generated scripts$(tput sgr0)
+		  -s, --setup                 $(tput setaf 8)Setup instances using generated scripts$(tput sgr0)
+		  -p, --provision             $(tput setaf 8)Provision instances using generated scripts$(tput sgr0)
+		  -d, --delete                $(tput setaf 8)Delete instances and local project data using generated scripts$(tput sgr0)
+		  -h, --help                  $(tput setaf 8)This help$(tput sgr0)
 	HELPMSG
 )
 
@@ -62,15 +64,15 @@ generate_bootstrap_scripts() {
   else
     echo "Missing config.libsonnet"
     echo "Copying config.libsonnet.example to config.libsonnet"
-    cp "${project_generator_path}/config.libsonnet.${instances_generator_orchestrator}.example" "${project_generator_path}/config.libsonnet"
+    cp "${project_generator_path}/config.libsonnet.${generator_orchestrator}.example" "${project_generator_path}/config.libsonnet"
   fi
-  echo "Using orchestrator: $(tput bold)${instances_generator_orchestrator}$(tput sgr0)"
-  echo "Using architecture: $(tput bold)${architecture}$(tput sgr0)"
+  echo "Using orchestrator: $(tput bold)${generator_orchestrator}$(tput sgr0)"
+  echo "Using host_architecture: $(tput bold)${host_architecture}$(tput sgr0)"
   cd "${project_generator_path}"
   jsonnet --create-output-dirs \
     --multi "${generated_project_path}" \
-    --tla-str orchestrator_name="${instances_generator_orchestrator}" \
-    --ext-str architecture="${architecture}" \
+    --ext-str orchestrator_name="${generator_orchestrator}" \
+    --ext-str host_architecture="${host_architecture}" \
     --string instances.jsonnet
   chmod u+x "${generated_project_path}"/*.sh
 }
@@ -110,12 +112,12 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       provision=true
       ;;
     -o | --orchestrator)
-      instances_generator_orchestrator=( "${2?Missing argument for  -o | --orchestrator}" ) ;
+      generator_orchestrator=( "${2?Missing argument for  -o | --orchestrator}" ) ;
       shift
       shift
       ;;
-    -r | --architecture)
-      architecture=( "${2?Missing argument for  -r | --architecture}" ) ;
+    -m | --machine-architecture)
+      host_architecture=( "${2?Missing argument for  -m | --machine-architecture}" ) ;
       shift
       shift
       ;;
@@ -152,12 +154,12 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
   esac
 done
 
-if [[ ! " ${valid_architectures[*]} " =~ " ${architecture} " ]]; then
-  printf "$(tput setaf 1)Error: 'architecture' must be one of: $(tput bold)${valid_architectures[*]}$(tput sgr0)\n" >&2
+if [[ ! " ${valid_architectures[*]} " =~ " ${host_architecture} " ]]; then
+  printf "$(tput setaf 1)Error: 'host_architecture' must be one of: $(tput bold)${valid_architectures[*]}$(tput sgr0)\n" >&2
   exit 1
 fi
 
-if [[ ! " ${valid_orchestrators[*]} " =~ " ${instances_generator_orchestrator} " ]]; then
+if [[ ! " ${valid_orchestrators[*]} " =~ " ${generator_orchestrator} " ]]; then
   printf "$(tput setaf 1)Error: 'orchestrator' must be one of: $(tput bold)${valid_orchestrators[*]}$(tput sgr0)\n" >&2
   exit 1
 fi

@@ -24,22 +24,15 @@ local ansible_user =
     std.objectHas(config, 'ansible_ssh_authorized_keys')
     && std.isArray(config.ansible_ssh_authorized_keys)
     && std.length(config.ansible_ssh_authorized_keys) > 0;
-  local use_ssh_import_id =
-    std.objectHas(config, 'ansible_ssh_import_id')
-    && std.isArray(config.ansible_ssh_import_id)
-    && std.length(config.ansible_ssh_import_id) > 0;
   {
     username: 'ansible',
     is_admin: true,
     [if use_ssh_authorized_keys then 'ssh_authorized_keys']:
       config.ansible_ssh_authorized_keys,
-    [if use_ssh_import_id then 'ssh_import_id']:
-      config.ansible_ssh_import_id,
   };
 
 local add_default_machine_data(setup, instance) =
   assert std.isObject(setup);
-  assert std.objectHas(instance, 'hostname');
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
   {
@@ -106,14 +99,16 @@ local add_default_machine_data(setup, instance) =
           type: 'file',
           source_host: 'localhost',
           source: './assets/.ssh/id_ed25519.pub',
-          destination: '/home/ubuntu/.ssh/id_ed25519.pub',
+          destination: '/home/iamadmin/.ssh/id_ed25519.pub',
+          destination_owner: 'iamadmin',
           create_parents_dir: true,
         },
         {
           type: 'file',
           source_host: 'localhost',
           source: './assets/.ssh/id_ed25519',
-          destination: '/home/ubuntu/.ssh/id_ed25519',
+          destination: '/home/iamadmin/.ssh/id_ed25519',
+          destination_owner: 'iamadmin',
           create_parents_dir: true,
         },
         {
@@ -121,8 +116,10 @@ local add_default_machine_data(setup, instance) =
           script:
             |||
               set -Eeuo pipefail
-              sudo chown ubuntu /home/ubuntu/.ssh/id_*
-              sudo chmod u=rw,go= /home/ubuntu/.ssh/id_*
+              sudo chown iamadmin /home/iamadmin/.ssh
+              sudo chmod u=rw,go= /home/iamadmin/.ssh/id_ed25519
+              sudo chmod u=rw,go= /home/iamadmin/.ssh/id_ed25519.pub
+              export DEBIAN_FRONTEND="dialog"
               sudo apt-get install -y ansible
             |||,
         },
@@ -135,16 +132,12 @@ local add_default_machine_data(setup, instance) =
               source $HOME/.profile
               echo '# Generated file' > inventory/machines_ips
               cat inventory/machines_config.json \
-                | jq '.list | {all: {hosts: map({(.name|tostring): {ansible_host: .ipv4[0]}}) | add}}' \
+                | jq '.list | {all: {hosts: with_entries({key: .key, value: .value | with_entries(.key |= if . == "ipv4" then "ansible_host" else . end) })}}' \
                 | yq -P >> inventory/machines_ips
               echo '# Generated file' > inventory/group_vars/all/10-hosts
               cat inventory/machines_config.json \
-                | jq '.list | {named_hosts: map({(.name|tostring): .ipv4[0]}) | add}' \
+                | jq '.list | {named_hosts: .}' \
                 | yq -P >> inventory/group_vars/all/10-hosts
-              echo '# Generated file' > inventory/group_vars/all/90-config
-              cat inventory/machines_config.json \
-                | jq '.network_interface as $n | {network_interface_name: $n}' \
-                | yq -P >> inventory/group_vars/all/90-config
               ansible 'all' -m ping
             |||,
         },
@@ -189,7 +182,6 @@ local add_default_machine_data(setup, instance) =
     {
       type: 'inline-shell',
       destination_host: 'ansible-controller',
-      working_directory: '/ansible',
       script:
         |||
           set -Eeuo pipefail

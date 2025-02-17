@@ -15,7 +15,7 @@ ca_root_certs_path: "{{ base_certs_path }}/ca"
 ca_root_certs_timestamp: "1707244011"
 # Set do_not_log to true to hide sensitive data
 do_not_log: false
-dns_server_ip: "{{ named_hosts['ansible-controller'] }}"
+dns_server_ip: "{{ named_hosts['ansible-controller']['ipv4'] }}"
 bootstrap_network:
   internal_dns: true
   domains:
