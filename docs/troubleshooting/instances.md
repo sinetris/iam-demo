@@ -9,11 +9,17 @@
 
 ## Check networking
 
+Execute commands from a shell in an instance.
+
 ```sh
+# Get default gateway network interface
+network_interface=$(ip route | awk '/^default/ {print $5; exit}')
+echo ${network_interface:?}
+# Get interface MAC address
+cat "/sys/class/net/${network_interface:?}/address"
 # Check DNS resolver
 resolvectl status
 # Check DNS resolver for interface
-network_interface=enp0s1
 resolvectl status ${network_interface:?}
 # Check DNS resolution
 dig iam-control-plane.iam-demo.test
@@ -62,11 +68,8 @@ the sensitivity from the Firefox Advanced Preferences page.
 > This operation is now automated using Ansible and the `firefox_preferences`
 > variable to create the `/etc/firefox/defaults/pref/config-prefs.js` file in
 > the `linux-desktop` instance.\
-> After changing the value in `firefox_preferences` and replaying the playbook,
-> you need to restart Firefox.\
 > You can still use the following method to find the value that best suits your
-> needs, but changes will be lost when you restart Firefox because the `user.js`
-> entry will override it.
+> needs.
 
 - open a new tab in Firefox and enter `about:config` into the address bar to
   access Advanced Preferences
