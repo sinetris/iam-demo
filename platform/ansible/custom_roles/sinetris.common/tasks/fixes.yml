@@ -13,3 +13,5 @@
   failed_when:
     - chrony_restart_result.msg is defined
     - "'Could not find' not in chrony_restart_result.msg"
+  retries: 3
+  timeout: 5

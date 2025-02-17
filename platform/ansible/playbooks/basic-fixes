@@ -1,10 +1,12 @@
 ---
-- name: Try to fix hosts
+- name: Basic Fixes
   hosts: all
   gather_facts: true
   become: true
   tasks:
-    - name: Basic fixes
+    - name: Ensure correct host state
       ansible.builtin.include_role:
         name: sinetris.common
         tasks_from: fixes.yml
+  environment:
+    ANSIBLE_TASK_TIMEOUT: 120
