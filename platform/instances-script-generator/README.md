@@ -60,7 +60,7 @@ Generate admin password and ansible ssh keys:
 # Create a directory for the generated files
 mkdir -p generated/assets/.ssh
 # Create password hash
-instance_admin_password=iamadmin
+instance_admin_password=ubuntu
 openssl passwd -6 -salt $(openssl rand -base64 8) "${instance_admin_password}" > generated/assets/admin_password
 # Generate SSH keys for ansible
 ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f generated/assets/.ssh/id_ed25519 -q -N ""
