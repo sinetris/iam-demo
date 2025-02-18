@@ -27,8 +27,8 @@ vbox_instance_start_type=headless
 
 # - Instance settings -
 instance_name=testing-instance
-instance_username=iamadmin
-instance_password=iamadmin
+instance_username=ubuntu
+instance_password=ubuntu
 # Disk size in MB
 instance_storage_space=5120
 instance_cpus=1

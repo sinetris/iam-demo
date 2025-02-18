@@ -99,16 +99,16 @@ local add_default_machine_data(setup, instance) =
           type: 'file',
           source_host: 'localhost',
           source: './assets/.ssh/id_ed25519.pub',
-          destination: '/home/iamadmin/.ssh/id_ed25519.pub',
-          destination_owner: 'iamadmin',
+          destination: '/home/ubuntu/.ssh/id_ed25519.pub',
+          destination_owner: 'ubuntu',
           create_parents_dir: true,
         },
         {
           type: 'file',
           source_host: 'localhost',
           source: './assets/.ssh/id_ed25519',
-          destination: '/home/iamadmin/.ssh/id_ed25519',
-          destination_owner: 'iamadmin',
+          destination: '/home/ubuntu/.ssh/id_ed25519',
+          destination_owner: 'ubuntu',
           create_parents_dir: true,
         },
         {
@@ -116,9 +116,9 @@ local add_default_machine_data(setup, instance) =
           script:
             |||
               set -Eeuo pipefail
-              sudo chown iamadmin /home/iamadmin/.ssh
-              sudo chmod u=rw,go= /home/iamadmin/.ssh/id_ed25519
-              sudo chmod u=rw,go= /home/iamadmin/.ssh/id_ed25519.pub
+              sudo chown ubuntu /home/ubuntu/.ssh
+              sudo chmod u=rw,go= /home/ubuntu/.ssh/id_ed25519
+              sudo chmod u=rw,go= /home/ubuntu/.ssh/id_ed25519.pub
               export DEBIAN_FRONTEND="dialog"
               sudo apt-get install -y ansible
             |||,

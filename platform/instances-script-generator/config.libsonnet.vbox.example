@@ -9,7 +9,7 @@
   ansible_inventory_path: self.ansible_files_path + '/inventory',
   // Files path relative to 'generated' directory
   kubernetes_files_path: '../../../kubernetes',
-  admin_username: 'iamadmin',
+  admin_username: 'ubuntu',
   admin_password: std.stripChars(importstr 'generated/assets/admin_password', '\n'),
   admin_ssh_authorized_keys: self.ansible_ssh_authorized_keys,
   admin_ssh_import_id: [
