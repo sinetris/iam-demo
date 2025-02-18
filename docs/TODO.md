@@ -319,8 +319,8 @@ section in [Kubernetes development tips](development/kubernetes.md).
     - [ ] add `ansible_controller_user` to `inventory/group_vars/all`
     - [ ] add `ansible_user` to `inventory/instances_config`
     - [ ] change occurrences of `iamadmin` to `%(admin_username)s` (requires templating)
-- [ ] disable automated suspend for `linux-desktop`
-  - [ ] modify `/etc/systemd/sleep.conf`
+- [x] disable automated suspend for `linux-desktop`
+  - [x] modify `/etc/systemd/sleep.conf`
 
     ```ini
     [Sleep]
@@ -339,7 +339,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
     sed -i 's/^#\?AllowHybridSleep=.*/AllowHybridSleep=no/' /etc/systemd/sleep.conf
     ```
 
-  - [ ] set `sleep-inactive-ac-timeout` to `0`
+  - [x] set `sleep-inactive-ac-timeout` to `0`
 
     ```sh
     sudo -u lightdm /bin/bash <<-'END'
