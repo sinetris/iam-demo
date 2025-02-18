@@ -12,6 +12,8 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         assert std.isArray(instance.tags);
         instance.tags
       else [];
+    local instance_users = addArrayIf(std.objectHas(instance, 'users'), instance.users);
+    local instance_users_usernames = std.uniq(std.sort(['ubuntu'] + [user.username for user in instance_users]));
     local is_desktop = std.member(tags, 'desktop');
     local is_vnc_server = std.member(tags, 'vnc-server');
     local is_rdp_server = std.member(tags, 'rdpserver');
@@ -61,7 +63,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
             && std.isArray(user.ssh_authorized_keys) then 'ssh_authorized_keys']:
           user.ssh_authorized_keys,
       };
-    local runcmd_for_user(username) =
+    local runcmd_fix_home_for_user(username) =
       local home_path = '/home/' + username;
       local ownership = username + ':' + username;
       [
@@ -69,6 +71,13 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         ['chown', '-R', ownership, home_path + '/bin'],
         ['mkdir', '-p', home_path + '/.local/bin'],
         ['chown', '-R', ownership, home_path + '/.local'],
+      ];
+    local runcmd_fix_gsettings_for_user(username) =
+      [
+        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'com.canonical.unity.settings-daemon.plugins.power'],
+        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'org.gnome.settings-daemon.plugins.power'],
+        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'org.gnome.desktop.session'],
+        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'org.gnome.desktop.screensaver'],
       ];
     local write_files() = [
       {
@@ -78,7 +87,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         |||,
         permissions: '0o640',
       },
-    ] + if is_desktop then [
+    ] + addArrayIf(is_desktop, [
       {
         path: '/etc/skel/.xsession',
         content: |||
@@ -86,7 +95,30 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         |||,
         permissions: '0o640',
       },
-    ] else [] + if is_vnc_server then [
+      {
+        path: '/usr/share/glib-2.0/schemas/certification.gschema.override',
+        content: |||
+          [com.canonical.unity.settings-daemon.plugins.power]
+          sleep-inactive-ac-timeout=0
+          sleep-inactive-battery-timeout=0
+          sleep-inactive-battery-type='nothing'
+          sleep-inactive-ac-type='nothing'
+          idle-dim=false
+          [org.gnome.settings-daemon.plugins.power]
+          sleep-inactive-ac-timeout=0
+          sleep-inactive-battery-timeout=0
+          sleep-inactive-battery-type='nothing'
+          sleep-inactive-ac-type='nothing'
+          idle-dim=false
+          [org.gnome.desktop.session]
+          idle-delay=0
+          [org.gnome.desktop.screensaver]
+          ubuntu-lock-on-suspend=false
+          lock-enabled=false
+          idle-activation-enabled=false
+        |||,
+      },
+    ]) + addArrayIf(is_vnc_server, [
       {
         path: '/lib/systemd/system/x11vnc.service',
         content: |||
@@ -108,7 +140,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         |||,
         permissions: '0o644',
       },
-    ] else [];
+    ]);
 
     local manifest = {
       hostname: instance.hostname,
@@ -124,7 +156,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         devices: ['/'],
         ignore_growroot_disabled: false,
       },
-      users: ['default'] + [user_mapping(user) for user in instance.users],
+      users: ['default'] + [user_mapping(user) for user in instance_users],
       apt: {
         // APT config
         conf: |||
@@ -149,6 +181,8 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'wget',
         'snapd',
         'openssh-server',
+        'libpam-systemd',
+        'dbus',
         'vim',
         'apt-transport-https',
         'gnupg2',
@@ -185,9 +219,18 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         ['x11vnc', '-storepasswd', 'iamdemo', '/etc/x11vnc.passwd'],
         ['systemctl', 'enable', 'x11vnc'],
         ['service', 'x11vnc', 'restart'],
-      ]) + std.flatMap(
-        runcmd_for_user,
-        ['ubuntu'] + [user.username for user in instance.users]
+      ]) + addArrayIf(is_desktop, [
+        ['sed -i', 's/^#\\?AllowSuspend=.*/AllowSuspend=no/', '/etc/systemd/sleep.conf'],
+        ['sed -i', 's/^#\\?AllowHibernation=.*/AllowHibernation=no/', '/etc/systemd/sleep.conf'],
+        ['sed -i', 's/^#\\?AllowSuspendThenHibernate=.*/AllowSuspendThenHibernate=no/', '/etc/systemd/sleep.conf'],
+        ['sed -i', 's/^#\\?AllowHybridSleep=.*/AllowHybridSleep=no/', '/etc/systemd/sleep.conf'],
+        ['glib-compile-schemas', '/usr/share/glib-2.0/schemas'],
+      ] + std.flatMap(
+        runcmd_fix_gsettings_for_user,
+        ['lightdm'] + instance_users_usernames
+      )) + std.flatMap(
+        runcmd_fix_home_for_user,
+        instance_users_usernames
       ),
       write_files: write_files(),
       final_message: |||
