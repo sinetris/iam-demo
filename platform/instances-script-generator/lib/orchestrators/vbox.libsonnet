@@ -677,9 +677,9 @@ local create_instance(config, instance) =
       fi
     done
     if ${_instance_check_ssh_success}; then
-      echo "✅ Instance is ready!"
+      echo "✅ Instance '${instance_name:?}' is ready!"
     else
-      echo "⚠️ Instance not ready. - Skipping!"
+      echo "⚠️ Instance '${instance_name:?}' not ready. - Skipping!"
     fi
   ||| % {
     instance_config: instance_config(config, instance),
@@ -862,7 +862,7 @@ local inline_shell_provisioning(opts) =
             fi
           done
           if ${_instance_check_success:?}; then
-            VBoxManage controlvm '${_instance_name:?}' reboot
+            VBoxManage controlvm "${_instance_name:?}" reboot || echo echo " ⚠️ Failed reboot for instance '${_instance_name:?}'!"
             _instance_check_success=false
             for _retry_counter in $(seq ${_instance_check_etries:?} 1); do
               _instance_status=$(VBoxManage showvminfo "${_instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
@@ -893,7 +893,12 @@ local inline_shell_provisioning(opts) =
   ||| % {
     variables: std.stripChars(variables, '\n'),
     pre_command: std.stripChars(pre_command, '\n'),
-    remote_script: ssh_exec('${destination_instance_username:?}', '${destination_instance_host:?}', script, '-q'),
+    remote_script: ssh_exec(
+      '${destination_instance_username:?}',
+      '${destination_instance_host:?}',
+      script,
+      '-q -o ServerAliveInterval=5 -o ServerAliveCountMax=3'
+    ),
     post_command: std.stripChars(post_command, '\n'),
   };
 
