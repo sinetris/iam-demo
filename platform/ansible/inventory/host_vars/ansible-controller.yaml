@@ -9,7 +9,6 @@ python_libraries:
 k3s_copy_cluster_config:
   - name: iam-demo-tech
     users:
-      - iamadmin
       - ubuntu
 bind9_only_ipv4: true
 bind9_listen_on_ipv4:

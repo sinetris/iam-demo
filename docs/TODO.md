@@ -54,9 +54,6 @@ The documentation should:
 
 ### Project scope
 
-This project is an implementation example of what will be defined in
-[sinetris/iam-introduction](https://github.com/sinetris/iam-introduction).
-
 Add an overview and place the tools used in the appropriate sub-set.
 
 Clarify that the tools selected are only used for the sake of semplicity (and
@@ -245,8 +242,8 @@ section in [Kubernetes development tips](development/kubernetes.md).
 
 - [x] rename `bunch-up` to `project-management`
 - [ ] change `instances-script-generator`
+  - [x] move generated scripts default path to project root
   - [ ] rename folder to `project-script-generator`
-  - [ ] move generated scripts default path to project root
   - [ ] generate `config/project.sh` (or `.env` file)
   - [ ] add script to show project generator config (`project-generator-config.sh`)
   - [ ] change `virtualmachines_destroy`
@@ -318,7 +315,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
     - [ ] rename `machines_ips` to `instances_config`
     - [ ] add `ansible_controller_user` to `inventory/group_vars/all`
     - [ ] add `ansible_user` to `inventory/instances_config`
-    - [ ] change occurrences of `iamadmin` to `%(admin_username)s` (requires templating)
+    - [ ] change occurrences of `ubuntu` user to `%(admin_username)s` (requires templating)
 - [x] disable automated suspend for `linux-desktop`
   - [x] modify `/etc/systemd/sleep.conf`
 

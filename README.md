@@ -231,7 +231,7 @@ exec $SHELL
 Open a terminal to generate the ssh keys.
 
 ```sh
-ssh-keygen -t ed25519 -C "iamadmin@iam-demo.test"
+ssh-keygen -t ed25519 -C "ubuntu@iam-demo.test"
 ```
 
 Open a [Forgejo](https://git.iam-demo.test) in a browser and login using the

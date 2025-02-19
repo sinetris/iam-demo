@@ -69,16 +69,27 @@ ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f generated/assets/.ssh/id_e
 Generate instances management scripts:
 
 ```sh
+# Set the project root path
+project_root_path="$(cd ../../ && pwd)"
+# Set the project generator path
+project_generator_path="$(pwd)"
+# Set the path for the generated files
+generated_files_path="${project_root_path:?}/generated"
 # Set the Orchestrator to be used in the Instances Generator script
-instances_generator_orchestrator=multipass
+generator_orchestrator=multipass
 # Use 'arm64' for Apple silicon processors or 'amd64' for Intel and AMD 64bit CPUs
 host_architecture=arm64
-cp config.libsonnet.${instances_generator_orchestrator}.example config.libsonnet
+cp config/config.libsonnet.${generator_orchestrator}.example config/config.libsonnet
 jsonnet --create-output-dirs \
---multi ./generated \
---tla-str orchestrator_name="${instances_generator_orchestrator}" \
---ext-str architecture="${host_architecture}" \
---string virtual-machines.jsonnet
+  --multi "${generated_files_path}" \
+  --ext-str project_path="${project_root_path}" \
+  --ext-str orchestrator_name="${generator_orchestrator}" \
+  --ext-str host_architecture="${host_architecture}" \
+  --jpath "${project_root_path}" \
+  --jpath "${project_generator_path}" \
+  --jpath "${project_generator_path}/config" \
+  --string "${project_generator_path}/instances.jsonnet"
+chmod u+x "${generated_files_path}"/*.sh
 ```
 
 ## Manage instances
