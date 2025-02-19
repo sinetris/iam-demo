@@ -3,11 +3,12 @@ set -Eeuo pipefail
 
 generator_orchestrator=multipass
 host_architecture=$(uname -m)
+instance_admin_password=ubuntu
 
 project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 generated_path=generated
 project_generator_path="${project_path}/platform/instances-script-generator"
-generated_project_path="${project_generator_path}/${generated_path}"
+generated_project_path="${project_path}/${generated_path}"
 valid_architectures=( amd64 x86_64 arm64 aarch64 )
 valid_orchestrators=( fake multipass vbox )
 
@@ -59,21 +60,31 @@ generate_ansible_ssh_keys() {
 
 generate_bootstrap_scripts() {
   check_dependency 'jsonnet'
-  if [ -f "${project_generator_path}/config.libsonnet" ]; then
+  if [ -f "${project_generator_path}/config/config.libsonnet" ]; then
     echo "Using existing $(tput bold)config.libsonnet$(tput sgr0) ✅"
   else
     echo "Missing config.libsonnet"
-    echo "Copying config.libsonnet.example to config.libsonnet"
-    cp "${project_generator_path}/config.libsonnet.${generator_orchestrator}.example" "${project_generator_path}/config.libsonnet"
+    echo "Copying config.libsonnet.${generator_orchestrator}.example to config.libsonnet"
+    cp "${project_generator_path}/config/config.libsonnet.${generator_orchestrator}.example" "${project_generator_path}/config/config.libsonnet"
+  fi
+  if [ -f "${generated_project_path}/assets/admin_password" ]; then
+    echo "Using existing password from $(tput bold)${generated_project_path}/assets/admin_password$(tput sgr0) ✅"
+  else
+    echo "Generating password in $(tput bold)${generated_project_path}/assets/admin_password$(tput sgr0)"
+    openssl passwd -6 -salt $(openssl rand -base64 8) "${instance_admin_password}" > "${generated_project_path}/assets/admin_password"
   fi
   echo "Using orchestrator: $(tput bold)${generator_orchestrator}$(tput sgr0)"
   echo "Using host_architecture: $(tput bold)${host_architecture}$(tput sgr0)"
-  cd "${project_generator_path}"
+  # cd "${project_generator_path}"
   jsonnet --create-output-dirs \
     --multi "${generated_project_path}" \
+    --ext-str project_path="${project_path}" \
     --ext-str orchestrator_name="${generator_orchestrator}" \
     --ext-str host_architecture="${host_architecture}" \
-    --string instances.jsonnet
+    --jpath "${project_path}" \
+    --jpath "${project_generator_path}" \
+    --jpath "${project_generator_path}/config" \
+    --string "${project_generator_path}/instances.jsonnet"
   chmod u+x "${generated_project_path}"/*.sh
 }
 

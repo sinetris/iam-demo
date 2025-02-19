@@ -104,6 +104,8 @@ local generic_project_config(config) =
   assert std.objectHas(config, 'project_domain');
   assert std.objectHas(config, 'projects_folder');
   assert std.objectHas(config, 'project_basefolder');
+  assert std.objectHas(config, 'project_path');
+  assert std.objectHas(config, 'project_generator_path');
   assert std.objectHas(config, 'os_release_codename');
   assert std.objectHas(config, 'host_architecture');
   |||
@@ -112,6 +114,8 @@ local generic_project_config(config) =
     project_domain="${project_name:?}.test"
     projects_folder=%(projects_folder)s
     project_basefolder="%(project_basefolder)s"
+    project_path="%(project_path)s"
+    project_generator_path="%(project_generator_path)s"
     os_release_codename=%(os_release_codename)s
     host_architecture=%(host_architecture)s
     host_public_key_file=~/.ssh/id_ed25519.pub
@@ -123,6 +127,8 @@ local generic_project_config(config) =
     project_domain: config.project_domain,
     projects_folder: config.projects_folder,
     project_basefolder: config.project_basefolder,
+    project_path: config.project_path,
+    project_generator_path: config.project_generator_path,
     os_release_codename: config.os_release_codename,
     host_architecture: config.host_architecture,
   };
@@ -426,13 +432,13 @@ local create_instance(config, instance) =
   |||
     %(instance_config)s
     echo "⚙️ Creating Instance '${instance_name:?}' ..."
-    vbox_os_mapping_file="${_this_file_path}/../assets/vbox_os_mapping.json"
-    vbox_instance_ostype=$(jq -L "${_this_file_path}/../lib/jq/modules" \
+    vbox_os_mapping_file="${project_generator_path:?}/assets/vbox_os_mapping.json"
+    vbox_instance_ostype=$(jq -L "${project_generator_path:?}/lib/jq/modules" \
       --arg architecture "${vbox_architecture:?}" \
       --arg os_release "${os_release_codename:?}" \
       --arg select_field "os_type" \
       --raw-output \
-      --from-file "${_this_file_path}/../lib/jq/filrters/get_vbox_mapping_value.jq" \
+      --from-file "${project_generator_path:?}/lib/jq/filrters/get_vbox_mapping_value.jq" \
       "${vbox_os_mapping_file:?}" 2>&1) && _exit_code=$? || _exit_code=$?
 
     if [[ $_exit_code -ne 0 ]]; then
@@ -441,12 +447,12 @@ local create_instance(config, instance) =
       exit 2
     fi
 
-    os_release_file=$(jq -L "${_this_file_path}/../lib/jq/modules" \
+    os_release_file=$(jq -L "${project_generator_path:?}/lib/jq/modules" \
       --arg architecture "${vbox_architecture:?}" \
       --arg os_release "${os_release_codename:?}" \
       --arg select_field "os_release_file" \
       --raw-output \
-      --from-file "${_this_file_path}/../lib/jq/filrters/get_vbox_mapping_value.jq" \
+      --from-file "${project_generator_path:?}/lib/jq/filrters/get_vbox_mapping_value.jq" \
       "${vbox_os_mapping_file:?}" 2>&1) && _exit_code=$? || _exit_code=$?
 
     if [[ $_exit_code -ne 0 ]]; then
@@ -980,7 +986,7 @@ local provision_instances(config) =
       %(project_config)s
 
       echo "Generating machines_config.json for ansible"
-      cat "${instances_catalog_file:?}" > "${generated_files_path}/"%(ansible_inventory_path)s/machines_config.json
+      cat "${instances_catalog_file:?}" > "${project_path}/"%(ansible_inventory_path)s/machines_config.json
       echo "Instances basic provisioning"
       %(instances_provision)s
     ||| % {
