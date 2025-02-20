@@ -104,7 +104,7 @@ local generic_project_config(config) =
   assert std.objectHas(config, 'project_domain');
   assert std.objectHas(config, 'projects_folder');
   assert std.objectHas(config, 'project_basefolder');
-  assert std.objectHas(config, 'project_path');
+  assert std.objectHas(config, 'project_root_path');
   assert std.objectHas(config, 'project_generator_path');
   assert std.objectHas(config, 'os_release_codename');
   assert std.objectHas(config, 'host_architecture');
@@ -114,7 +114,7 @@ local generic_project_config(config) =
     project_domain="${project_name:?}.test"
     projects_folder=%(projects_folder)s
     project_basefolder="%(project_basefolder)s"
-    project_path="%(project_path)s"
+    project_root_path="%(project_root_path)s"
     project_generator_path="%(project_generator_path)s"
     os_release_codename=%(os_release_codename)s
     host_architecture=%(host_architecture)s
@@ -127,14 +127,14 @@ local generic_project_config(config) =
     project_domain: config.project_domain,
     projects_folder: config.projects_folder,
     project_basefolder: config.project_basefolder,
-    project_path: config.project_path,
+    project_root_path: config.project_root_path,
     project_generator_path: config.project_generator_path,
     os_release_codename: config.os_release_codename,
     host_architecture: config.host_architecture,
   };
 // end: bash-utils
 
-local ssh_exec(username, host, script, options='-q') =
+local ssh_exec(username, host, script, options='-q -o ServerAliveInterval=120 -o ServerAliveCountMax=3') =
   |||
     ssh %(options)s \
       -o UserKnownHostsFile=/dev/null \
@@ -359,15 +359,13 @@ local instance_config(config, instance) =
   local instence_memory = std.get(instance, 'memory', '1024');
   local instance_vram = std.get(instance, 'vram', '64');
   local instance_username = std.get(instance, 'admin_username', 'admin');
-  local instance_password = std.get(instance, 'admin_password_plain', 'password');
   local instance_timeout = std.get(instance, 'timeout', '300');
   local instance_check_ssh_retries = std.get(instance, 'check_ssh_retries', '10');
-  local instance_check_sleep_time_seconds = std.get(instance, 'check_sleep_time_seconds', '2');
+  local instance_check_sleep_time_seconds = std.get(instance, 'check_sleep_time_seconds', '5');
   |||
     # - Instance settings -
     instance_name=%(instance_hostname)s
     instance_username=%(instance_username)s
-    instance_password=%(instance_password)s
     # Disk size in MB
     instance_storage_space=%(instance_storage_space)s
     instance_cpus=%(instance_cpus)s
@@ -381,14 +379,11 @@ local instance_config(config, instance) =
     instance_basefolder="%(instance_basefolder)s"
     instance_cidata_files_path=${instance_basefolder:?}/cidata
     instance_cidata_iso_file="${instance_basefolder:?}/disks/${instance_name:?}-cidata.iso"
-    instance_password_file="${instance_basefolder:?}/assets/admin-password-plain"
-    instance_password_hash_file="${instance_basefolder:?}/assets/admin-password-hash"
     vbox_instance_disk_file="${instance_basefolder:?}/disks/${instance_name:?}-boot-disk.vdi"
     instance_config=${instance_basefolder:?}/assets/instance_config.json
   ||| % {
     instance_hostname: instance.hostname,
     instance_username: instance_username,
-    instance_password: instance_password,
     instance_basefolder: instance.basefolder,
     instance_cpus: instance_cpus,
     instance_storage_space: instance_storage_space,
@@ -473,9 +468,6 @@ local create_instance(config, instance) =
       mkdir -pv "${os_images_path:?}"
       curl --output "${os_image_path:?}" "${os_image_url:?}"
     fi
-    echo "${instance_password:?}" > "${instance_password_file:?}"
-    openssl passwd -6 -salt $(openssl rand -base64 8) "${instance_password}" > "${instance_password_hash_file:?}"
-    _instance_password_hash=$(cat "${instance_password_hash_file:?}")
     _instance_public_key=$(cat "${host_public_key_file:?}")
     echo " - Create cloud-init configuration"
     # MAC Addresses in cloud-init network config (six octects, lowercase, separated by colon)
@@ -633,17 +625,31 @@ local create_instance(config, instance) =
 
     echo "Wait for instance IPv4 or error on timeout after ${instance_check_timeout_seconds} seconds..."
 
-    _cmd_status=$(VBoxManage guestproperty wait \
-      "${instance_name:?}" \
-      "${_vbox_lab_nic_ipv4_property:?}" \
-      --timeout $((instance_check_timeout_seconds * 1000)) --fail-on-timeout 2>&1) && _exit_code=$? || _exit_code=$?
+    _start_time=$SECONDS
+    _instance_ipv4=""
+    _command_success=false
+    _seconds_to_timeout=$instance_check_timeout_seconds
+    until $_command_success; do
+      if (( _seconds_to_timeout <= 0 )); then
+        echo "⚠️ VirtualBox instance '${instance_name:?}' check timeout!"  >&2
+        exit 1
+      fi
+      _cmd_status=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_nic_ipv4_property:?}" 2>&1) \
+        && _exit_code=$? || _exit_code=$?
 
-    if [[ $_exit_code -ne 0 ]]; then
-      echo "Error: $_cmd_status!"  >&2
-      exit 2
-    else
-      _instance_ipv4=$(echo $_cmd_status | perl -nle'print for /value: \K.+(?=, flags:)/g')
-    fi
+      if [[ $_exit_code -ne 0 ]]; then
+        echo "⚠️ Error in VBoxManage for 'guestproperty get ${instance_name:?} ${_vbox_lab_nic_ipv4_property:?}'"  >&2
+        exit 2
+      elif [[ "$_cmd_status" =~ 'No value set!' ]]; then
+        echo "💤 Not ready yet! Retry in: ${instance_check_sleep_time_seconds}s - Timeout in: ${_seconds_to_timeout}s"
+        sleep ${instance_check_sleep_time_seconds}
+      else
+        echo "✅ Instance '${instance_name:?}' network ready!"
+        _command_success=true
+        _instance_ipv4=$(echo "$_cmd_status" | awk '{print $2}')
+      fi
+      (( _seconds_to_timeout = instance_check_timeout_seconds - (SECONDS - _start_time)))
+    done
 
     echo "Instance IPv4: ${_instance_ipv4:?}"
     instance_config=${instance_basefolder:?}/assets/instance_config.json
@@ -651,6 +657,7 @@ local create_instance(config, instance) =
     _vbox_lab_nic_name_property="/VirtualBox/GuestInfo/Net/${_vbox_lab_nic_id:?}/Name"
     _instance_nic_name=$(VBoxManage guestproperty get "${instance_name:?}" "${_vbox_lab_nic_name_property:?}" | awk '{print $2}' 2>&1)
 
+    echo "Configuring instance catalog for '${instance_name:?}'..."
     PROJECT_TMP_FILE="$(mktemp)"
     jq --indent 2 \
       --arg host "${instance_name:?}" \
@@ -660,7 +667,8 @@ local create_instance(config, instance) =
       --arg admin_username "${instance_username:?}" \
       '.list += {($host): {ipv4: $ip, mac_address: $macaddr, network_interface_name: $nic, network_interface_netplan_name: $nic, admin_username: $admin_username}}' \
       "${instances_catalog_file:?}" \
-      > "$PROJECT_TMP_FILE" && mv "$PROJECT_TMP_FILE" "${instances_catalog_file:?}"
+      > "$PROJECT_TMP_FILE"
+    mv "$PROJECT_TMP_FILE" "${instances_catalog_file:?}"
     echo "Wait for cloud-init to complete..."
 
     _instance_command='sudo cloud-init status --wait --long'
@@ -743,35 +751,39 @@ local file_provisioning(opts) =
       }
     else '';
   local variables =
-    (if is_remote_source then
-       |||
-         source_hostname=%(host)s
-         source_instance_username=$(jq -r --arg host "${source_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
-         if [[ $_exit_code -ne 0 ]]; then
-           echo " ❌ Could not get 'admin_username' for instance '${source_hostname:?}'"
-           exit 2
-         fi
-         source_instance_host=$(jq -r --arg host "${source_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
-         if [[ $_exit_code -ne 0 ]]; then
-           echo " ❌ Could not get 'ipv4' for instance '${source_hostname:?}'"
-           exit 2
-         fi
-       ||| % { host: opts.source_host }
-     else '') + (if is_remote_destination then
-                   |||
-                     destination_hostname=%(host)s
-                     destination_instance_username=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
-                     if [[ $_exit_code -ne 0 ]]; then
-                       echo " ❌ Could not get 'admin_username' for instance '${destination_hostname:?}'"
-                       exit 2
-                     fi
-                     destination_instance_host=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
-                     if [[ $_exit_code -ne 0 ]]; then
-                       echo " ❌ Could not get 'ipv4' for instance '${destination_hostname:?}'"
-                       exit 2
-                     fi
-                   ||| % { host: opts.destination_host }
-                 else '');
+    (
+      if is_remote_source then
+        |||
+          source_hostname=%(host)s
+          source_instance_username=$(jq -r --arg host "${source_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+          if [[ $_exit_code -ne 0 ]]; then
+            echo " ❌ Could not get 'admin_username' for instance '${source_hostname:?}'"
+            exit 2
+          fi
+          source_instance_host=$(jq -r --arg host "${source_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+          if [[ $_exit_code -ne 0 ]]; then
+            echo " ❌ Could not get 'ipv4' for instance '${source_hostname:?}'"
+            exit 2
+          fi
+        ||| % { host: opts.source_host }
+      else ''
+    ) + (
+      if is_remote_destination then
+        |||
+          destination_hostname=%(host)s
+          destination_instance_username=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+          if [[ $_exit_code -ne 0 ]]; then
+            echo " ❌ Could not get 'admin_username' for instance '${destination_hostname:?}'"
+            exit 2
+          fi
+          destination_instance_host=$(jq -r --arg host "${destination_hostname:?}" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+          if [[ $_exit_code -ne 0 ]]; then
+            echo " ❌ Could not get 'ipv4' for instance '${destination_hostname:?}'"
+            exit 2
+          fi
+        ||| % { host: opts.destination_host }
+      else ''
+    );
   local copy_file =
     (if is_remote_source || is_remote_destination then
        |||
@@ -986,7 +998,7 @@ local provision_instances(config) =
       %(project_config)s
 
       echo "Generating machines_config.json for ansible"
-      cat "${instances_catalog_file:?}" > "${project_path}/"%(ansible_inventory_path)s/machines_config.json
+      cat "${instances_catalog_file:?}" > "${project_root_path}/"%(ansible_inventory_path)s/machines_config.json
       echo "Instances basic provisioning"
       %(instances_provision)s
     ||| % {

@@ -1,12 +1,12 @@
 // Run the following command to generate files:
-// project_path=$(cd ../../ && pwd)
-// project_generator_path="${project_path:?}/platform/instances-script-generator"
+// project_root_path=$(cd ../../ && pwd)
+// project_generator_path="${project_root_path:?}/platform/instances-script-generator"
 // jsonnet --create-output-dirs \
-//   --multi "${project_path:?}/generated" \
-//   --ext-str project_path="${project_path:?}" \
+//   --multi "${project_root_path:?}/generated" \
+//   --ext-str project_root_path="${project_root_path:?}" \
 //   --ext-str orchestrator_name="multipass" \
 //   --ext-str host_architecture="amd64" \
-//   --jpath "${project_path:?}" \
+//   --jpath "${project_root_path:?}" \
 //   --jpath "${project_generator_path}" \
 //   --string "${project_generator_path}/instances.jsonnet"
 local setup = import 'setup.libsonnet';

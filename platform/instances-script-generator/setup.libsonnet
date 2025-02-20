@@ -13,7 +13,8 @@ local admin_user =
   {
     username: config.admin_username,
     is_admin: true,
-    password: config.admin_password,
+    [if std.objectHas(config, 'admin_passwd') then 'passwd']: config.admin_passwd,
+    [if std.objectHas(config, 'admin_plain_text_passwd') then 'plain_text_passwd']: config.admin_plain_text_passwd,
     [if use_ssh_authorized_keys then 'ssh_authorized_keys']:
       config.admin_ssh_authorized_keys,
     [if use_ssh_import_id then 'ssh_import_id']:
@@ -69,8 +70,8 @@ local add_default_machine_data(setup, instance) =
   project_domain: config.base_domain,
   host_architecture: std.extVar('host_architecture'),
   orchestrator_name: std.extVar('orchestrator_name'),
-  project_path: std.extVar('project_path'),
-  project_generator_path: self.project_path + '/platform/instances-script-generator',
+  project_root_path: std.extVar('project_root_path'),
+  project_generator_path: self.project_root_path + '/platform/instances-script-generator',
   projects_folder: '$HOME/.local/projects',
   project_basefolder: self.projects_folder + '/' + self.project_name,
   os_release_codename: 'noble',
@@ -85,11 +86,11 @@ local add_default_machine_data(setup, instance) =
       memory: '2048',
       mounts+: [
         {
-          host_path: '${project_path:?}/' + config.ansible_files_path,
+          host_path: '${project_root_path:?}/' + config.ansible_files_path,
           guest_path: '/ansible',
         },
         {
-          host_path: '${project_path:?}/' + config.kubernetes_files_path,
+          host_path: '${project_root_path:?}/' + config.kubernetes_files_path,
           guest_path: '/kubernetes',
         },
       ],
@@ -164,6 +165,7 @@ local add_default_machine_data(setup, instance) =
         'rdpserver',
         'desktop',
       ],
+      install_recommends: true,
       users+: [ansible_user],
     }),
   ],
