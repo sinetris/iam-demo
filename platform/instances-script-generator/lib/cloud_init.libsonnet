@@ -15,7 +15,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     local instance_users = addArrayIf(std.objectHas(instance, 'users'), instance.users);
     local instance_users_usernames = std.uniq(std.sort(['ubuntu'] + [user.username for user in instance_users]));
     local is_desktop = std.member(tags, 'desktop');
-    local is_vnc_server = std.member(tags, 'vnc-server');
+    local install_recommends = std.get(instance, 'install_recommends', false);
     local is_rdp_server = std.member(tags, 'rdpserver');
     local is_ansible_controller = std.member(tags, 'ansible-controller');
     local is_vbox = config.orchestrator_name == 'vbox';
@@ -72,13 +72,6 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         ['mkdir', '-p', home_path + '/.local/bin'],
         ['chown', '-R', ownership, home_path + '/.local'],
       ];
-    local runcmd_fix_gsettings_for_user(username) =
-      [
-        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'com.canonical.unity.settings-daemon.plugins.power'],
-        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'org.gnome.settings-daemon.plugins.power'],
-        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'org.gnome.desktop.session'],
-        ['sudo', '-u', username, '-H', 'gsettings', 'reset-recursively', 'org.gnome.desktop.screensaver'],
-      ];
     local write_files() = [
       {
         path: '/var/local/.test',
@@ -118,28 +111,6 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
           idle-activation-enabled=false
         |||,
       },
-    ]) + addArrayIf(is_vnc_server, [
-      {
-        path: '/lib/systemd/system/x11vnc.service',
-        content: |||
-          [Unit]
-          Description=VNC service
-          Requires=display-manager.service
-          After=display-manager.service
-
-          [Service]
-          Type=forking
-          ExecStart=/usr/bin/x11vnc -forever -noxrecord -auth guess -rfbauth /etc/x11vnc.passwd
-          # /usr/bin/x11vnc -display :0 -noxrecord -noxfixes -noxdamage -auth guess -rfbauth /etc/x11vnc.passwd
-          ExecStop=/usr/bin/killall x11vnc
-          Restart=on-failure
-          RestartSec=10
-
-          [Install]
-          WantedBy=multi-user.target
-        |||,
-        permissions: '0o644',
-      },
     ]);
 
     local manifest = {
@@ -156,7 +127,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         devices: ['/'],
         ignore_growroot_disabled: false,
       },
-      users: ['default'] + [user_mapping(user) for user in instance_users],
+      users: [user_mapping(user) for user in instance_users],
       apt: {
         // APT config
         conf: |||
@@ -167,7 +138,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
               Fix-Broken "true";
             };
           };
-        ||| % { install_recommends: is_desktop },
+        ||| % { install_recommends: install_recommends },
       },
       package_update: true,
       package_upgrade: true,
@@ -188,24 +159,17 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         'gnupg2',
         'jq',
       ] + addArrayIf(is_desktop, [
-        'xfce4',
-        'xfce4-session',
-        'xfce4-goodies',
-        'xfce4-panel',
-        'xfce4-terminal',
-        'xfce4-clipman-plugin',
+        'lightdm',
         'xclip',
+        'xfce4-clipman-plugin',
+        'xfce4-goodies',
+        'xfce4',
       ]) + addArrayIf(is_rdp_server, [
         'xrdp',
       ]) + addArrayIf(is_vbox, [
         'linux-headers-generic',
         'perl',
         'make',
-      ]) + addArrayIf(is_vnc_server, [
-        'lightdm',
-        'xvfb',
-        'novnc',
-        'x11vnc',
       ]),
       runcmd: addArrayIf(is_vbox, [
         ['mkdir', '-p', '/mnt/additions'],
@@ -215,20 +179,14 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
       ]) + addArrayIf(is_rdp_server, [
         ['systemctl', 'enable', 'xrdp'],
         ['service', 'xrdp', 'restart'],
-      ]) + addArrayIf(is_vnc_server, [
-        ['x11vnc', '-storepasswd', 'iamdemo', '/etc/x11vnc.passwd'],
-        ['systemctl', 'enable', 'x11vnc'],
-        ['service', 'x11vnc', 'restart'],
       ]) + addArrayIf(is_desktop, [
         ['sed -i', 's/^#\\?AllowSuspend=.*/AllowSuspend=no/', '/etc/systemd/sleep.conf'],
         ['sed -i', 's/^#\\?AllowHibernation=.*/AllowHibernation=no/', '/etc/systemd/sleep.conf'],
         ['sed -i', 's/^#\\?AllowSuspendThenHibernate=.*/AllowSuspendThenHibernate=no/', '/etc/systemd/sleep.conf'],
         ['sed -i', 's/^#\\?AllowHybridSleep=.*/AllowHybridSleep=no/', '/etc/systemd/sleep.conf'],
         ['glib-compile-schemas', '/usr/share/glib-2.0/schemas'],
-      ] + std.flatMap(
-        runcmd_fix_gsettings_for_user,
-        ['lightdm'] + instance_users_usernames
-      )) + std.flatMap(
+        ['systemctl', 'disable', 'systemd-networkd.service'],
+      ]) + std.flatMap(
         runcmd_fix_home_for_user,
         instance_users_usernames
       ),

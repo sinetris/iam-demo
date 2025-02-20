@@ -58,6 +58,8 @@ repos:
         args:
           - "platform/instances-script-generator/instances.jsonnet"
           - "--jpath"
+          - "platform/instances-script-generator"
+          - "--jpath"
           - "platform/instances-script-generator/test"
         pass_filenames: false
   # YAML Formatter

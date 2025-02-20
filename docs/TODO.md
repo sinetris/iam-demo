@@ -17,6 +17,7 @@
   - [Kubernetes resources, labels, and annotations](#kubernetes-resources-labels-and-annotations)
   - [Project and instances management](#project-and-instances-management)
     - [VirtualBox](#virtualbox)
+      - [Add Serial Console to VirtualBox instances](#add-serial-console-to-virtualbox-instances)
     - [Track boot process state](#track-boot-process-state)
       - [VirtualBox instance boot state](#virtualbox-instance-boot-state)
 - [Future changes and alternatives](#future-changes-and-alternatives)
@@ -244,7 +245,9 @@ section in [Kubernetes development tips](development/kubernetes.md).
 - [ ] change `instances-script-generator`
   - [x] move generated scripts default path to project root
   - [ ] rename folder to `project-script-generator`
-  - [ ] generate `config/project.sh` (or `.env` file)
+  - [ ] rename `instances.jsonnet` to `project-files-generator.jsonnet`
+  - [ ] generate `include/project_config.sh` (or `.env` file)
+  - [ ] generate `include/utils.sh`
   - [ ] add script to show project generator config (`project-generator-config.sh`)
   - [ ] change `virtualmachines_destroy`
     - [ ] rename to `project_delete`
@@ -366,6 +369,8 @@ section in [Kubernetes development tips](development/kubernetes.md).
 - [x] add hostname and IPv4 in instances catalog json file
 - [x] add username and MAC address in instances catalog json file
 - [x] use `VBoxManage guestproperty wait` instead of `until` in instances creation
+- [x] set default `options` as `-q -o ServerAliveInterval=300 -o ServerAliveCountMax=3`
+      in `ssh_exec`
 - [ ] add all network interfaces in instances catalog json file
 - [ ] create instances snapshots
 - [ ] use previous MAC addressses, if presents
@@ -376,6 +381,46 @@ section in [Kubernetes development tips](development/kubernetes.md).
 - [ ] do not create network if `config.network.skip_creation` exists
 - [ ] move `instances_catalog_file` to `${project_basefolder:?}\assets\instances_catalog.json`
 - [ ] add tags to instances using `guestproperty`
+
+##### Add Serial Console to VirtualBox instances
+
+On instance creation:
+
+```sh
+# Configure COM1 to be used for Serial Console
+_uart_file="/tmp/${instance_name:?}-tty.socket"
+echo " - Set Serial Port for Serial Console"
+VBoxManage modifyvm \
+  "${instance_name:?}" \
+  --uart1 0x3F8 4 \
+  --uart-type2 16550A \
+  --uartmode1 server \
+  "${_uart_file:?}"
+```
+
+In cloud-init:
+
+```sh
+# create /etc/default/grub.d/60-serial-console.cfg
+GRUB_CMDLINE_LINUX="console=tty1 console=ttyS0,115200n8 earlyprintk=ttyS0,keep"
+GRUB_TERMINAL="console serial"
+GRUB_SERIAL_COMMAND="serial --unit=0 --speed=115200 --word=8 --parity=no --stop=1"
+# Update grub configuration
+grub2-mkconfig -o /boot/grub2/grub.cfg
+# If necessary, enable serial-getty service for ttyS0
+systemctl enable serial-getty@ttyS0.service
+```
+
+Connect to instance serial console from the host:
+
+```sh
+instance_name=ansible-controller
+# Connect using 'minicom'
+minicom --baudrate 115200 --device 'unix#'"/tmp/${instance_name:?}-tty.socket" --color=on
+# Connect using 'socat' and 'screen'
+socat UNIX-CONNECT:/tmp/${instance_name:?}-tty.socket PTY,link=/tmp/${instance_name:?}.pty
+screen /tmp/${instance_name:?}.pty
+```
 
 #### Track boot process state
 

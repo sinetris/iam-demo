@@ -3,12 +3,13 @@ set -Eeuo pipefail
 
 generator_orchestrator=multipass
 host_architecture=$(uname -m)
-instance_admin_password=ubuntu
+# Paths relative to project root
+generated_project_relative_path=generated
+project_generator_relative_path="platform/instances-script-generator"
 
-project_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-generated_path=generated
-project_generator_path="${project_path}/platform/instances-script-generator"
-generated_project_path="${project_path}/${generated_path}"
+project_root_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+project_generator_path="${project_root_path:?}/${project_generator_relative_path:?}"
+generated_project_path="${project_root_path:?}/${generated_project_relative_path:?}"
 valid_architectures=( amd64 x86_64 arm64 aarch64 )
 valid_orchestrators=( fake multipass vbox )
 
@@ -48,40 +49,36 @@ check_dependency() {
 }
 
 generate_ansible_ssh_keys() {
-  if [ -f "${generated_project_path}/assets/.ssh/id_ed25519.pub" ]; then
+  ansible_ssh_key_file="${generated_project_relative_path:?}/assets/.ssh/id_ed25519"
+  if [ -f "${project_root_path:?}/${ansible_ssh_key_file:?}" ]; then
     echo "Using existing SSH keys for ansible ✅"
   else
     check_dependency 'ssh-keygen'
     echo "Generating SSH keys for ansible ..."
-    mkdir -p "${generated_project_path}/assets/.ssh"
-    ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f "${generated_project_path}/assets/.ssh/id_ed25519" -q -N ""
+    mkdir -p "$(dirname "${project_root_path:?}/${ansible_ssh_key_file:?}")"
+    ssh-keygen -t ed25519 -C "automator@iam-demo.test" -f "${project_root_path:?}/${ansible_ssh_key_file:?}" -q -N ""
   fi
 }
 
 generate_bootstrap_scripts() {
   check_dependency 'jsonnet'
-  if [ -f "${project_generator_path}/config/config.libsonnet" ]; then
-    echo "Using existing $(tput bold)config.libsonnet$(tput sgr0) ✅"
+  project_config_file="${project_generator_relative_path:?}/config/config.libsonnet"
+  if [ -f "${project_root_path:?}/${project_config_file:?}" ]; then
+    echo "Using existing project config '$(tput bold)${project_config_file:?}$(tput sgr0)' ✅"
   else
     echo "Missing config.libsonnet"
-    echo "Copying config.libsonnet.${generator_orchestrator}.example to config.libsonnet"
-    cp "${project_generator_path}/config/config.libsonnet.${generator_orchestrator}.example" "${project_generator_path}/config/config.libsonnet"
-  fi
-  if [ -f "${generated_project_path}/assets/admin_password" ]; then
-    echo "Using existing password from $(tput bold)${generated_project_path}/assets/admin_password$(tput sgr0) ✅"
-  else
-    echo "Generating password in $(tput bold)${generated_project_path}/assets/admin_password$(tput sgr0)"
-    openssl passwd -6 -salt $(openssl rand -base64 8) "${instance_admin_password}" > "${generated_project_path}/assets/admin_password"
+    echo "Copying config.libsonnet.${generator_orchestrator:?}.example to '${project_config_file:?}'"
+    cp "${project_generator_path:?}/config/config.libsonnet.${generator_orchestrator:?}.example" \
+      "${project_root_path:?}/${project_config_file:?}"
   fi
   echo "Using orchestrator: $(tput bold)${generator_orchestrator}$(tput sgr0)"
   echo "Using host_architecture: $(tput bold)${host_architecture}$(tput sgr0)"
-  # cd "${project_generator_path}"
   jsonnet --create-output-dirs \
     --multi "${generated_project_path}" \
-    --ext-str project_path="${project_path}" \
+    --ext-str project_root_path="${project_root_path}" \
     --ext-str orchestrator_name="${generator_orchestrator}" \
     --ext-str host_architecture="${host_architecture}" \
-    --jpath "${project_path}" \
+    --jpath "${project_root_path}" \
     --jpath "${project_generator_path}" \
     --jpath "${project_generator_path}/config" \
     --string "${project_generator_path}/instances.jsonnet"
@@ -204,7 +201,7 @@ fi
 
 echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"
 echo
-echo "$(tput setaf 3)Project path: $(tput bold)${project_path}$(tput sgr0)"
+echo "$(tput setaf 3)Project root path: $(tput bold)${project_root_path}$(tput sgr0)"
 
 if $create || $setup || $provision; then
   echo

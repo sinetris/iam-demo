@@ -82,7 +82,7 @@ host_architecture=arm64
 cp config/config.libsonnet.${generator_orchestrator}.example config/config.libsonnet
 jsonnet --create-output-dirs \
   --multi "${generated_files_path}" \
-  --ext-str project_path="${project_root_path}" \
+  --ext-str project_root_path="${project_root_path}" \
   --ext-str orchestrator_name="${generator_orchestrator}" \
   --ext-str host_architecture="${host_architecture}" \
   --jpath "${project_root_path}" \
