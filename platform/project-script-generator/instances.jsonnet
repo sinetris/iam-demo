@@ -1,6 +1,6 @@
 // Run the following command to generate files:
 // project_root_path=$(cd ../../ && pwd)
-// project_generator_path="${project_root_path:?}/platform/instances-script-generator"
+// project_generator_path="${project_root_path:?}/platform/project-script-generator"
 // jsonnet --create-output-dirs \
 //   --multi "${project_root_path:?}/generated" \
 //   --ext-str project_root_path="${project_root_path:?}" \

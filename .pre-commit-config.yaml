@@ -56,11 +56,11 @@ repos:
       - id: jsonnet-format
       - id: jsonnet-lint
         args:
-          - "platform/instances-script-generator/instances.jsonnet"
+          - "platform/project-script-generator/instances.jsonnet"
           - "--jpath"
-          - "platform/instances-script-generator"
+          - "platform/project-script-generator"
           - "--jpath"
-          - "platform/instances-script-generator/test"
+          - "platform/project-script-generator/test"
         pass_filenames: false
   # YAML Formatter
   - repo: https://github.com/google/yamlfmt

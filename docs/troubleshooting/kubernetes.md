@@ -204,7 +204,10 @@ helm template \
 SSH into `ansible-controller` and move into `/kubernetes` folder:
 
 ```sh
-./platform/instances-script-generator/generated/instance-shell.sh ansible-controller
+# On the host
+cd generated
+./instance-shell.sh ansible-controller
+# Inside the instance
 cd /kubernetes
 ```
 
