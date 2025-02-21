@@ -21,6 +21,7 @@
     - [Track boot process state](#track-boot-process-state)
       - [VirtualBox instance boot state](#virtualbox-instance-boot-state)
 - [Future changes and alternatives](#future-changes-and-alternatives)
+  - [Move elements to their own repositories](#move-elements-to-their-own-repositories)
   - [Excluded Applications](#excluded-applications)
   - [Change configuration](#change-configuration)
     - [Basic changes](#basic-changes)
@@ -40,8 +41,9 @@
 
 The README should:
 
-- [x] include a warning
+- [x] include a warning about the lack of backward compatibility
 - [x] include a link to the TODO (this document)
+- [x] include a brief description on top
 - [ ] have a better description of the [project scope](#project-scope)
 - [ ] include links to the main topics covered in the project documentation
 - [ ] be concise
@@ -49,6 +51,8 @@ The README should:
 
 The documentation should:
 
+- [ ] include an introduction to IAM and IGA
+- [x] include an introduction to HR-Driven Identity Lifecycle
 - [ ] have an [infrastructure overview](#add-an-infrastructure-overview)
 - [ ] include [development instructions](#add-development-instructions)
 - [ ] include [screenshots](#add-screenshots)
@@ -446,6 +450,24 @@ VBoxManage guestproperty get "${instance_name:?}" "instance:state"
 ```
 
 ## Future changes and alternatives
+
+### Move elements to their own repositories
+
+- [ ] Move project to its own [GitHub organization](https://docs.github.com/en/organizations)
+- [ ] Move [Ansible custom roles](../platform/ansible/custom_roles/)
+  - [ ] create Ansible collections for custom roles
+  - [ ] move the Ansible collections to their own repositories
+  - [ ] add collections to ansible [requirements.yml](../platform/ansible/requirements.yml)
+- [ ] [Project infrastructure script generator](../platform/project-script-generator/)
+  - [ ] make the script more generic
+  - [ ] move to new repo `project-infrastructure-script-generator`
+- [ ] Documentation
+  - [ ] Split the documentation and move into new repositories
+    - [ ] Project specific documentation
+    - [ ] Generic IAM documentation
+    - [ ] Generic technical documentation
+- [ ] Create new repo `iam-infrastructure-prototype`
+- [ ] Add link to new repos in README and archive this repo
 
 ### Excluded Applications
 
