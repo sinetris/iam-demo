@@ -44,6 +44,7 @@ The README should:
 - [x] include a warning about the lack of backward compatibility
 - [x] include a link to the TODO (this document)
 - [x] include a brief description on top
+- [x] specify licenses for documentation and code
 - [ ] have a better description of the [project scope](#project-scope)
 - [ ] include links to the main topics covered in the project documentation
 - [ ] be concise
@@ -453,7 +454,6 @@ VBoxManage guestproperty get "${instance_name:?}" "instance:state"
 
 ### Move elements to their own repositories
 
-- [ ] Move project to its own [GitHub organization](https://docs.github.com/en/organizations)
 - [ ] Move [Ansible custom roles](../platform/ansible/custom_roles/)
   - [ ] create Ansible collections for custom roles
   - [ ] move the Ansible collections to their own repositories
@@ -461,13 +461,14 @@ VBoxManage guestproperty get "${instance_name:?}" "instance:state"
 - [ ] [Project infrastructure script generator](../platform/project-script-generator/)
   - [ ] make the script more generic
   - [ ] move to new repo `project-infrastructure-script-generator`
-- [ ] Documentation
-  - [ ] Split the documentation and move into new repositories
-    - [ ] Project specific documentation
-    - [ ] Generic IAM documentation
+- [ ] Split code and documentation
+  - [ ] Create new repo `iam-infrastructure-prototype` for the code
+  - [ ] further split the documentation and move into new repos
+    - [ ] Project specific documentation (e.g. `iam-infrastructure-prototype-documentation`)
+    - [ ] Generic IAM documentation (e.g. `iam-infrastructure-overview`)
     - [ ] Generic technical documentation
-- [ ] Create new repo `iam-infrastructure-prototype`
-- [ ] Add link to new repos in README and archive this repo
+  - [ ] Add link to new repos in README and archive this repo
+- [ ] Move project to its own [GitHub organization](https://docs.github.com/en/organizations)
 
 ### Excluded Applications
 
