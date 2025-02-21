@@ -99,8 +99,8 @@ cd generated
 chmod u+x *.sh
 # Create instances
 ./instances-create.sh
-# Basic setup
-./instances-setup.sh
+# Wrap-up basic project setup
+./project-wrap-up.sh
 # Automated provisioning
 ./instances-provisioning.sh
 # Get all instances status

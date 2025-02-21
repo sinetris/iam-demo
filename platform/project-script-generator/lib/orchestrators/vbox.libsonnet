@@ -982,7 +982,7 @@ local provision_instances(setup) =
         for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_setup(setup)::
+  project_wrap_up(setup)::
     local instances = [instance.hostname for instance in setup.virtual_machines];
     local provisionings =
       if std.objectHas(setup, 'base_provisionings') then

@@ -73,12 +73,13 @@ in some cases not the best tools for the job) to cover certain topics.
 - [ ] Dependencies
   - [Jsonnet][jsonnet]
   - [Windows App][microsoft-windows-app] (formerly known as [Microsoft Remote Desktop][microsoft-remote-desktop])
-  - [Multipass][multipass]
+  - [Multipass][multipass] or [VirtualBox][virtualbox]
   - [pre-commit][pre-commit]
 
 ### Add screenshots
 
 - [ ] Linux Desktop
+  - [ ] configure Remote Desktop (e.g. [Windows App][microsoft-windows-app]) on host
   - [x] Terminal execute `~/bin/check-instance-config.sh`
   - [x] Firefox bookmarks
   - [ ] Alertmanager
@@ -269,7 +270,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [ ] split `virtualmachines_bootstrap`
     - [ ] `project_prepare_config` (create file `project-prepare-config.sh`)
     - [ ] `project_bootstrap` (create file `project-bootstrap.sh`)
-  - [ ] rename `virtualmachines_setup` to `project_wrap_up` (create file `project-wrap-up.sh`)
+  - [x] rename `virtualmachines_setup` to `project_wrap_up` (create file `project-wrap-up.sh`)
   - [ ] rename `virtualmachines_provisioning` to `project_provisioning`
   - [ ] rename `instances-provisioning.sh` to `project-provisioning.sh`
   - [ ] rename `virtualmachines_info` to `instance_info`
@@ -803,6 +804,7 @@ like [Mozilla Firefox][mozilla-firefox].
 [vault-pki]: <https://www.vaultproject.io/docs/secrets/pki> "Vault PKI"
 [vault]: <https://www.vaultproject.io/> "HashiCorp Vault"
 [velero]: <https://velero.io/> "Velero"
+[virtualbox]: <https://www.virtualbox.org/> "VirtualBox"
 [waypoint]: <https://www.waypointproject.io/> "Waypoint"
 [wazuh]: <https://wazuh.com/> "Wazuh"
 [woodpecker-ci]: <https://woodpecker-ci.org/> "Woodpecker CI"
