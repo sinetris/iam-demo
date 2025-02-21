@@ -24,6 +24,6 @@
     self.fake_script(setup, 'list'),
   virtualmachine_shell(setup)::
     self.fake_script(setup, 'shell'),
-  virtualmachines_info(setup)::
+  instance_info(setup)::
     self.fake_script(setup, 'info'),
 }

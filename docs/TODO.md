@@ -276,7 +276,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `virtualmachines_setup` to `project_wrap_up` (create file `project-wrap-up.sh`)
   - [x] rename `virtualmachines_provisioning` to `project_provisioning`
   - [x] rename `instances-provisioning.sh` to `project-provisioning.sh`
-  - [ ] rename `virtualmachines_info` to `instance_info`
+  - [x] rename `virtualmachines_info` to `instance_info`
   - [ ] change `instance_info` to show static instance info
   - [ ] rename `virtualmachines_status` to `instances_status`
   - [ ] use envsubst template for cloud-init `user-data`

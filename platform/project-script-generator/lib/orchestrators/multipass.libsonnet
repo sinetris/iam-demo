@@ -487,6 +487,6 @@ local virtualmachine_command(setup, command) =
     },
   virtualmachine_shell(setup)::
     virtualmachine_command(setup, 'shell'),
-  virtualmachines_info(setup)::
+  instance_info(setup)::
     virtualmachine_command(setup, 'info --format yaml'),
 }
