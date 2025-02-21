@@ -5,7 +5,7 @@ generator_orchestrator=multipass
 host_architecture=$(uname -m)
 # Paths relative to project root
 generated_project_relative_path=generated
-project_generator_relative_path="platform/instances-script-generator"
+project_generator_relative_path="platform/project-script-generator"
 
 project_root_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 project_generator_path="${project_root_path:?}/${project_generator_relative_path:?}"

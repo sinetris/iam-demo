@@ -244,7 +244,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
 - [x] rename `bunch-up` to `project-management`
 - [ ] change `instances-script-generator`
   - [x] move generated scripts default path to project root
-  - [ ] rename folder to `project-script-generator`
+  - [x] rename folder to `project-script-generator`
   - [ ] rename `instances.jsonnet` to `project-files-generator.jsonnet`
   - [ ] generate `include/project_config.sh` (or `.env` file)
   - [ ] generate `include/utils.sh`

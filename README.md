@@ -187,7 +187,7 @@ to connect to the `linux-desktop` instance.
 The IP Address is the first entry from `ipv4` when running the following command:
 
 ```sh
-./platform/instances-script-generator/generated/instances-status.sh linux-desktop
+./platform/project-script-generator/generated/instances-status.sh linux-desktop
 ```
 
 #### Test self-signed certificates
@@ -253,7 +253,7 @@ in a browser and paste the public key.
 Access `ansible-controller` shell using:
 
 ```sh
-./platform/instances-script-generator/generated/instance-shell.sh ansible-controller
+./platform/project-script-generator/generated/instance-shell.sh ansible-controller
 ```
 
 or connect to `linux-desktop` [using Remote Desktop](#connect-using-remote-desktop)
@@ -262,7 +262,7 @@ and open a terminal.
 You can also access `linux-desktop` shell using:
 
 ```sh
-./platform/instances-script-generator/generated/instance-shell.sh linux-desktop
+./platform/project-script-generator/generated/instance-shell.sh linux-desktop
 ```
 
 To check the Kubernetes configuration, type:

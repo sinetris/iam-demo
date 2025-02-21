@@ -71,7 +71,7 @@ local add_default_machine_data(setup, instance) =
   host_architecture: std.extVar('host_architecture'),
   orchestrator_name: std.extVar('orchestrator_name'),
   project_root_path: std.extVar('project_root_path'),
-  project_generator_path: self.project_root_path + '/platform/instances-script-generator',
+  project_generator_path: self.project_root_path + '/platform/project-script-generator',
   projects_folder: '$HOME/.local/projects',
   project_basefolder: self.projects_folder + '/' + self.project_name,
   os_release_codename: 'noble',
