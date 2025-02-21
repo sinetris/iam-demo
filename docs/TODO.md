@@ -278,7 +278,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `instances-provisioning.sh` to `project-provisioning.sh`
   - [x] rename `virtualmachines_info` to `instance_info`
   - [ ] change `instance_info` to show static instance info
-  - [ ] rename `virtualmachines_status` to `instances_status`
+  - [x] rename `virtualmachines_list` to `instances_status`
   - [ ] use envsubst template for cloud-init `user-data`
   - [ ] standardize scripts output
   - [ ] modify `provisionings` to accept templating

@@ -17,7 +17,7 @@ local utils = import 'lib/utils.libsonnet';
 
 function() {
   local orchestrator_implementation = orchestrator.get(setup.orchestrator_name),
-  'instances-status.sh': orchestrator_implementation.use.virtualmachines_list(setup),
+  'instances-status.sh': orchestrator_implementation.use.instances_status(setup),
   'project-bootstrap.sh': orchestrator_implementation.use.project_bootstrap(setup),
   'project-wrap-up.sh': orchestrator_implementation.use.project_wrap_up(setup),
   'project-provisioning.sh': orchestrator_implementation.use.project_provisioning(setup),
