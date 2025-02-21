@@ -1110,7 +1110,7 @@ local provision_instances(setup) =
       project_config: project_config(setup),
       bash_utils: bash_utils(setup),
     },
-  virtualmachines_info(setup)::
+  instance_info(setup)::
     assert std.isObject(setup);
     assert std.objectHas(setup, 'virtual_machines');
     assert std.isArray(setup.virtual_machines);
