@@ -260,7 +260,7 @@ local create_instance(config, instance) =
     		--disk ${instance_storage_space}M \
     		--memory ${instance_memory}M \
     		--name "${instance_name}" \
-    		--cloud-init "assets/cloud-init-${instance_name}.yaml" \
+    		--cloud-init "assets/cidata-${instance_name:?}-user-data.yaml" \
     		--timeout ${instance_check_timeout_seconds} \
     		%(mounts)s release:${os_release_codename}
     	_instance_status=$(multipass info --format json ${instance_name} 2>&1) && _exit_code=$? || _exit_code=$?

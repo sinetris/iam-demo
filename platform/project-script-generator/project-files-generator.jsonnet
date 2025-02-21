@@ -25,6 +25,6 @@ function() {
   'instances-destroy.sh': orchestrator_implementation.use.virtualmachines_destroy(setup),
   'instance-info.sh': orchestrator_implementation.use.virtualmachines_info(setup),
 } + {
-  [utils.cloudinit_filename(entry.hostname)]: utils.cloud_config(setup, entry)
+  [utils.cloudinit_user_data_filename(entry.hostname)]: utils.cloud_config(setup, entry)
   for entry in setup.virtual_machines
 }

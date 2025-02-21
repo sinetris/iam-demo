@@ -495,8 +495,8 @@ local create_instance(config, instance) =
     # _public_key=${_instance_public_key} \
     # _additions_file=${vbox_additions_installer_file} \
     # envsubst '$_domain,$_hostname,$_username,$_password_hash,$_public_key,$_additions_file' \
-    #   <"cloud-init-user-data.yaml.tpl" | tee "${instance_cidata_files_path:?}/user-data" >/dev/null
-    cat "assets/cloud-init-${instance_name}.yaml" > "${instance_cidata_files_path:?}/user-data"
+    #   <"cidata-user-data.yaml.tpl" | tee "${instance_cidata_files_path:?}/user-data" >/dev/null
+    cat "assets/cidata-${instance_name:?}-user-data.yaml" > "${instance_cidata_files_path:?}/user-data"
     echo " - Create VirtualMachine"
     VBoxManage createvm \
       --name "${instance_name:?}" \
