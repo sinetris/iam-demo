@@ -97,8 +97,8 @@ chmod u+x "${generated_files_path}"/*.sh
 ```sh
 cd generated
 chmod u+x *.sh
-# Create instances
-./instances-create.sh
+# Create project network and instances
+./project-bootstrap.sh
 # Wrap-up basic project setup
 ./project-wrap-up.sh
 # Automated provisioning

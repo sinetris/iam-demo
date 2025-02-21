@@ -374,7 +374,7 @@ local virtualmachine_command(setup, command) =
 
 // Exported functions
 {
-  virtualmachines_bootstrap(setup)::
+  project_bootstrap(setup)::
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail

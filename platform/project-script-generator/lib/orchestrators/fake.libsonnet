@@ -12,7 +12,7 @@
         for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_bootstrap(setup)::
+  project_bootstrap(setup)::
     self.fake_script(setup, 'bootstrap'),
   project_wrap_up(setup)::
     self.fake_script(setup, 'wrap-up'),
