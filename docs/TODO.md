@@ -247,7 +247,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename folder to `project-script-generator`
   - [x] rename `instances.jsonnet` to `project-files-generator.jsonnet`
   - [x] rename `cloud-init-<instance_name>.yaml` to `cidata-<instance_name>-user-data.yaml`
-  - [ ] use `setup` instead of `config` where appropriate
+  - [x] use `setup` instead of `config` where appropriate
   - [ ] generate `include/project_config.sh` (or `.env` file)
   - [ ] generate `include/utils.sh`
   - [ ] add script to show project generator config (`project-generator-config.sh`)

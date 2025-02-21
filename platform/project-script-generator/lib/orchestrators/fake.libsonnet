@@ -1,5 +1,5 @@
 {
-  fake_script(config, action)::
+  fake_script(setup, action)::
     |||
       #!/usr/bin/env bash
 
@@ -9,21 +9,21 @@
       action: action,
       instances: std.join('\n', [
         'echo ' + std.escapeStringBash(instance.hostname)
-        for instance in config.virtual_machines
+        for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_bootstrap(config)::
-    self.fake_script(config, 'bootstrap'),
-  virtualmachines_setup(config)::
-    self.fake_script(config, 'setup'),
-  virtualmachines_provisioning(config)::
-    self.fake_script(config, 'provisioning'),
-  virtualmachines_destroy(config)::
-    self.fake_script(config, 'destroy'),
-  virtualmachines_list(config)::
-    self.fake_script(config, 'list'),
-  virtualmachine_shell(config)::
-    self.fake_script(config, 'shell'),
-  virtualmachines_info(config)::
-    self.fake_script(config, 'info'),
+  virtualmachines_bootstrap(setup)::
+    self.fake_script(setup, 'bootstrap'),
+  virtualmachines_setup(setup)::
+    self.fake_script(setup, 'setup'),
+  virtualmachines_provisioning(setup)::
+    self.fake_script(setup, 'provisioning'),
+  virtualmachines_destroy(setup)::
+    self.fake_script(setup, 'destroy'),
+  virtualmachines_list(setup)::
+    self.fake_script(setup, 'list'),
+  virtualmachine_shell(setup)::
+    self.fake_script(setup, 'shell'),
+  virtualmachines_info(setup)::
+    self.fake_script(setup, 'info'),
 }

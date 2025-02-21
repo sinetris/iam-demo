@@ -98,16 +98,16 @@ local bash_mac_address_functions() =
     }
   |||;
 
-local generic_project_config(config) =
-  assert std.isObject(config);
-  assert std.objectHas(config, 'project_name');
-  assert std.objectHas(config, 'project_domain');
-  assert std.objectHas(config, 'projects_folder');
-  assert std.objectHas(config, 'project_basefolder');
-  assert std.objectHas(config, 'project_root_path');
-  assert std.objectHas(config, 'project_generator_path');
-  assert std.objectHas(config, 'os_release_codename');
-  assert std.objectHas(config, 'host_architecture');
+local generic_project_config(setup) =
+  assert std.isObject(setup);
+  assert std.objectHas(setup, 'project_name');
+  assert std.objectHas(setup, 'project_domain');
+  assert std.objectHas(setup, 'projects_folder');
+  assert std.objectHas(setup, 'project_basefolder');
+  assert std.objectHas(setup, 'project_root_path');
+  assert std.objectHas(setup, 'project_generator_path');
+  assert std.objectHas(setup, 'os_release_codename');
+  assert std.objectHas(setup, 'host_architecture');
   |||
     # -- start: generic-project-config
     project_name=%(project_name)s
@@ -123,14 +123,14 @@ local generic_project_config(config) =
     instances_catalog_file="${generated_files_path:?}/assets/machines_config.json"
     # -- end: generic-project-config
   ||| % {
-    project_name: config.project_name,
-    project_domain: config.project_domain,
-    projects_folder: config.projects_folder,
-    project_basefolder: config.project_basefolder,
-    project_root_path: config.project_root_path,
-    project_generator_path: config.project_generator_path,
-    os_release_codename: config.os_release_codename,
-    host_architecture: config.host_architecture,
+    project_name: setup.project_name,
+    project_domain: setup.project_domain,
+    projects_folder: setup.projects_folder,
+    project_basefolder: setup.project_basefolder,
+    project_root_path: setup.project_root_path,
+    project_generator_path: setup.project_generator_path,
+    os_release_codename: setup.os_release_codename,
+    host_architecture: setup.host_architecture,
   };
 // end: bash-utils
 
@@ -165,9 +165,9 @@ local scp_file(source, destination, options='-q') =
     options: options,
   };
 
-local cidata_network_config_template(config) =
-  assert std.isObject(config);
-  local dns_servers = std.get(config, 'dns_servers', []);
+local cidata_network_config_template(setup) =
+  assert std.isObject(setup);
+  local dns_servers = std.get(setup, 'dns_servers', []);
   assert std.isArray(dns_servers);
   |||
     tee "${cidata_network_config_template_file:?}" > /dev/null <<-'EOT'
@@ -224,10 +224,10 @@ local vbox_bash_architecture_configs() =
     esac
   |||;
 
-local vbox_project_config(config) =
-  assert std.isObject(config);
-  assert std.objectHas(config, 'network');
-  local network = std.get(config, 'network');
+local vbox_project_config(setup) =
+  assert std.isObject(setup);
+  assert std.objectHas(setup, 'network');
+  local network = std.get(setup, 'network');
   assert std.objectHas(network, 'name');
   assert std.objectHas(network, 'netmask');
   assert std.objectHas(network, 'lower_ip');
@@ -248,25 +248,25 @@ local vbox_project_config(config) =
     vbox_instance_start_type=headless
     # -- end: vbox-project-config
   ||| % {
-    network_name: config.network.name,
-    network_netmask: config.network.netmask,
-    network_lower_ip: config.network.lower_ip,
-    network_upper_ip: config.network.upper_ip,
+    network_name: setup.network.name,
+    network_netmask: setup.network.netmask,
+    network_lower_ip: setup.network.lower_ip,
+    network_upper_ip: setup.network.upper_ip,
   };
 // end: vbox-bash-utils
 
-local project_config(config) =
+local project_config(setup) =
   |||
     # - start: config
     %(generic_project_config)s
     %(vbox_project_config)s
     # - end: config
   ||| % {
-    generic_project_config: generic_project_config(config),
-    vbox_project_config: vbox_project_config(config),
+    generic_project_config: generic_project_config(setup),
+    vbox_project_config: vbox_project_config(setup),
   };
 
-local bash_utils(config) =
+local bash_utils(setup) =
   |||
     # - start: utils
     %(mac_address_functions)s
@@ -276,11 +276,11 @@ local bash_utils(config) =
   ||| % {
     mac_address_functions: bash_mac_address_functions(),
     get_architecture_configs: vbox_bash_architecture_configs(),
-    cidata_network_config_template: std.stripChars(cidata_network_config_template(config), '\n'),
+    cidata_network_config_template: std.stripChars(cidata_network_config_template(setup), '\n'),
   };
 
 
-local check_instance_exist_do(_config, instance, action_code) =
+local check_instance_exist_do(setup, instance, action_code) =
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
   |||
@@ -310,7 +310,7 @@ local check_instance_exist_do(_config, instance, action_code) =
     action_code: action_code,
   };
 
-local create_network(_config) =
+local create_network(setup) =
   |||
     echo "Checking Network '${project_network_name}'..."
     _project_network_status=$(VBoxManage hostonlynet modify \
@@ -332,7 +332,7 @@ local create_network(_config) =
     fi
   |||;
 
-local remove_network(_config) =
+local remove_network(setup) =
   |||
     _network_status=$(VBoxManage hostonlynet modify \
       --name ${project_network_name} --disable 2>&1) && _exit_code=$? || _exit_code=$?
@@ -349,8 +349,8 @@ local remove_network(_config) =
     fi
   |||;
 
-local instance_config(config, instance) =
-  assert std.isObject(config);
+local instance_config(setup, instance) =
+  assert std.isObject(setup);
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
   assert std.objectHas(instance, 'basefolder');
@@ -394,8 +394,8 @@ local instance_config(config, instance) =
     instance_vram: instance_vram,
   };
 
-local create_instance(config, instance) =
-  assert std.isObject(config);
+local create_instance(setup, instance) =
+  assert std.isObject(setup);
   assert std.isObject(instance);
   local mount_opt(host_path, guest_path) =
     |||
@@ -696,11 +696,11 @@ local create_instance(config, instance) =
       echo "⚠️ Instance '${instance_name:?}' not ready. - Skipping!"
     fi
   ||| % {
-    instance_config: instance_config(config, instance),
+    instance_config: instance_config(setup, instance),
     mounts: shell_lines(mounts),
   };
 
-local destroy_instance(config, instance) =
+local destroy_instance(setup, instance) =
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
   |||
@@ -721,7 +721,7 @@ local destroy_instance(config, instance) =
     VBoxManage closemedium dvd "${instance_cidata_iso_file:?}" --delete 2>/dev/null \
       || echo "✅ Disk '${instance_cidata_iso_file}' does not exist!"
   ||| % {
-    instance_config: instance_config(config, instance),
+    instance_config: instance_config(setup, instance),
     hostname: instance.hostname,
   };
 
@@ -943,20 +943,20 @@ local provision_instance(instance) =
     ))
   else '';
 
-local provision_instances(config) =
-  if std.objectHas(config, 'provisionings') then
-    assert std.isArray(config.provisionings) : 'provisionings MUST be an array';
+local provision_instances(setup) =
+  if std.objectHas(setup, 'provisionings') then
+    assert std.isArray(setup.provisionings) : 'provisionings MUST be an array';
     shell_lines(std.map(
       func=generate_provisioning,
-      arr=config.provisionings
+      arr=setup.provisionings
     ))
   else '';
 
 // Exported functions
 {
-  virtualmachines_bootstrap(config)::
-    assert std.objectHas(config, 'virtual_machines');
-    assert std.isArray(config.virtual_machines);
+  virtualmachines_bootstrap(setup)::
+    assert std.objectHas(setup, 'virtual_machines');
+    assert std.isArray(setup.virtual_machines);
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -974,19 +974,19 @@ local provision_instances(config) =
       %(instances_creation)s
       echo "✅ Project instances created!"
     ||| % {
-      project_config: project_config(config),
-      bash_utils: bash_utils(config),
-      network_creation: create_network(config),
+      project_config: project_config(setup),
+      bash_utils: bash_utils(setup),
+      network_creation: create_network(setup),
       instances_creation: shell_lines([
-        check_instance_exist_do(config, instance, indent(create_instance(config, instance), '\t'))
-        for instance in config.virtual_machines
+        check_instance_exist_do(setup, instance, indent(create_instance(setup, instance), '\t'))
+        for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_setup(config)::
-    local instances = [instance.hostname for instance in config.virtual_machines];
+  virtualmachines_setup(setup)::
+    local instances = [instance.hostname for instance in setup.virtual_machines];
     local provisionings =
-      if std.objectHas(config, 'base_provisionings') then
-        config.base_provisionings
+      if std.objectHas(setup, 'base_provisionings') then
+        setup.base_provisionings
       else [];
     |||
       #!/usr/bin/env bash
@@ -1002,19 +1002,19 @@ local provision_instances(config) =
       echo "Instances basic provisioning"
       %(instances_provision)s
     ||| % {
-      ansible_inventory_path: config.ansible_inventory_path,
-      project_config: project_config(config),
+      ansible_inventory_path: setup.ansible_inventory_path,
+      project_config: project_config(setup),
       instances_provision: shell_lines([
         provision_instance(instance)
-        for instance in config.virtual_machines
+        for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_provisioning(config)::
-    assert std.isObject(config);
+  virtualmachines_provisioning(setup)::
+    assert std.isObject(setup);
     local provisionings =
-      if std.objectHas(config, 'app_provisionings') then
-        assert std.isArray(config.app_provisionings);
-        config.app_provisionings
+      if std.objectHas(setup, 'app_provisionings') then
+        assert std.isArray(setup.app_provisionings);
+        setup.app_provisionings
       else [];
     |||
       #!/usr/bin/env bash
@@ -1027,11 +1027,11 @@ local provision_instances(config) =
       echo "Provisioning instances"
       %(instances_provision)s
     ||| % {
-      instances_provision: provision_instances(config),
-      project_config: project_config(config),
+      instances_provision: provision_instances(setup),
+      project_config: project_config(setup),
     },
-  virtualmachines_destroy(config)::
-    assert std.isObject(config);
+  virtualmachines_destroy(setup)::
+    assert std.isObject(setup);
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -1047,19 +1047,19 @@ local provision_instances(config) =
       %(remove_network)s
       echo "✅ Deleting project '${project_name:?}' completed!"
     ||| % {
-      project_config: project_config(config),
+      project_config: project_config(setup),
       instances_destroy: shell_lines([
-        destroy_instance(config, instance)
-        for instance in config.virtual_machines
+        destroy_instance(setup, instance)
+        for instance in setup.virtual_machines
       ]),
-      remove_network: remove_network(config),
+      remove_network: remove_network(setup),
     },
-  virtualmachines_list(config)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'virtual_machines');
-    assert std.isArray(config.virtual_machines);
+  virtualmachines_list(setup)::
+    assert std.isObject(setup);
+    assert std.objectHas(setup, 'virtual_machines');
+    assert std.isArray(setup.virtual_machines);
 
-    local instances = [instance.hostname for instance in config.virtual_machines];
+    local instances = [instance.hostname for instance in setup.virtual_machines];
 
     |||
       #!/usr/bin/env bash
@@ -1076,7 +1076,7 @@ local provision_instances(config) =
     ||| % {
       instances: std.join(' ', instances),
     },
-  virtualmachine_shell(config)::
+  virtualmachine_shell(setup)::
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -1107,15 +1107,15 @@ local provision_instances(config) =
         -i "${generated_files_path}/assets/.ssh/id_ed25519" \
         ${instance_username:?}@${instance_host:?}
     ||| % {
-      project_config: project_config(config),
-      bash_utils: bash_utils(config),
+      project_config: project_config(setup),
+      bash_utils: bash_utils(setup),
     },
-  virtualmachines_info(config)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'virtual_machines');
-    assert std.isArray(config.virtual_machines);
+  virtualmachines_info(setup)::
+    assert std.isObject(setup);
+    assert std.objectHas(setup, 'virtual_machines');
+    assert std.isArray(setup.virtual_machines);
 
-    local instances = [instance.hostname for instance in config.virtual_machines];
+    local instances = [instance.hostname for instance in setup.virtual_machines];
 
     |||
       #!/usr/bin/env bash
