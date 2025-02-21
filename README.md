@@ -5,7 +5,7 @@ compliance (GRC), cybersecurity, and infrastructure automation can benefit from
 the use of HR-Driven Identity Lifecycle and other Identity and Access Management
 practices.
 
-- [❗ Notice](#-notice)
+- [📝 Notice](#-notice)
 - [📜 Introduction](#-introduction)
   - [Stakeholders](#stakeholders)
   - [Workforce IAM](#workforce-iam)
@@ -36,9 +36,12 @@ practices.
   - [Compliance As Code](#compliance-as-code)
   - [Frameworks and Regulations](#frameworks-and-regulations)
   - [Standard Notations](#standard-notations)
-- [📄 License](#-license)
+- [📄 Licenses](#-licenses)
 
-## ❗ Notice
+## 📝 Notice
+
+You can see [screenshots](docs/screenshots.md) of some of the applications
+that will be provisioned with the current setup.
 
 This project is ambitious and constantly evolving.
 
@@ -152,9 +155,6 @@ This project will create and provision 3 instances:
 - an [ansible][ansible] controller (also used to host the internal DNS server)
 - a [Kubernetes][kubernetes] cluster (a single instance for now)
 - a Linux desktop with [Xfce Desktop Environment][xfce]
-
-You can see [screenshots](docs/screenshots.md) of some of the applications
-that will be provisioned.
 
 > **Warning**
 >
@@ -451,11 +451,10 @@ concepts:
 - [BPMN][bpmn]: Business Process Model and Notation
 - [DMN][dmn]: Decision Model and Notation
 
-## 📄 License
+## 📄 Licenses
 
-Distributed under the terms of the Apache License (Version 2.0).
-
-See [LICENSE](LICENSE) for details.
+- Documentation: [CC-BY-4.0](LICENSE-DOCS)
+- Code: [Apache-2.0](LICENSE-CODE)
 
 [ansible]: <https://ansible.readthedocs.io/> "Ansible"
 [bafin-de]: <https://www.bafin.de/> "BaFin - Bundesanstalt für Finanzdienstleistungsaufsicht"
