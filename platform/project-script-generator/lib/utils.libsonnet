@@ -18,6 +18,6 @@ local cloud_init = import 'cloud_init.libsonnet';
       postfix: 'user-data',
       extension: 'yaml',
     }),
-  cloud_config(config, instance)::
-    cloud_init.cloud_config(config, instance),
+  cloud_config(setup, instance)::
+    cloud_init.cloud_config(setup, instance),
 }

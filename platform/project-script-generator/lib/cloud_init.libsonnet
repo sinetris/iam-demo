@@ -1,9 +1,9 @@
 local addArrayIf(condition, array, elseArray=[]) = if condition then array else elseArray;
 
 {
-  cloud_config(config, instance)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'base_domain');
+  cloud_config(setup, instance)::
+    assert std.isObject(setup);
+    assert std.objectHas(setup, 'base_domain');
     assert std.isObject(instance);
     assert std.objectHas(instance, 'hostname');
     assert std.objectHas(instance, 'architecture');
@@ -18,7 +18,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     local install_recommends = std.get(instance, 'install_recommends', false);
     local is_rdp_server = std.member(tags, 'rdpserver');
     local is_ansible_controller = std.member(tags, 'ansible-controller');
-    local is_vbox = config.orchestrator_name == 'vbox';
+    local is_vbox = setup.orchestrator_name == 'vbox';
     local code_pkg = 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-' + instance.architecture;
     local user_mapping(user) =
       assert std.isObject(user);
@@ -117,7 +117,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
       hostname: instance.hostname,
       fqdn: '%(hostname)s.%(base_domain)s' % {
         hostname: instance.hostname,
-        base_domain: config.base_domain,
+        base_domain: setup.base_domain,
       },
       prefer_fqdn_over_hostname: true,
       manage_etc_hosts: true,

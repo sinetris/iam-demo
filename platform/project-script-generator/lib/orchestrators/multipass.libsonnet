@@ -15,14 +15,14 @@ local indent(string, pre) =
   );
 // END - Utilities functions
 
-local generic_project_config(config) =
-  assert std.isObject(config);
-  assert std.objectHas(config, 'project_name');
-  assert std.objectHas(config, 'project_domain');
-  assert std.objectHas(config, 'projects_folder');
-  assert std.objectHas(config, 'project_basefolder');
-  assert std.objectHas(config, 'os_release_codename');
-  assert std.objectHas(config, 'host_architecture');
+local generic_project_config(setup) =
+  assert std.isObject(setup);
+  assert std.objectHas(setup, 'project_name');
+  assert std.objectHas(setup, 'project_domain');
+  assert std.objectHas(setup, 'projects_folder');
+  assert std.objectHas(setup, 'project_basefolder');
+  assert std.objectHas(setup, 'os_release_codename');
+  assert std.objectHas(setup, 'host_architecture');
   |||
     # -- start: generic-project-config
     project_name=%(project_name)s
@@ -36,48 +36,48 @@ local generic_project_config(config) =
     instances_catalog_file="${generated_files_path:?}/assets/machines_config.json"
     # -- end: generic-project-config
   ||| % {
-    project_name: config.project_name,
-    project_domain: config.project_domain,
-    projects_folder: config.projects_folder,
-    project_basefolder: config.project_basefolder,
-    os_release_codename: config.os_release_codename,
-    host_architecture: config.host_architecture,
+    project_name: setup.project_name,
+    project_domain: setup.project_domain,
+    projects_folder: setup.projects_folder,
+    project_basefolder: setup.project_basefolder,
+    os_release_codename: setup.os_release_codename,
+    host_architecture: setup.host_architecture,
   };
 
-local multipass_project_config(config) =
-  assert std.isObject(config);
-  assert std.objectHas(config, 'project_name');
-  assert std.objectHas(config, 'project_domain');
-  assert std.objectHas(config, 'projects_folder');
-  assert std.objectHas(config, 'project_basefolder');
-  assert std.objectHas(config, 'os_release_codename');
-  assert std.objectHas(config, 'host_architecture');
+local multipass_project_config(setup) =
+  assert std.isObject(setup);
+  assert std.objectHas(setup, 'project_name');
+  assert std.objectHas(setup, 'project_domain');
+  assert std.objectHas(setup, 'projects_folder');
+  assert std.objectHas(setup, 'project_basefolder');
+  assert std.objectHas(setup, 'os_release_codename');
+  assert std.objectHas(setup, 'host_architecture');
   |||
     # -- start: multipass-project-config
     netplan_nic_name='default'
     # -- end: multipass-project-config
   ||| % {
-    project_name: config.project_name,
-    project_domain: config.project_domain,
-    projects_folder: config.projects_folder,
-    project_basefolder: config.project_basefolder,
-    os_release_codename: config.os_release_codename,
-    host_architecture: config.host_architecture,
+    project_name: setup.project_name,
+    project_domain: setup.project_domain,
+    projects_folder: setup.projects_folder,
+    project_basefolder: setup.project_basefolder,
+    os_release_codename: setup.os_release_codename,
+    host_architecture: setup.host_architecture,
   };
 
-local project_config(config) =
+local project_config(setup) =
   |||
     # - start: config
     %(generic_project_config)s
     %(multipass_project_config)s
     # - end: config
   ||| % {
-    generic_project_config: generic_project_config(config),
-    multipass_project_config: multipass_project_config(config),
+    generic_project_config: generic_project_config(setup),
+    multipass_project_config: multipass_project_config(setup),
   };
 
-local instance_config(config, instance) =
-  assert std.isObject(config);
+local instance_config(setup, instance) =
+  assert std.isObject(setup);
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
   local cpus = std.get(instance, 'cpus', '1');
@@ -228,8 +228,8 @@ local provision_instance(instance) =
     ))
   else '';
 
-local create_instance(config, instance) =
-  assert std.isObject(config);
+local create_instance(setup, instance) =
+  assert std.isObject(setup);
   assert std.isObject(instance);
   local mount_opt(host_path, guest_path) =
     '--mount "%(host_path)s":"%(guest_path)s"' % {
@@ -293,11 +293,11 @@ local create_instance(config, instance) =
     	exit 2
     fi
   ||| % {
-    instance_config: instance_config(config, instance),
+    instance_config: instance_config(setup, instance),
     mounts: indent(std.join(' \\\n', mounts), '\t\t'),
   };
 
-local destroy_instance(config, instance) =
+local destroy_instance(setup, instance) =
   assert std.isObject(instance);
   assert std.objectHas(instance, 'hostname');
 
@@ -342,19 +342,19 @@ local snapshot_instance(instance) =
     hostname: instance.hostname,
   };
 
-local provision_instances(config) =
-  if std.objectHas(config, 'provisionings') then
+local provision_instances(setup) =
+  if std.objectHas(setup, 'provisionings') then
     shell_lines(std.map(
       func=generate_provisioning,
-      arr=config.provisionings
+      arr=setup.provisionings
     ))
   else '';
 
-local virtualmachine_command(config, command) =
-  assert std.isObject(config);
-  assert std.objectHas(config, 'virtual_machines');
-  assert std.isArray(config.virtual_machines);
-  local instances = [instance.hostname for instance in config.virtual_machines];
+local virtualmachine_command(setup, command) =
+  assert std.isObject(setup);
+  assert std.objectHas(setup, 'virtual_machines');
+  assert std.isArray(setup.virtual_machines);
+  local instances = [instance.hostname for instance in setup.virtual_machines];
 
   |||
     #!/usr/bin/env bash
@@ -374,7 +374,7 @@ local virtualmachine_command(config, command) =
 
 // Exported functions
 {
-  virtualmachines_bootstrap(config)::
+  virtualmachines_bootstrap(setup)::
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -388,14 +388,14 @@ local virtualmachine_command(config, command) =
       jq --null-input --indent 2 '{list: {}}' > "${instances_catalog_file:?}"
       %(instances_creation)s
     ||| % {
-      project_config: project_config(config),
+      project_config: project_config(setup),
       instances_creation: shell_lines([
-        create_instance(config, instance)
-        for instance in config.virtual_machines
+        create_instance(setup, instance)
+        for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_setup(config)::
-    local instances = [instance.hostname for instance in config.virtual_machines];
+  virtualmachines_setup(setup)::
+    local instances = [instance.hostname for instance in setup.virtual_machines];
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -413,25 +413,25 @@ local virtualmachine_command(config, command) =
       echo "Check snapshots for instances"
       %(instances_snapshot)s
     ||| % {
-      project_config: project_config(config),
-      ansible_inventory_path: config.ansible_inventory_path,
+      project_config: project_config(setup),
+      ansible_inventory_path: setup.ansible_inventory_path,
       instances_check: shell_lines([
         check_instance(instance)
-        for instance in config.virtual_machines
+        for instance in setup.virtual_machines
       ]),
       instances_provision: shell_lines([
         provision_instance(instance)
-        for instance in config.virtual_machines
+        for instance in setup.virtual_machines
       ]),
       instances_snapshot: shell_lines([
         snapshot_instance(instance)
-        for instance in config.virtual_machines
+        for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_provisioning(config)::
+  virtualmachines_provisioning(setup)::
     local provisionings =
-      if std.objectHas(config, 'provisionings') then
-        config.provisionings
+      if std.objectHas(setup, 'provisionings') then
+        setup.provisionings
       else [];
     |||
       #!/usr/bin/env bash
@@ -442,11 +442,11 @@ local virtualmachine_command(config, command) =
       echo "Provisioning instances"
       %(instances_provision)s
     ||| % {
-      instances_provision: provision_instances(config),
+      instances_provision: provision_instances(setup),
     },
-  virtualmachines_destroy(config)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'project_basefolder');
+  virtualmachines_destroy(setup)::
+    assert std.isObject(setup);
+    assert std.objectHas(setup, 'project_basefolder');
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
@@ -459,17 +459,17 @@ local virtualmachine_command(config, command) =
       rm -rfv "${project_basefolder:?}"
       echo "✅ Deleting project '${project_name:?}' completed!"
     ||| % {
-      project_config: project_config(config),
+      project_config: project_config(setup),
       instances_destroy: shell_lines([
-        destroy_instance(config, instance)
-        for instance in config.virtual_machines
+        destroy_instance(setup, instance)
+        for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_list(config)::
-    assert std.isObject(config);
-    assert std.objectHas(config, 'virtual_machines');
-    assert std.isArray(config.virtual_machines);
-    local instances = [instance.hostname for instance in config.virtual_machines];
+  virtualmachines_list(setup)::
+    assert std.isObject(setup);
+    assert std.objectHas(setup, 'virtual_machines');
+    assert std.isArray(setup.virtual_machines);
+    local instances = [instance.hostname for instance in setup.virtual_machines];
 
     |||
       #!/usr/bin/env bash
@@ -485,8 +485,8 @@ local virtualmachine_command(config, command) =
     ||| % {
       instances: std.join(' ', instances),
     },
-  virtualmachine_shell(config)::
-    virtualmachine_command(config, 'shell'),
-  virtualmachines_info(config)::
-    virtualmachine_command(config, 'info --format yaml'),
+  virtualmachine_shell(setup)::
+    virtualmachine_command(setup, 'shell'),
+  virtualmachines_info(setup)::
+    virtualmachine_command(setup, 'info --format yaml'),
 }
