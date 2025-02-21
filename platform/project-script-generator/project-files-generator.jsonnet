@@ -8,7 +8,7 @@
 //   --ext-str host_architecture="amd64" \
 //   --jpath "${project_root_path:?}" \
 //   --jpath "${project_generator_path}" \
-//   --string "${project_generator_path}/instances.jsonnet"
+//   --string "${project_generator_path}/project-files-generator.jsonnet"
 local setup = import 'setup.libsonnet';
 
 local orchestrator = import 'lib/orchestrator.libsonnet';

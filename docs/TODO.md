@@ -245,7 +245,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
 - [ ] change `instances-script-generator`
   - [x] move generated scripts default path to project root
   - [x] rename folder to `project-script-generator`
-  - [ ] rename `instances.jsonnet` to `project-files-generator.jsonnet`
+  - [x] rename `instances.jsonnet` to `project-files-generator.jsonnet`
   - [ ] generate `include/project_config.sh` (or `.env` file)
   - [ ] generate `include/utils.sh`
   - [ ] add script to show project generator config (`project-generator-config.sh`)
