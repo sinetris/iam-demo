@@ -88,7 +88,7 @@ jsonnet --create-output-dirs \
   --jpath "${project_root_path}" \
   --jpath "${project_generator_path}" \
   --jpath "${project_generator_path}/config" \
-  --string "${project_generator_path}/instances.jsonnet"
+  --string "${project_generator_path}/project-files-generator.jsonnet"
 chmod u+x "${generated_files_path}"/*.sh
 ```
 

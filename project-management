@@ -81,7 +81,7 @@ generate_bootstrap_scripts() {
     --jpath "${project_root_path}" \
     --jpath "${project_generator_path}" \
     --jpath "${project_generator_path}/config" \
-    --string "${project_generator_path}/instances.jsonnet"
+    --string "${project_generator_path}/project-files-generator.jsonnet"
   chmod u+x "${generated_project_path}"/*.sh
 }
 

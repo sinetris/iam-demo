@@ -56,7 +56,7 @@ repos:
       - id: jsonnet-format
       - id: jsonnet-lint
         args:
-          - "platform/project-script-generator/instances.jsonnet"
+          - "platform/project-script-generator/project-files-generator.jsonnet"
           - "--jpath"
           - "platform/project-script-generator"
           - "--jpath"
