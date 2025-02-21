@@ -5,13 +5,14 @@ compliance (GRC), cybersecurity, and infrastructure automation can benefit from
 the use of HR-Driven Identity Lifecycle and other Identity and Access Management
 practices.
 
+- [❗ Notice](#-notice)
 - [📜 Introduction](#-introduction)
+  - [Stakeholders](#stakeholders)
   - [Workforce IAM](#workforce-iam)
     - [HR-Driven Identity Lifecycle](#hr-driven-identity-lifecycle)
     - [Application Lifecycle Management (ALM) connected with the Asset Catalog](#application-lifecycle-management-alm-connected-with-the-asset-catalog)
     - [Automated Provisioning](#automated-provisioning)
     - [Procedure and Processes](#procedure-and-processes)
-  - [Note](#note)
 - [🐣 Getting started](#-getting-started)
   - [⚙️ Setup](#️-setup)
     - [Dependencies](#dependencies)
@@ -37,7 +38,16 @@ practices.
   - [Standard Notations](#standard-notations)
 - [📄 License](#-license)
 
+## ❗ Notice
+
+This project is ambitious and constantly evolving.
+
+In the [To Do](docs/TODO.md) document you can find what has been implemented
+and what is planned.
+
 ## 📜 Introduction
+
+### Stakeholders
 
 The implementation of a proper IAM infrastructure requires the involvement of
 people from different teams and departments. Underestimating the need to involve
@@ -134,12 +144,6 @@ These include, but are not limited to:
 - Business Continuity
 - Disaster Recovery
 - Internal Audit
-
-### Note
-
-This project is ambitious and constantly evolving.\
-In the [To Do](docs/TODO.md) document I try to keep track of what has been
-implemented and what is planned to be added.
 
 ## 🐣 Getting started
 
