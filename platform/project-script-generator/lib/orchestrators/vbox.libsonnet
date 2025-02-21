@@ -1009,7 +1009,7 @@ local provision_instances(setup) =
         for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_provisioning(setup)::
+  project_provisioning(setup)::
     assert std.isObject(setup);
     local provisionings =
       if std.objectHas(setup, 'app_provisionings') then

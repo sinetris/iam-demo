@@ -95,9 +95,9 @@ instances_wrap_up() {
   ./project-wrap-up.sh
 }
 
-instances_provisioning() {
+project_provisioning() {
   cd "${generated_project_path}"
-  ./instances-provisioning.sh
+  ./project-provisioning.sh
 }
 
 instances_delete() {
@@ -194,9 +194,9 @@ if $wrap_up; then
   echo "$(tput bold)$(tput setaf 2) - Project wrap-up done ✅ - $(tput sgr0)"
 fi
 if $provision; then
-  echo "$(tput bold)$(tput setaf 2) - Starting instances provisioning ... - $(tput sgr0)"
-  instances_provisioning
-  echo "$(tput bold)$(tput setaf 2) - Instances provisioning done ✅ - $(tput sgr0)"
+  echo "$(tput bold)$(tput setaf 2) - Starting project instances provisioning ... - $(tput sgr0)"
+  project_provisioning
+  echo "$(tput bold)$(tput setaf 2) - Project instances provisioning done ✅ - $(tput sgr0)"
 fi
 
 echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"

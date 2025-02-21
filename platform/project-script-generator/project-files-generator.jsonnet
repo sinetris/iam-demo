@@ -20,7 +20,7 @@ function() {
   'instances-status.sh': orchestrator_implementation.use.virtualmachines_list(setup),
   'project-bootstrap.sh': orchestrator_implementation.use.project_bootstrap(setup),
   'project-wrap-up.sh': orchestrator_implementation.use.project_wrap_up(setup),
-  'instances-provisioning.sh': orchestrator_implementation.use.virtualmachines_provisioning(setup),
+  'project-provisioning.sh': orchestrator_implementation.use.project_provisioning(setup),
   'instance-shell.sh': orchestrator_implementation.use.virtualmachine_shell(setup),
   'instances-destroy.sh': orchestrator_implementation.use.virtualmachines_destroy(setup),
   'instance-info.sh': orchestrator_implementation.use.virtualmachines_info(setup),
