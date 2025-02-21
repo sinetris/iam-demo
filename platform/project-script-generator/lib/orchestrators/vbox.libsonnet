@@ -203,7 +203,7 @@ local cidata_network_config_template(setup) =
     dns_servers: std.join(',', dns_servers),
   };
 
-// start: vbox-bash-utils
+// start: vbox-bash-variables
 local vbox_bash_architecture_configs() =
   |||
     case "${host_architecture:?}" in
@@ -246,14 +246,16 @@ local vbox_project_config(setup) =
     vbox_basefolder=~/"VirtualBox VMs"
     # Start type: gui | headless | sdl | separate
     vbox_instance_start_type=headless
+    %(set_architecture_configs)s
     # -- end: vbox-project-config
   ||| % {
     network_name: setup.network.name,
     network_netmask: setup.network.netmask,
     network_lower_ip: setup.network.lower_ip,
     network_upper_ip: setup.network.upper_ip,
+    set_architecture_configs: vbox_bash_architecture_configs(),
   };
-// end: vbox-bash-utils
+// end: vbox-bash-variables
 
 local project_config(setup) =
   |||
@@ -270,13 +272,9 @@ local bash_utils(setup) =
   |||
     # - start: utils
     %(mac_address_functions)s
-    %(get_architecture_configs)s
-    %(cidata_network_config_template)s
     # - end: utils
   ||| % {
     mac_address_functions: bash_mac_address_functions(),
-    get_architecture_configs: vbox_bash_architecture_configs(),
-    cidata_network_config_template: std.stripChars(cidata_network_config_template(setup), '\n'),
   };
 
 
@@ -954,6 +952,46 @@ local provision_instances(setup) =
 
 // Exported functions
 {
+  project_utils(setup)::
+    |||
+      #!/usr/bin/env bash
+      #
+      # Common Helpers Functions
+      set -Eeuo pipefail
+
+      : ${NO_COLOR:=0}
+      if [[ -z ${NO_COLOR+notset} ]] || [ "${NO_COLOR}" == "0" ]; then
+        bold_text=$(tput bold)
+        bad_result_text=$(tput setaf 1)
+        good_result_text=$(tput setaf 2)
+        highlight_text=$(tput setaf 3)
+        info_text=$(tput setaf 4)
+        reset_text=$(tput sgr0)
+        status_success=✅
+        status_error=❌
+        status_warning=⚠️
+        status_info=ℹ️
+        status_waiting=💤
+        status_action=⚙️
+      else
+        bold_text=''
+        bad_result_text=''
+        good_result_text=''
+        highlight_text=''
+        info_text=''
+        reset_text=''
+        status_success='[SUCCESS]'
+        status_error='[ERROR]'
+        status_warning='[WARNING]'
+        status_info='[INFO]'
+        status_waiting='[WAITING]'
+        status_action='[ACTION]'
+      fi
+
+      %(bash_utils)s
+    ||| % {
+      bash_utils: bash_utils(setup),
+    },
   project_bootstrap(setup)::
     assert std.objectHas(setup, 'virtual_machines');
     assert std.isArray(setup.virtual_machines);
@@ -961,10 +999,11 @@ local provision_instances(setup) =
       #!/usr/bin/env bash
       set -Eeuo pipefail
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
 
       %(project_config)s
-      %(bash_utils)s
+      %(cidata_network_config_template)s
 
       echo "Creating Network"
       %(network_creation)s
@@ -975,7 +1014,7 @@ local provision_instances(setup) =
       echo "✅ Project instances created!"
     ||| % {
       project_config: project_config(setup),
-      bash_utils: bash_utils(setup),
+      cidata_network_config_template: std.stripChars(cidata_network_config_template(setup), '\n'),
       network_creation: create_network(setup),
       instances_creation: shell_lines([
         check_instance_exist_do(setup, instance, indent(create_instance(setup, instance), '\t'))
@@ -1087,6 +1126,7 @@ local provision_instances(setup) =
       fi
 
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
       %(project_config)s
 
@@ -1108,7 +1148,6 @@ local provision_instances(setup) =
         ${instance_username:?}@${instance_host:?}
     ||| % {
       project_config: project_config(setup),
-      bash_utils: bash_utils(setup),
     },
   instance_info(setup)::
     assert std.isObject(setup);
