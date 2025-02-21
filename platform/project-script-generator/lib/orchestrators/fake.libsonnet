@@ -18,7 +18,7 @@
     self.fake_script(setup, 'wrap-up'),
   project_provisioning(setup)::
     self.fake_script(setup, 'provisioning'),
-  virtualmachines_destroy(setup)::
+  project_delete(setup)::
     self.fake_script(setup, 'destroy'),
   instances_status(setup)::
     self.fake_script(setup, 'list'),

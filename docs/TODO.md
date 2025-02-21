@@ -257,9 +257,9 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [ ] generate `include/project_config.sh` (or `.env` file)
   - [ ] generate `include/utils.sh`
   - [ ] add script to show project generator config (`project-generator-config.sh`)
-  - [ ] change `virtualmachines_destroy`
-    - [ ] rename to `project_delete`
-    - [ ] rename `instances-destroy.sh` to `project-delete.sh`
+  - [ ] change `project_delete` (was `virtualmachines_destroy`)
+    - [x] rename `virtualmachines_destroy` to `project_delete`
+    - [x] rename `instances-destroy.sh` to `project-delete.sh`
     - [ ] delete (keep config)
       - [ ] remove instances
       - [ ] delete `${project_basefolder:?}/${instance_name:?}/disks`

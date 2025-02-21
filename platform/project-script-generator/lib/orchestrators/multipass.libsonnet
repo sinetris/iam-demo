@@ -444,7 +444,7 @@ local virtualmachine_command(setup, command) =
     ||| % {
       instances_provision: provision_instances(setup),
     },
-  virtualmachines_destroy(setup)::
+  project_delete(setup)::
     assert std.isObject(setup);
     assert std.objectHas(setup, 'project_basefolder');
     |||

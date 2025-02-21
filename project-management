@@ -102,7 +102,7 @@ project_provisioning() {
 
 instances_delete() {
   cd "${generated_project_path}"
-  ./instances-destroy.sh
+  ./project-delete.sh
 }
 
 bootstrap=false

@@ -22,7 +22,7 @@ function() {
   'project-wrap-up.sh': orchestrator_implementation.use.project_wrap_up(setup),
   'project-provisioning.sh': orchestrator_implementation.use.project_provisioning(setup),
   'instance-shell.sh': orchestrator_implementation.use.virtualmachine_shell(setup),
-  'instances-destroy.sh': orchestrator_implementation.use.virtualmachines_destroy(setup),
+  'project-delete.sh': orchestrator_implementation.use.project_delete(setup),
   'instance-info.sh': orchestrator_implementation.use.instance_info(setup),
 } + {
   [utils.cloudinit_user_data_filename(entry.hostname)]: utils.cloud_config(setup, entry)
