@@ -20,7 +20,7 @@
     self.fake_script(setup, 'provisioning'),
   virtualmachines_destroy(setup)::
     self.fake_script(setup, 'destroy'),
-  virtualmachines_list(setup)::
+  instances_status(setup)::
     self.fake_script(setup, 'list'),
   virtualmachine_shell(setup)::
     self.fake_script(setup, 'shell'),

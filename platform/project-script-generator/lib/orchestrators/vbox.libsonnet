@@ -1054,7 +1054,7 @@ local provision_instances(setup) =
       ]),
       remove_network: remove_network(setup),
     },
-  virtualmachines_list(setup)::
+  instances_status(setup)::
     assert std.isObject(setup);
     assert std.objectHas(setup, 'virtual_machines');
     assert std.isArray(setup.virtual_machines);
