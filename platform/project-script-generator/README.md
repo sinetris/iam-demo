@@ -102,7 +102,7 @@ chmod u+x *.sh
 # Wrap-up basic project setup
 ./project-wrap-up.sh
 # Automated provisioning
-./instances-provisioning.sh
+./project-provisioning.sh
 # Get all instances status
 ./instances-status.sh
 # Get status for a specific instance

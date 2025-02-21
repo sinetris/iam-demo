@@ -16,7 +16,7 @@
     self.fake_script(setup, 'bootstrap'),
   project_wrap_up(setup)::
     self.fake_script(setup, 'wrap-up'),
-  virtualmachines_provisioning(setup)::
+  project_provisioning(setup)::
     self.fake_script(setup, 'provisioning'),
   virtualmachines_destroy(setup)::
     self.fake_script(setup, 'destroy'),

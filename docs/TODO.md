@@ -274,8 +274,8 @@ section in [Kubernetes development tips](development/kubernetes.md).
     - [ ] `project_bootstrap`
       - [ ] create networks and instances based on config files from `project_basefolder`
   - [x] rename `virtualmachines_setup` to `project_wrap_up` (create file `project-wrap-up.sh`)
-  - [ ] rename `virtualmachines_provisioning` to `project_provisioning`
-  - [ ] rename `instances-provisioning.sh` to `project-provisioning.sh`
+  - [x] rename `virtualmachines_provisioning` to `project_provisioning`
+  - [x] rename `instances-provisioning.sh` to `project-provisioning.sh`
   - [ ] rename `virtualmachines_info` to `instance_info`
   - [ ] change `instance_info` to show static instance info
   - [ ] rename `virtualmachines_status` to `instances_status`
