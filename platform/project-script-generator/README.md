@@ -113,10 +113,10 @@ chmod u+x *.sh
 ./instance-shell.sh ansible-controller
 ```
 
-To destroy all instances and the generated project folder:
+To remove networks, destroy all instances, and delete the generated project folder:
 
 ```sh
-./instances-destroy.sh
+./project-delete.sh
 ```
 
 ## Ubuntu ISO

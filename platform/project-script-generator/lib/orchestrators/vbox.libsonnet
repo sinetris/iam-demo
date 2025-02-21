@@ -1030,7 +1030,7 @@ local provision_instances(setup) =
       instances_provision: provision_instances(setup),
       project_config: project_config(setup),
     },
-  virtualmachines_destroy(setup)::
+  project_delete(setup)::
     assert std.isObject(setup);
     |||
       #!/usr/bin/env bash
