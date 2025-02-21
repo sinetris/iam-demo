@@ -394,7 +394,7 @@ local virtualmachine_command(setup, command) =
         for instance in setup.virtual_machines
       ]),
     },
-  virtualmachines_setup(setup)::
+  project_wrap_up(setup)::
     local instances = [instance.hostname for instance in setup.virtual_machines];
     |||
       #!/usr/bin/env bash

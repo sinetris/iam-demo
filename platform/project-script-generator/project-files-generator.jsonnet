@@ -19,7 +19,7 @@ function() {
   local orchestrator_implementation = orchestrator.get(setup.orchestrator_name),
   'instances-status.sh': orchestrator_implementation.use.virtualmachines_list(setup),
   'instances-create.sh': orchestrator_implementation.use.virtualmachines_bootstrap(setup),
-  'instances-setup.sh': orchestrator_implementation.use.virtualmachines_setup(setup),
+  'project-wrap-up.sh': orchestrator_implementation.use.project_wrap_up(setup),
   'instances-provisioning.sh': orchestrator_implementation.use.virtualmachines_provisioning(setup),
   'instance-shell.sh': orchestrator_implementation.use.virtualmachine_shell(setup),
   'instances-destroy.sh': orchestrator_implementation.use.virtualmachines_destroy(setup),

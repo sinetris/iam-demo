@@ -25,7 +25,7 @@ __usage=$(
 		  -m, --machine-architecture  $(tput setaf 8)Host architecture (default: '${host_architecture}' using 'uname -m')$(tput sgr0)
 		  -g, --generate              $(tput setaf 8)Generate instances management scripts$(tput sgr0)
 		  -c, --create                $(tput setaf 8)Create instances using generated scripts$(tput sgr0)
-		  -s, --setup                 $(tput setaf 8)Setup instances using generated scripts$(tput sgr0)
+		  -w, --wrap-up               $(tput setaf 8)Wrap-up project basic setup using generated scripts$(tput sgr0)
 		  -p, --provision             $(tput setaf 8)Provision instances using generated scripts$(tput sgr0)
 		  -d, --delete                $(tput setaf 8)Delete instances and local project data using generated scripts$(tput sgr0)
 		  -h, --help                  $(tput setaf 8)This help$(tput sgr0)
@@ -90,9 +90,9 @@ instances_creations() {
   ./instances-create.sh
 }
 
-instances_setup() {
+instances_wrap_up() {
   cd "${generated_project_path}"
-  ./instances-setup.sh
+  ./project-wrap-up.sh
 }
 
 instances_provisioning() {
@@ -108,7 +108,7 @@ instances_delete() {
 create=false
 generate=false
 provision=false
-setup=false
+wrap_up=false
 delete=false
 while [ $# -gt 0 ] && [ "$1" != "" ]; do
   case $1 in
@@ -137,9 +137,9 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       shift
       create=true
       ;;
-    -s | --setup)
+    -w | --wrap-up)
       shift
-      setup=true
+      wrap_up=true
       ;;
     -p | --provision)
       shift
@@ -188,10 +188,10 @@ if $create; then
   instances_creations
   echo "$(tput bold)$(tput setaf 2) - Instances creation done ✅ - $(tput sgr0)"
 fi
-if $setup; then
-  echo "$(tput bold)$(tput setaf 2) - Running instances setup ... - $(tput sgr0)"
-  instances_setup
-  echo "$(tput bold)$(tput setaf 2) - Instances setup done ✅ - $(tput sgr0)"
+if $wrap_up; then
+  echo "$(tput bold)$(tput setaf 2) - Running project wrap-up ... - $(tput sgr0)"
+  instances_wrap_up
+  echo "$(tput bold)$(tput setaf 2) - Project wrap-up done ✅ - $(tput sgr0)"
 fi
 if $provision; then
   echo "$(tput bold)$(tput setaf 2) - Starting instances provisioning ... - $(tput sgr0)"
