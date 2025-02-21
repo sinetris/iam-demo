@@ -12,9 +12,10 @@ local cloud_init = import 'cloud_init.libsonnet';
     (if std.objectHas(opts, 'extension') then
        '.' + opts.extension
      else ''),
-  cloudinit_filename(hostname)::
+  cloudinit_user_data_filename(hostname)::
     'assets/' + self.file_name(hostname, {
-      prefix: 'cloud-init',
+      prefix: 'cidata',
+      postfix: 'user-data',
       extension: 'yaml',
     }),
   cloud_config(config, instance)::
