@@ -954,7 +954,7 @@ local provision_instances(setup) =
 
 // Exported functions
 {
-  virtualmachines_bootstrap(setup)::
+  project_bootstrap(setup)::
     assert std.objectHas(setup, 'virtual_machines');
     assert std.isArray(setup.virtual_machines);
     |||

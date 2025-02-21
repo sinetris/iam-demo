@@ -20,11 +20,11 @@ __usage=$(
 		$(tput setaf 3)$(tput bold)Manage instances provisioning.$(tput sgr0)
 
 		Options:
-		  -a, --all                   $(tput setaf 8)Run all tasks to setup instances (in order: generate create setup provision)$(tput sgr0)
+		  -a, --all                   $(tput setaf 8)Run all tasks to setup instances (in order: generate bootstrap wrap-up provision)$(tput sgr0)
 		  -o, --orchestrator          $(tput setaf 8)Select orchestrator for instances management scripts generator (default: '${generator_orchestrator}')$(tput sgr0)
 		  -m, --machine-architecture  $(tput setaf 8)Host architecture (default: '${host_architecture}' using 'uname -m')$(tput sgr0)
 		  -g, --generate              $(tput setaf 8)Generate instances management scripts$(tput sgr0)
-		  -c, --create                $(tput setaf 8)Create instances using generated scripts$(tput sgr0)
+		  -b, --bootstrap             $(tput setaf 8)Bootstrap project network and instances using generated scripts$(tput sgr0)
 		  -w, --wrap-up               $(tput setaf 8)Wrap-up project basic setup using generated scripts$(tput sgr0)
 		  -p, --provision             $(tput setaf 8)Provision instances using generated scripts$(tput sgr0)
 		  -d, --delete                $(tput setaf 8)Delete instances and local project data using generated scripts$(tput sgr0)
@@ -85,9 +85,9 @@ generate_bootstrap_scripts() {
   chmod u+x "${generated_project_path}"/*.sh
 }
 
-instances_creations() {
+project_bootstrap() {
   cd "${generated_project_path}"
-  ./instances-create.sh
+  ./project-bootstrap.sh
 }
 
 instances_wrap_up() {
@@ -105,7 +105,7 @@ instances_delete() {
   ./instances-destroy.sh
 }
 
-create=false
+bootstrap=false
 generate=false
 provision=false
 wrap_up=false
@@ -115,7 +115,7 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
     -a | --all)
       shift
       generate=true
-      create=true
+      bootstrap=true
       setup=true
       provision=true
       ;;
@@ -133,9 +133,9 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       shift
       generate=true
       ;;
-    -c | --create)
+    -b | --bootstrap)
       shift
-      create=true
+      bootstrap=true
       ;;
     -w | --wrap-up)
       shift
@@ -183,10 +183,10 @@ if $generate; then
   generate_bootstrap_scripts
   echo "$(tput bold)$(tput setaf 2) - Instances setup scripts generated ✅ - $(tput sgr0)"
 fi
-if $create; then
-  echo "$(tput bold)$(tput setaf 2) - Starting instances creation ... - $(tput sgr0)"
-  instances_creations
-  echo "$(tput bold)$(tput setaf 2) - Instances creation done ✅ - $(tput sgr0)"
+if $bootstrap; then
+  echo "$(tput bold)$(tput setaf 2) - Starting project network and instances creation ... - $(tput sgr0)"
+  project_bootstrap
+  echo "$(tput bold)$(tput setaf 2) - Project network and instances creation done ✅ - $(tput sgr0)"
 fi
 if $wrap_up; then
   echo "$(tput bold)$(tput setaf 2) - Running project wrap-up ... - $(tput sgr0)"
@@ -203,7 +203,7 @@ echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"
 echo
 echo "$(tput setaf 3)Project root path: $(tput bold)${project_root_path}$(tput sgr0)"
 
-if $create || $setup || $provision; then
+if $bootstrap || $setup || $provision; then
   echo
   echo "$(tput setaf 3)To ssh into an instance use $(tput bold)./instance-shell.sh <instance-name>$(tput sgr0) from the generated folder."
   echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
