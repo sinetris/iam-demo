@@ -116,7 +116,7 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
       shift
       generate=true
       bootstrap=true
-      setup=true
+      wrap_up=true
       provision=true
       ;;
     -o | --orchestrator)
@@ -203,7 +203,7 @@ echo "$(tput bold)$(tput setaf 2) - All done ✅ - $(tput sgr0)"
 echo
 echo "$(tput setaf 3)Project root path: $(tput bold)${project_root_path}$(tput sgr0)"
 
-if $bootstrap || $setup || $provision; then
+if $bootstrap || $wrap_up || $provision; then
   echo
   echo "$(tput setaf 3)To ssh into an instance use $(tput bold)./instance-shell.sh <instance-name>$(tput sgr0) from the generated folder."
   echo "  $(tput bold)$(tput setaf 5)Example:$(tput sgr0)"
