@@ -1,5 +1,3 @@
-local cloud_init = import 'cloud_init.libsonnet';
-
 {
   file_name(name, opts={})::
     assert std.isObject(opts);
@@ -18,6 +16,4 @@ local cloud_init = import 'cloud_init.libsonnet';
       postfix: 'user-data',
       extension: 'yaml',
     }),
-  cloud_config(setup, instance)::
-    cloud_init.cloud_config(setup, instance),
 }

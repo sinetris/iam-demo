@@ -1,7 +1,7 @@
 local addArrayIf(condition, array, elseArray=[]) = if condition then array else elseArray;
 
 {
-  cloud_config(setup, instance)::
+  user_data(setup, instance)::
     assert std.isObject(setup);
     assert std.objectHas(setup, 'base_domain');
     assert std.isObject(instance);
