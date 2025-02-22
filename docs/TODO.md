@@ -294,7 +294,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [ ] standardize scripts output
   - [ ] modify `provisionings` to accept templating
   - [ ] add optional `description` field to `provisionings`
-  - [ ] add `NO_COLOR` to generated scripts
+  - [x] add `NO_COLOR` to generated scripts
     - [x] change `tput` calls to variables
 
       ```sh

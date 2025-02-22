@@ -13,6 +13,7 @@ local setup = import 'setup.libsonnet';
 
 local orchestrator = import 'lib/orchestrator.libsonnet';
 
+local cloud_init = import 'lib/cloud_init.libsonnet';
 local utils = import 'lib/utils.libsonnet';
 
 function() {
@@ -26,6 +27,6 @@ function() {
   'project-delete.sh': orchestrator_implementation.use.project_delete(setup),
   'instance-info.sh': orchestrator_implementation.use.instance_info(setup),
 } + {
-  [utils.cloudinit_user_data_filename(entry.hostname)]: utils.cloud_config(setup, entry)
-  for entry in setup.virtual_machines
+  [utils.cloudinit_user_data_filename(instance.hostname)]: cloud_init.user_data(setup, instance)
+  for instance in setup.virtual_machines
 }
