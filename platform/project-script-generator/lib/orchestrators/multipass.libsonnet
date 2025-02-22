@@ -1,19 +1,6 @@
+local utils = import 'lib/utils.libsonnet';
+
 local guest_os_release = 'lts';
-
-// TODO: Move 'Utilities functions' in external libsonnet file
-// Start - Utilities functions
-local shell_lines(lines) =
-  std.stripChars(
-    std.join('', lines),
-    '\n'
-  );
-
-local indent(string, pre) =
-  pre + std.join(
-    '\n' + pre,
-    std.split(std.rstripChars(string, '\n'), '\n')
-  );
-// END - Utilities functions
 
 local generic_project_config(setup) =
   assert std.isObject(setup);
@@ -205,7 +192,7 @@ local inline_shell_provisioning(opts) =
   ||| % {
     pre_command: std.stripChars(pre_command, '\n'),
     working_directory_option: working_directory_option,
-    script: indent(std.stripChars(opts.script, '\n'), '\t'),
+    script: utils.indent(std.stripChars(opts.script, '\n'), '\t'),
     destination_host: opts.destination_host,
     post_command: std.stripChars(post_command, '\n'),
   };
@@ -222,7 +209,7 @@ local generate_provisioning(opts) =
 local provision_instance(instance) =
   if std.objectHas(instance, 'base_provisionings') && std.isArray(instance.base_provisionings) then
     local provisionings = [i { destination_host: instance.hostname } for i in instance.base_provisionings];
-    shell_lines(std.map(
+    utils.shell_lines(std.map(
       func=generate_provisioning,
       arr=provisionings
     ))
@@ -294,7 +281,7 @@ local create_instance(setup, instance) =
     fi
   ||| % {
     instance_config: instance_config(setup, instance),
-    mounts: indent(std.join(' \\\n', mounts), '\t\t'),
+    mounts: utils.indent(std.join(' \\\n', mounts), '\t\t'),
   };
 
 local destroy_instance(setup, instance) =
@@ -344,7 +331,7 @@ local snapshot_instance(instance) =
 
 local provision_instances(setup) =
   if std.objectHas(setup, 'provisionings') then
-    shell_lines(std.map(
+    utils.shell_lines(std.map(
       func=generate_provisioning,
       arr=setup.provisionings
     ))
@@ -425,7 +412,7 @@ local virtualmachine_command(setup, command) =
       %(instances_creation)s
     ||| % {
       project_config: project_config(setup),
-      instances_creation: shell_lines([
+      instances_creation: utils.shell_lines([
         create_instance(setup, instance)
         for instance in setup.virtual_machines
       ]),
@@ -451,15 +438,15 @@ local virtualmachine_command(setup, command) =
     ||| % {
       project_config: project_config(setup),
       ansible_inventory_path: setup.ansible_inventory_path,
-      instances_check: shell_lines([
+      instances_check: utils.shell_lines([
         check_instance(instance)
         for instance in setup.virtual_machines
       ]),
-      instances_provision: shell_lines([
+      instances_provision: utils.shell_lines([
         provision_instance(instance)
         for instance in setup.virtual_machines
       ]),
-      instances_snapshot: shell_lines([
+      instances_snapshot: utils.shell_lines([
         snapshot_instance(instance)
         for instance in setup.virtual_machines
       ]),
@@ -496,7 +483,7 @@ local virtualmachine_command(setup, command) =
       echo "${status_success} Deleting project '${project_name:?}' completed!"
     ||| % {
       project_config: project_config(setup),
-      instances_destroy: shell_lines([
+      instances_destroy: utils.shell_lines([
         destroy_instance(setup, instance)
         for instance in setup.virtual_machines
       ]),
