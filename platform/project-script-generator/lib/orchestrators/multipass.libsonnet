@@ -127,13 +127,13 @@ local check_instance(instance) =
     echo "Checking '${_instance_name}'..."
     _instance_status=$(multipass info --format yaml ${_instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
-    	echo "✅ Instance '${_instance_name}' found!"
+    	echo "${status_success} Instance '${_instance_name}' found!"
     elif [[ $_exit_code -eq 2 ]] && [[ $_instance_status =~ 'does not exist' ]]; then
-    	echo "❌ Instance '${_instance_name}' not found!"
+    	echo "${status_error} Instance '${_instance_name}' not found!" >&2
     	exit 1
     else
-    	echo "❌ Instance '${_instance_name}' - exit code '${_exit_code}'"
-    	echo ${_instance_status}
+    	echo "${status_error} Instance '${_instance_name}' - exit code '${_exit_code}'" >&2
+    	echo ${_instance_status} >&2
     	exit 2
     fi
   ||| % {
@@ -252,7 +252,7 @@ local create_instance(setup, instance) =
     echo "Checking '${instance_name}'..."
     _instance_status=$(multipass info --format yaml ${instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
-    	echo "✅ Instance '${instance_name}' already exist!"
+    	echo "${status_success} Instance '${instance_name}' already exist!"
     elif [[ $_exit_code -eq 2 ]] && [[ $_instance_status =~ 'does not exist' ]]; then
     	echo " - Create Project data folder and subfolders: '${project_basefolder:?}'"
     	mkdir -p "${instance_basefolder:?}"/{cidata,disks,shared,tmp,assets}
@@ -265,7 +265,7 @@ local create_instance(setup, instance) =
     		%(mounts)s release:${os_release_codename}
     	_instance_status=$(multipass info --format json ${instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
     	if [[ $_exit_code -ne 0 ]]; then
-    		echo "❌ Could not get instance '${instance_name}' configuration!'"
+    		echo "${status_error} Could not get instance '${instance_name}' configuration!'" >&2
     		exit 1
     	fi
       _instance_ipv4=$(echo "${_instance_status:?}" | jq --arg host "${instance_name:?}" '.info.[$host].ipv4[0]' --raw-output)
@@ -275,7 +275,7 @@ local create_instance(setup, instance) =
     		END
     	2>&1) && _exit_code=$? || _exit_code=$?
     	if [[ $_exit_code -ne 0 ]]; then
-    		echo "❌ Could not get instance '${instance_name}' network interface!'"
+    		echo "${status_error} Could not get instance '${instance_name}' network interface!'" >&2
     		exit 1
     	fi
     	PROJECT_TMP_FILE="$(mktemp)"
@@ -288,8 +288,8 @@ local create_instance(setup, instance) =
     		"${instances_catalog_file:?}" \
     		> "$PROJECT_TMP_FILE" && mv "$PROJECT_TMP_FILE" "${instances_catalog_file:?}"
     else
-    	echo "❌ Instance '${instance_name}' - exit code '${_exit_code}'"
-    	echo ${_instance_status}
+    	echo "${status_error} Instance '${instance_name}' - exit code '${_exit_code}'" >&2
+    	echo ${_instance_status} >&2
     	exit 2
     fi
   ||| % {
@@ -304,9 +304,9 @@ local destroy_instance(setup, instance) =
   |||
     _instance_name=%(hostname)s
     if multipass delete --purge "${_instance_name}"; then
-    	echo "✅ Instance '${_instance_name}' deleted!"
+    	echo "${status_success} Instance '${_instance_name}' deleted!"
     else
-    	echo "✅ Instance '${_instance_name}' does not exist!"
+    	echo "${status_success} Instance '${_instance_name}' does not exist!"
     fi
   ||| % {
     hostname: instance.hostname,
@@ -320,8 +320,8 @@ local snapshot_instance(instance) =
     echo "Check '${_instance_name}' snapshot"
     _instance_status=$(multipass info ${_instance_name} --snapshots 2>&1) && _exit_code=$? || _exit_code=$?
     if [[ $_exit_code -ne 0 ]]; then
-    	echo "❌ Instance snapshots for '${_instance_name}' - exit code '${_exit_code}'"
-    	echo ${_instance_status}
+    	echo " ${status_error} Instance snapshots for '${_instance_name}' - exit code '${_exit_code}'" >&2
+    	echo ${_instance_status} >&2
     	exit 2
     elif [[ $_instance_status =~ 'No snapshots found.' ]]; then
     	echo "No snapshots found!"
@@ -336,7 +336,7 @@ local snapshot_instance(instance) =
     	echo "Restarting '${_instance_name}' ..."
     	multipass start ${_instance_name} -vv
     else
-    	echo "✅ Snapshot for '${_instance_name}' already present!"
+    	echo "${status_success} Snapshot for '${_instance_name}' already present!"
     fi
   ||| % {
     hostname: instance.hostname,
@@ -361,8 +361,8 @@ local virtualmachine_command(setup, command) =
     set -Eeuo pipefail
 
     if [[ $# -lt 1 ]]; then
-    	echo "$(tput setaf 2)Usage:$(tput sgr0) $(tput bold)$0 <name>$(tput sgr0)"
-    	echo "$(tput setaf 3)  Where <name> is one of:$(tput sgr0) $(tput bold)%(instances)s$(tput sgr0)"
+    	echo "${info_text}Usage:${reset_text} ${bold_text}$0 <name>${reset_text}" >&2
+    	echo "${highlight_text}  Where <name> is one of:${reset_text} ${bold_text}%(instances)s${reset_text}" >&2
     	exit 1
     fi
 
@@ -377,7 +377,38 @@ local virtualmachine_command(setup, command) =
   project_utils(setup)::
     |||
       #!/usr/bin/env bash
+      #
+      # Common Helpers Functions
       set -Eeuo pipefail
+
+      : ${NO_COLOR:=0}
+      if [[ -z ${NO_COLOR+notset} ]] || [ "${NO_COLOR}" == "0" ]; then
+        bold_text=$(tput bold)
+        bad_result_text=$(tput setaf 1)
+        good_result_text=$(tput setaf 2)
+        highlight_text=$(tput setaf 3)
+        info_text=$(tput setaf 4)
+        reset_text=$(tput sgr0)
+        status_success=✅
+        status_error=❌
+        status_warning=⚠️
+        status_info=ℹ️
+        status_waiting=💤
+        status_action=⚙️
+      else
+        bold_text=''
+        bad_result_text=''
+        good_result_text=''
+        highlight_text=''
+        info_text=''
+        reset_text=''
+        status_success='[SUCCESS]'
+        status_error='[ERROR]'
+        status_warning='[WARNING]'
+        status_info='[INFO]'
+        status_waiting='[WAITING]'
+        status_action='[ACTION]'
+      fi
     |||,
   project_bootstrap(setup)::
     |||
@@ -462,7 +493,7 @@ local virtualmachine_command(setup, command) =
       %(instances_destroy)s
       echo "Deleting '${project_basefolder:?}'"
       rm -rfv "${project_basefolder:?}"
-      echo "✅ Deleting project '${project_name:?}' completed!"
+      echo "${status_success} Deleting project '${project_name:?}' completed!"
     ||| % {
       project_config: project_config(setup),
       instances_destroy: shell_lines([

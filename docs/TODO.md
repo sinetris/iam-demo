@@ -254,8 +254,8 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `instances.jsonnet` to `project-files-generator.jsonnet`
   - [x] rename `cloud-init-<instance_name>.yaml` to `cidata-<instance_name>-user-data.yaml`
   - [x] use `setup` instead of `config` where appropriate
-  - [ ] generate `include/project_config.sh` (or `.env` file)
-  - [ ] generate `include/utils.sh`
+  - [x] generate `include/utils.sh`
+  - [ ] generate and include project config in scripts
   - [ ] add script to show project generator config (`project-generator-config.sh`)
   - [ ] change `project_delete` (was `virtualmachines_destroy`)
     - [x] rename `virtualmachines_destroy` to `project_delete`
@@ -279,12 +279,23 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `virtualmachines_info` to `instance_info`
   - [ ] change `instance_info` to show static instance info
   - [x] rename `virtualmachines_list` to `instances_status`
-  - [ ] use envsubst template for cloud-init `user-data`
+  - [ ] remove `envsubst` dependency
+  - [ ] use `yq` for cloud-init `user-data`
+    - [ ] add ssh public key to user
+
+        ```sh
+        instance_name=ansible-controller
+        instance_username="ubuntu" \
+        ssh_authorized_key=$(cat "$HOME/.ssh/id_ed25519.pub") \
+        yq -i '(.users[] | select(.name == strenv(instance_username)) | .ssh_authorized_keys) |= . + strenv(ssh_authorized_key)' \
+          cidata-${instance_name:?}-user-data.yaml
+        ```
+
   - [ ] standardize scripts output
   - [ ] modify `provisionings` to accept templating
   - [ ] add optional `description` field to `provisionings`
   - [ ] add `NO_COLOR` to generated scripts
-    - [ ] change `tput` calls to variables
+    - [x] change `tput` calls to variables
 
       ```sh
       bold_text=$(tput bold)
@@ -295,7 +306,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
       reset_text=$(tput sgr0)
       ```
 
-    - [ ] use variables for Emoji
+    - [x] use variables for Emoji
 
       ```sh
       status_success=✅
@@ -306,7 +317,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
       status_action=⚙️
       ```
 
-    - [ ] when `NO_COLOR`, set variables as
+    - [x] when `NO_COLOR`, set variables as
 
       ```sh
       bold_text=''
@@ -323,6 +334,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
       status_action='[ACTION]'
       ```
 
+  - [ ] change `cloud_config` to `user_data` in `cloud_init.libsonnet`
   - Generic changes to `orchestrators`
     - [ ] add `ansible_user` to `instances_catalog_file` for each instance
   - `base_provisionings` for `ansible-controller` in `setup.jsonnet`
