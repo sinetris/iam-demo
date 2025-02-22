@@ -281,7 +281,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `virtualmachines_list` to `instances_status`
   - [ ] remove `envsubst` dependency
   - [ ] use `yq` for cloud-init `user-data`
-    - [ ] add ssh public key to user
+    - [ ] add ssh public key to user in cloud-init using `yq`
 
         ```sh
         instance_name=ansible-controller
@@ -334,7 +334,8 @@ section in [Kubernetes development tips](development/kubernetes.md).
       status_action='[ACTION]'
       ```
 
-  - [ ] change `cloud_config` to `user_data` in `cloud_init.libsonnet`
+  - [x] change `cloud_config` to `user_data` in `cloud_init.libsonnet`
+  - [x] move generic functions to `utils.libsonnet`
   - Generic changes to `orchestrators`
     - [ ] add `ansible_user` to `instances_catalog_file` for each instance
   - `base_provisionings` for `ansible-controller` in `setup.jsonnet`

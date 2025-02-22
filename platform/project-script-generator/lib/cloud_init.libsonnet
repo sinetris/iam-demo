@@ -1,4 +1,4 @@
-local addArrayIf(condition, array, elseArray=[]) = if condition then array else elseArray;
+local utils = import 'lib/utils.libsonnet';
 
 {
   user_data(setup, instance)::
@@ -7,50 +7,55 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
     assert std.isObject(instance);
     assert std.objectHas(instance, 'hostname');
     assert std.objectHas(instance, 'architecture');
-    local tags =
-      if std.objectHas(instance, 'tags') then
-        assert std.isArray(instance.tags);
-        instance.tags
-      else [];
-    local instance_users = addArrayIf(std.objectHas(instance, 'users'), instance.users);
+    local tags = utils.arrayIf(std.objectHas(instance, 'tags'), instance.tags);
+    local instance_users = utils.arrayIf(std.objectHas(instance, 'users'), instance.users);
     local instance_users_usernames = std.uniq(std.sort(['ubuntu'] + [user.username for user in instance_users]));
     local is_desktop = std.member(tags, 'desktop');
     local install_recommends = std.get(instance, 'install_recommends', false);
     local is_rdp_server = std.member(tags, 'rdpserver');
     local is_ansible_controller = std.member(tags, 'ansible-controller');
     local is_vbox = setup.orchestrator_name == 'vbox';
-    local code_pkg = 'https://code.visualstudio.com/sha/download?build=stable&os=linux-deb-' + instance.architecture;
     local user_mapping(user) =
       assert std.isObject(user);
       assert std.objectHas(user, 'username');
+      assert !(
+        std.objectHas(user, 'password')
+        && std.objectHas(user, 'plain_text_passwd')
+      ) : "Invalid user '%s' in instance '%s' - cannot have both 'password' and 'plain_text_passwd'!" % [
+        user.username,
+        instance.hostname,
+      ];
       local is_admin = std.objectHas(user, 'is_admin') && user.is_admin;
       {
         name: user.username,
         shell: '/bin/bash',
-        groups: addArrayIf(is_admin, [
-          'adm',
-          'audio',
-          'cdrom',
-          'dialout',
-          'dip',
-          'floppy',
-          'lxd',
-          'netdev',
-          'plugdev',
-          'ssl-cert',
-          'staff',
-          'sudo',
-          'users',
-          'video',
-          'rdptest',
-        ], [
-          'staff',
-          'users',
-        ]) + addArrayIf(is_rdp_server, [
-          'xrdp',
-        ]) + addArrayIf(is_vbox, [
-          'vboxsf',
-        ]),
+        groups: std.uniq(
+          std.sort(
+            utils.arrayIf(is_admin, [
+              'adm',
+              'audio',
+              'cdrom',
+              'dialout',
+              'dip',
+              'floppy',
+              'lxd',
+              'netdev',
+              'plugdev',
+              'ssl-cert',
+              'staff',
+              'sudo',
+              'users',
+              'video',
+            ], [
+              'staff',
+              'users',
+            ]) + utils.arrayIf(is_rdp_server, [
+              'xrdp',
+            ]) + utils.arrayIf(is_vbox, [
+              'vboxsf',
+            ]),
+          )
+        ),
         [if is_admin then 'sudo']: 'ALL=(ALL) NOPASSWD:ALL',
         [if std.objectHas(user, 'password') then 'passwd']: user.password,
         [if std.objectHas(user, 'plain_text_passwd') then 'plain_text_passwd']: user.plain_text_passwd,
@@ -80,7 +85,7 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
         |||,
         permissions: '0o640',
       },
-    ] + addArrayIf(is_desktop, [
+    ] + utils.arrayIf(is_desktop, [
       {
         path: '/etc/skel/.xsession',
         content: |||
@@ -142,44 +147,48 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
       },
       package_update: true,
       package_upgrade: true,
-      packages: [
-        'ca-certificates',
-        'build-essential',
-        'python3',
-        'python3-pip',
-        'git',
-        'curl',
-        'wget',
-        'snapd',
-        'openssh-server',
-        'libpam-systemd',
-        'dbus',
-        'vim',
-        'apt-transport-https',
-        'gnupg2',
-        'jq',
-      ] + addArrayIf(is_desktop, [
-        'lightdm',
-        'xclip',
-        'xfce4-clipman-plugin',
-        'xfce4-goodies',
-        'xfce4',
-      ]) + addArrayIf(is_rdp_server, [
-        'xrdp',
-      ]) + addArrayIf(is_vbox, [
-        'linux-headers-generic',
-        'perl',
-        'make',
-      ]),
-      runcmd: addArrayIf(is_vbox, [
+      packages: std.uniq(
+        std.sort(
+          [
+            'apt-transport-https',
+            'build-essential',
+            'ca-certificates',
+            'curl',
+            'dbus',
+            'git',
+            'gnupg2',
+            'jq',
+            'libpam-systemd',
+            'openssh-server',
+            'python3-pip',
+            'python3',
+            'snapd',
+            'vim',
+            'wget',
+          ] + utils.arrayIf(is_desktop, [
+            'lightdm',
+            'xclip',
+            'xfce4-clipman-plugin',
+            'xfce4-goodies',
+            'xfce4',
+          ]) + utils.arrayIf(is_rdp_server, [
+            'xrdp',
+          ]) + utils.arrayIf(is_vbox, [
+            'linux-headers-generic',
+            'make',
+            'perl',
+          ]),
+        )
+      ),
+      runcmd: utils.arrayIf(is_vbox, [
         ['mkdir', '-p', '/mnt/additions'],
         ['mount', '-t', 'iso9660', '-o', 'ro', '/dev/sr1', '/mnt/additions'],
         // ['/mnt/additions/${_additions_file}'],
         ['/mnt/additions/VBoxLinuxAdditions-arm64.run'],
-      ]) + addArrayIf(is_rdp_server, [
+      ]) + utils.arrayIf(is_rdp_server, [
         ['systemctl', 'enable', 'xrdp'],
         ['service', 'xrdp', 'restart'],
-      ]) + addArrayIf(is_desktop, [
+      ]) + utils.arrayIf(is_desktop, [
         ['sed -i', 's/^#\\?AllowSuspend=.*/AllowSuspend=no/', '/etc/systemd/sleep.conf'],
         ['sed -i', 's/^#\\?AllowHibernation=.*/AllowHibernation=no/', '/etc/systemd/sleep.conf'],
         ['sed -i', 's/^#\\?AllowSuspendThenHibernate=.*/AllowSuspendThenHibernate=no/', '/etc/systemd/sleep.conf'],
@@ -204,19 +213,21 @@ local addArrayIf(condition, array, elseArray=[]) = if condition then array else 
           ['install', 'yq'],
         ],
       },
-    } + if is_ansible_controller then {
+    } + utils.objectIf(is_ansible_controller, {
       ansible: {
         package_name: 'ansible-core',
         install_method: 'distro',
         run_user: instance.admin_username,
       },
-    } else {} + if is_vbox then {
+    }) + utils.objectIf(is_vbox, {
       power_state: {
         mode: 'reboot',
-        timeout: 30,
+        delay: 'now',
+        message: 'Rebooting machine',
+        timeout: 120,
         condition: true,
       },
-    } else {};
+    });
 
     // Result
     '#cloud-config\n'

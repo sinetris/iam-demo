@@ -1,16 +1,4 @@
-// start: jsonnet-utils
-local shell_lines(lines) =
-  std.stripChars(
-    std.join('', lines),
-    '\n'
-  );
-
-local indent(string, pre) =
-  pre + std.join(
-    '\n' + pre,
-    std.split(std.rstripChars(string, '\n'), '\n')
-  );
-// end: jsonnet-utils
+local utils = import 'lib/utils.libsonnet';
 
 // start: bash-utils
 local bash_mac_address_functions() =
@@ -695,7 +683,7 @@ local create_instance(setup, instance) =
     fi
   ||| % {
     instance_config: instance_config(setup, instance),
-    mounts: shell_lines(mounts),
+    mounts: utils.shell_lines(mounts),
   };
 
 local destroy_instance(setup, instance) =
@@ -935,7 +923,7 @@ local provision_instance(instance) =
       provisioning { destination_host: instance.hostname }
       for provisioning in instance.base_provisionings
     ];
-    shell_lines(std.map(
+    utils.shell_lines(std.map(
       func=generate_provisioning,
       arr=provisionings
     ))
@@ -944,7 +932,7 @@ local provision_instance(instance) =
 local provision_instances(setup) =
   if std.objectHas(setup, 'provisionings') then
     assert std.isArray(setup.provisionings) : 'provisionings MUST be an array';
-    shell_lines(std.map(
+    utils.shell_lines(std.map(
       func=generate_provisioning,
       arr=setup.provisionings
     ))
@@ -1016,8 +1004,8 @@ local provision_instances(setup) =
       project_config: project_config(setup),
       cidata_network_config_template: std.stripChars(cidata_network_config_template(setup), '\n'),
       network_creation: create_network(setup),
-      instances_creation: shell_lines([
-        check_instance_exist_do(setup, instance, indent(create_instance(setup, instance), '\t'))
+      instances_creation: utils.shell_lines([
+        check_instance_exist_do(setup, instance, utils.indent(create_instance(setup, instance), '\t'))
         for instance in setup.virtual_machines
       ]),
     },
@@ -1044,7 +1032,7 @@ local provision_instances(setup) =
     ||| % {
       ansible_inventory_path: setup.ansible_inventory_path,
       project_config: project_config(setup),
-      instances_provision: shell_lines([
+      instances_provision: utils.shell_lines([
         provision_instance(instance)
         for instance in setup.virtual_machines
       ]),
@@ -1090,7 +1078,7 @@ local provision_instances(setup) =
       echo "${status_success} ${good_result_text}Deleting project '${project_name:?}' completed!${reset_text}"
     ||| % {
       project_config: project_config(setup),
-      instances_destroy: shell_lines([
+      instances_destroy: utils.shell_lines([
         destroy_instance(setup, instance)
         for instance in setup.virtual_machines
       ]),
