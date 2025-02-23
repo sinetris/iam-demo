@@ -403,6 +403,7 @@ local virtualmachine_command(setup, command) =
       set -Eeuo pipefail
 
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
 
       %(project_config)s
@@ -423,8 +424,9 @@ local virtualmachine_command(setup, command) =
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
-      this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      generated_files_path="${this_file_path}"
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
+      generated_files_path="${_this_file_path}"
       %(project_config)s
 
       echo "Checking instances"
@@ -451,7 +453,7 @@ local virtualmachine_command(setup, command) =
         for instance in setup.virtual_machines
       ]),
     },
-  project_provisionings(setup)::
+  project_provisioning(setup)::
     local provisionings =
       if std.objectHas(setup, 'provisionings') then
         setup.provisionings
@@ -460,7 +462,8 @@ local virtualmachine_command(setup, command) =
       #!/usr/bin/env bash
       set -Eeuo pipefail
 
-      this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
 
       echo "Provisioning instances"
       %(instances_provision)s
@@ -474,6 +477,7 @@ local virtualmachine_command(setup, command) =
       #!/usr/bin/env bash
       set -Eeuo pipefail
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
       echo "Destroying instances"
       %(project_config)s
