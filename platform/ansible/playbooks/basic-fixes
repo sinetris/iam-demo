@@ -4,6 +4,11 @@
   gather_facts: true
   become: true
   tasks:
+    - name: Wait for system to become reachable
+      ansible.builtin.wait_for_connection:
+        timeout: 90
+    - name: Gather facts
+      ansible.builtin.setup:
     - name: Ensure correct host state
       ansible.builtin.include_role:
         name: sinetris.common

@@ -50,5 +50,21 @@
     mode: u=rw,g=r,o=
   when:
     - updated.changed
-  notify:
-    - reboot machine
+- name: Reboot machine
+  ansible.builtin.reboot:
+    reboot_timeout: 240
+  register: reboot_result
+  retries: 3
+  delay: 10
+  until: reboot_result is not failed
+  when: >-
+    is_ansible_controller is not defined
+    or (is_ansible_controller is defined and not is_ansible_controller)
+- name: Ansible controller need reboot
+  ansible.builtin.file:
+    path: /var/run/reboot-required
+    state: touch
+    mode: u=rw,g=r,o=r
+  when:
+    - is_ansible_controller is defined
+    - is_ansible_controller
