@@ -27,6 +27,6 @@ function() {
   'project-delete.sh': orchestrator_implementation.use.project_delete(setup),
   'instance-info.sh': orchestrator_implementation.use.instance_info(setup),
 } + {
-  [utils.cloudinit_user_data_filename(instance.hostname)]: cloud_init.user_data(setup, instance)
+  ['assets/' + utils.cloudinit_user_data_filename(instance.hostname)]: cloud_init.user_data(setup, instance)
   for instance in setup.virtual_machines
 }
