@@ -1292,7 +1292,7 @@ local provision_instances(setup) =
     ||| % {
       instances: std.join(' ', instances),
     },
-  virtualmachine_shell(setup)::
+  instance_shell(setup)::
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
