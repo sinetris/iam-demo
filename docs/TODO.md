@@ -280,7 +280,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `virtualmachines_info` to `instance_info`
   - [ ] change `instance_info` to show static instance info
   - [x] rename `virtualmachines_list` to `instances_status`
-  - [ ] rename `virtualmachine_shell` to `instance_shell`
+  - [x] rename `virtualmachine_shell` to `instance_shell`
   - [ ] remove `envsubst` dependency
   - [ ] use `yq` for cloud-init `user-data`
     - [ ] add ssh public key to user in cloud-init using `yq`

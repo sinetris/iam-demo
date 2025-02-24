@@ -24,7 +24,7 @@
     self.fake_script(setup, 'destroy'),
   instances_status(setup)::
     self.fake_script(setup, 'list'),
-  virtualmachine_shell(setup)::
+  instance_shell(setup)::
     self.fake_script(setup, 'shell'),
   instance_info(setup)::
     self.fake_script(setup, 'info'),

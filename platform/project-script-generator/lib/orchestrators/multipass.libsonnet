@@ -519,7 +519,7 @@ local virtualmachine_command(setup, command) =
     ||| % {
       instances: std.join(' ', instances),
     },
-  virtualmachine_shell(setup)::
+  instance_shell(setup)::
     virtualmachine_command(setup, 'shell'),
   instance_info(setup)::
     virtualmachine_command(setup, 'info --format yaml'),
