@@ -7,8 +7,8 @@
     assert std.isObject(object);
     assert std.isObject(elseObject);
     (if condition then object else elseObject),
-  indent(string, pre)::
-    pre + std.join('\n' + pre, std.split(std.rstripChars(string, '\n'), '\n')),
+  indent(string, pre, beginning=pre)::
+    beginning + std.join('\n' + pre, std.split(std.rstripChars(string, '\n'), '\n')),
   shell_lines(lines)::
     std.stripChars(std.join('', lines), '\n'),
   file_name(name, opts={})::
