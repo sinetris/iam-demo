@@ -122,8 +122,7 @@ local add_default_machine_data(setup, instance) =
               sudo chown ubuntu /home/ubuntu/.ssh
               sudo chmod u=rw,go= /home/ubuntu/.ssh/id_ed25519
               sudo chmod u=rw,go= /home/ubuntu/.ssh/id_ed25519.pub
-              export DEBIAN_FRONTEND="dialog"
-              sudo apt-get install -y ansible
+              sudo DEBIAN_FRONTEND="noninteractive" apt-get install -y ansible
             |||,
         },
         {
