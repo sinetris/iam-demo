@@ -191,6 +191,7 @@ local add_default_machine_data(setup, instance) =
           [ -f /var/run/reboot-required ] && exit 1 || exit 0
         |||,
       reboot_on_error: true,
+      restart_wait_mount: '/ansible',
     },
     {
       type: 'inline-shell',

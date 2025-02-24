@@ -122,36 +122,118 @@ local generic_project_config(setup) =
   };
 // end: bash-utils
 
-local ssh_exec(username, host, script, options='-q -o ServerAliveInterval=120 -o ServerAliveCountMax=3') =
+// start: ssh-utils
+local ssh_default_args = {
+  quiet: true,
+  options: {
+    IdentitiesOnly: 'yes',
+    ServerAliveCountMax: 3,
+    ServerAliveInterval: 120,
+    StrictHostKeyChecking: 'no',
+    UserKnownHostsFile: '/dev/null',
+  },
+  identity_files: [
+    '"${generated_files_path}/assets/.ssh/id_ed25519"',
+  ],
+};
+
+local ssh_options_to_array(args) =
+  if std.isString(args) then
+    [args]
+  else if std.isObject(args) then
+    (if std.objectHas(args, 'quiet') then ['-q'] else [])
+    + utils.arrayIf(
+      std.objectHas(args, 'options'),
+      ['-o %(key)s=%(value)s' % option for option in std.objectKeysValues(args.options)]
+    ) + utils.arrayIf(
+      std.objectHas(args, 'identity_files'),
+      ['-i %s' % identity_file for identity_file in args.identity_files]
+    )
+  else if std.isArray(args) then
+    args
+  else
+    [];
+
+local ssh_exec(instance_name, script, override_args='', default_args=ssh_default_args) =
+  local args_string =
+    std.join(
+      ' \\\n\t',
+      (if std.isObject(override_args) && std.isObject(default_args) then
+         ssh_options_to_array(std.mergePatch(default_args, override_args))
+       else
+         ssh_options_to_array(override_args) + ssh_options_to_array(default_args))
+    );
   |||
-    ssh %(options)s \
-      -o UserKnownHostsFile=/dev/null \
-      -o StrictHostKeyChecking=no \
-      -o IdentitiesOnly=yes \
-      -i "${generated_files_path}/assets/.ssh/id_ed25519" \
-      "%(instance_username)s"@"%(instance_host)s" \
+    _instance_username=$(jq -r --arg host "%(instance_name)s" '.list.[$host].admin_username' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+    if [[ $_exit_code -ne 0 ]]; then
+      echo " ${status_error} Could not get 'admin_username' for instance '%(instance_name)s'" >&2
+      exit 2
+    fi
+    _instance_host=$(jq -r --arg host "%(instance_name)s" '.list.[$host].ipv4' "${instances_catalog_file:?}") && _exit_code=$? || _exit_code=$?
+    if [[ $_exit_code -ne 0 ]]; then
+      echo " ${status_error} Could not get 'ipv4' for instance '%(instance_name)s'" >&2
+      exit 2
+    fi
+    ssh %(args_string)s \
+      "${_instance_username:?}"@"${_instance_host:?}" \
     %(script)s
   ||| % {
-    instance_username: username,
-    instance_host: host,
+    instance_name: instance_name,
     script: script,
-    options: options,
+    args_string: args_string,
   };
 
-local scp_file(source, destination, options='-q') =
+local ssh_check_retry(instance_name, script='whoami', retries=10, sleep=2) =
   |||
-    scp %(options)s \
-      -o UserKnownHostsFile=/dev/null \
-      -o StrictHostKeyChecking=no \
-      -o IdentitiesOnly=yes \
-      -i "${generated_files_path}/assets/.ssh/id_ed25519" \
+    _instance_name_to_check=%(instance_name)s
+    _check_retries=%(retries)s
+    _check_sleep=%(sleep)s
+    _instance_check_ssh_success=false
+    echo "${status_info} Wait for SSH and run command"
+    for retry_counter in $(seq $_check_retries 1); do
+      %(ssh_exec)s && _exit_code=$? || _exit_code=$?
+      if [[ $_exit_code -eq 0 ]]; then
+        echo "${status_success} SSH command ran successfully!"
+        _instance_check_ssh_success=true
+        break
+      else
+        echo "${status_waiting} Will retry command in ${_check_sleep} seconds. Retry left: ${retry_counter}"
+        sleep ${_check_sleep}
+      fi
+    done
+    if ${_instance_check_ssh_success}; then
+      echo "${status_success} Instance '${_instance_name_to_check:?}' is ready!"
+    else
+      echo "${status_warning} Instance '${_instance_name_to_check:?}' not ready!"
+    fi
+  ||| % {
+    instance_name: instance_name,
+    retries: retries,
+    sleep: sleep,
+    ssh_exec: std.stripChars(
+      ssh_exec(
+        '${_instance_name_to_check:?}',
+        script,
+      ), '\n'
+    ),
+  };
+
+local scp_file(source, destination, override_args='', default_args=ssh_default_args) =
+  local args_string =
+    std.join(
+      ' \\\n\t',
+      ssh_options_to_array(override_args) + ssh_options_to_array(default_args)
+    );
+  |||
+    scp %(args_string)s \
       %(source)s \
       %(destination)s
   ||| % {
     source: source,
     destination: destination,
-    options: options,
+    args_string: args_string,
   };
+// end: ssh-utils
 
 local cidata_network_config_template(setup) =
   assert std.isObject(setup);
@@ -244,6 +326,86 @@ local vbox_project_config(setup) =
     set_architecture_configs: vbox_bash_architecture_configs(),
   };
 // end: vbox-bash-variables
+
+local instance_shutdown(instance_name, timeout=90, sleep=5) =
+  |||
+    echo "Stopping '%(instance_name)s'..."
+    VBoxManage controlvm "%(instance_name)s" shutdown
+    echo "Waiting for '%(instance_name)s' shutdown..."
+    _start_time=$SECONDS
+    _command_success=false
+    _check_timeout_seconds=%(timeout)s
+    _seconds_to_timeout=${_check_timeout_seconds}
+    _sleep_time_seconds=%(sleep)s
+    until $_command_success; do
+      if (( _seconds_to_timeout <= 0 )); then
+        echo "${status_warning} Instance '%(instance_name)s' check timeout!" >&2
+        exit 1
+      fi
+      _cmd_status=$(VBoxManage showvminfo "%(instance_name)s" --machinereadable 2>&1) \
+        && _exit_code=$? || _exit_code=$?
+      if [[ $_exit_code -ne 0 ]]; then
+        echo "${status_warning} Error checking '%(instance_name)s'" >&2
+        exit 2
+      elif [[ "$_cmd_status" =~ 'VMState="poweroff"' ]]; then
+        echo "${status_info} Instance '%(instance_name)s' shutdown!"
+        _command_success=true
+      else
+        echo "${status_waiting} Not ready yet! - Retry in ${_sleep_time_seconds} seconds - Timeout in ${_seconds_to_timeout} seconds"
+        sleep ${_sleep_time_seconds}
+      fi
+      (( _seconds_to_timeout = _check_timeout_seconds - (SECONDS - _start_time)))
+    done
+  ||| % {
+    instance_name: instance_name,
+    timeout: timeout,
+    sleep: sleep,
+  };
+
+local instance_wait_started(instance_name, script='whoami', timeout=90, sleep=5) =
+  |||
+    _instance_name_to_wait=%(instance_name)s
+    echo "Starting '${_instance_name_to_wait:?}'..."
+    VBoxManage startvm "${_instance_name_to_wait:?}" --type headless
+    echo "Waiting for '${_instance_name_to_wait:?}' to be ready..."
+    _start_time=$SECONDS
+    _command_success=false
+    _check_timeout_seconds=%(timeout)s
+    _seconds_to_timeout=${_check_timeout_seconds}
+    _sleep_time_seconds=%(sleep)s
+    until $_command_success; do
+      if (( _seconds_to_timeout <= 0 )); then
+        echo "${status_error} Instance '${_instance_name_to_wait:?}' check timeout!" >&2
+        exit 1
+      fi
+      _cmd_status=$(VBoxManage showvminfo "${_instance_name_to_wait:?}" --machinereadable 2>&1) \
+        && _exit_code=$? || _exit_code=$?
+      if [[ $_exit_code -ne 0 ]]; then
+        echo "${status_error} Error checking '${_instance_name_to_wait:?}'" >&2
+        exit 2
+      elif [[ "$_cmd_status" =~ 'VMState="running"' ]]; then
+        echo "${status_info} Instance '${_instance_name_to_wait:?}' running!"
+        _command_success=true
+      else
+        echo "${status_waiting} Not ready yet! - Retry in ${_sleep_time_seconds} seconds - Timeout in ${_seconds_to_timeout} seconds"
+        sleep ${_sleep_time_seconds}
+      fi
+      (( _seconds_to_timeout = _check_timeout_seconds - (SECONDS - _start_time)))
+    done
+     %(ssh_check_retry)s
+  ||| % {
+    instance_name: instance_name,
+    timeout: timeout,
+    sleep: sleep,
+    ssh_check_retry: utils.indent(
+      ssh_check_retry(
+        '${_instance_name_to_wait:?}',
+        script,
+      ),
+      '\t\t',
+      ''
+    ),
+  };
 
 local project_config(setup) =
   |||
@@ -346,7 +508,7 @@ local instance_config(setup, instance) =
   local instance_vram = std.get(instance, 'vram', '64');
   local instance_username = std.get(instance, 'admin_username', 'admin');
   local instance_timeout = std.get(instance, 'timeout', '300');
-  local instance_check_ssh_retries = std.get(instance, 'check_ssh_retries', '10');
+  local instance_check_ssh_retries = std.get(instance, 'check_ssh_retries', '30');
   local instance_check_sleep_time_seconds = std.get(instance, 'check_sleep_time_seconds', '5');
   |||
     # - Instance settings -
@@ -658,32 +820,16 @@ local create_instance(setup, instance) =
     echo "Wait for cloud-init to complete..."
 
     _instance_command='sudo cloud-init status --wait --long'
-    _instance_check_ssh_success=false
-    for retry_counter in $(seq $instance_check_ssh_retries 1); do
-      ssh \
-        -o UserKnownHostsFile=/dev/null \
-        -o StrictHostKeyChecking=no \
-        -o IdentitiesOnly=yes \
-        -i "${generated_files_path}/assets/.ssh/id_ed25519" \
-        -t ${instance_username:?}@${_instance_ipv4:?} \
-        "${_instance_command:?}" && _exit_code=$? || _exit_code=$?
-      if [[ $_exit_code -eq 0 ]]; then
-        echo "${status_success} SSH command ran successfully!"
-        _instance_check_ssh_success=true
-        break
-      else
-        echo "${status_waiting} Will retry command in ${instance_check_sleep_time_seconds} seconds. Retry left: ${retry_counter}"
-        sleep ${instance_check_sleep_time_seconds}
-      fi
-    done
-    if ${_instance_check_ssh_success}; then
-      echo "${status_success} Instance '${instance_name:?}' is ready!"
-    else
-      echo "${status_warning} Instance '${instance_name:?}' not ready. - Skipping!"
-    fi
+    %(ssh_check_retry)s
   ||| % {
     instance_config: instance_config(setup, instance),
     mounts: utils.shell_lines(mounts),
+    ssh_check_retry: ssh_check_retry(
+      '${instance_name:?}',
+      '${_instance_command:?}',
+      '${instance_check_ssh_retries:?}',
+      '${instance_check_sleep_time_seconds:?}',
+    ),
   };
 
 local destroy_instance(setup, instance) =
@@ -711,6 +857,43 @@ local destroy_instance(setup, instance) =
     hostname: instance.hostname,
   };
 
+local snapshot_instance(setup, instance) =
+  assert std.isObject(instance);
+  assert std.objectHas(instance, 'hostname');
+  |||
+    %(instance_config)s
+    _instance_snaphot_name=base-snapshot
+    echo "Check '${instance_name}' snapshot"
+    _instance_status=$(VBoxManage snapshot ${instance_name} showvminfo ${_instance_snaphot_name} 2>&1) && _exit_code=$? || _exit_code=$?
+    if [[ $_exit_code -eq 1 ]] && [[ $_instance_status =~ 'This machine does not have any snapshots' ]]; then
+      echo "No snapshots found!"
+      %(instance_shutdown)s
+      echo "Create snapshot for '${instance_name}'..."
+      VBoxManage snapshot "${instance_name:?}" take ${_instance_snaphot_name} --description "First snapshot for '${instance_name}'"
+      echo "Restarting '${instance_name}' ..."
+      %(instance_wait_started)s
+    elif [[ $_exit_code -ne 0 ]]; then
+      echo " ${status_error} Error checking snapshots for '${instance_name}' - exit code '${_exit_code}'" >&2
+      echo ${_instance_status} >&2
+      exit 2
+    else
+      echo "${status_success} Snapshot for '${instance_name}' already present!"
+    fi
+  ||| % {
+    hostname: instance.hostname,
+    instance_config: instance_config(setup, instance),
+    instance_shutdown: instance_shutdown(
+      '${instance_name:?}',
+      '${instance_check_timeout_seconds:?}',
+      '${instance_check_sleep_time_seconds:?}',
+    ),
+    instance_wait_started: instance_wait_started(
+      '${instance_name:?}',
+      '${instance_check_timeout_seconds:?}',
+      '${instance_check_sleep_time_seconds:?}',
+    ),
+  };
+
 local file_provisioning(opts) =
   assert std.objectHas(opts, 'destination') : 'destination file is missing';
   assert std.objectHas(opts, 'source') : 'source file is missing';
@@ -720,18 +903,17 @@ local file_provisioning(opts) =
     if std.objectHas(opts, 'create_parents_dir') && opts.create_parents_dir then
       local script = 'mkdir -pv $(dirname "%s")' % opts.destination;
       |||
-        echo " ${status_action} Create destination folder"
+        echo " ${status_action} Create destination folder for '%(destination_file)s'"
         %(create_parents_destination_folder)s
       ||| % {
+        destination_file: opts.destination,
         create_parents_destination_folder:
           if is_remote_destination then
             ssh_exec(
-              '${destination_instance_username:?}',
-              '${destination_instance_host:?}',
+              opts.destination_host,
               std.escapeStringBash(if std.objectHas(opts, 'destination_owner') then
                 "sudo -i -u %(owner)s /bin/bash -c '%(script)s'" % { owner: std.escapeStringBash(opts.destination_owner), script: script }
               else "sudo su -c '%s'" % script),
-              '-q'
             )
           else script,
       }
@@ -778,11 +960,11 @@ local file_provisioning(opts) =
          %(remote_mv)s
        ||| % {
          destination_file:
-           if std.objectHas(opts, 'destination_owner') then
+           if std.objectHas(opts, 'destination_host') then
              |||
                # Use a temporary destination_file
                destination_file=$(%s)
-             ||| % ssh_exec('${destination_instance_username:?}', '${destination_instance_host:?}', 'mktemp', '-q')
+             ||| % ssh_exec(opts.destination_host, 'mktemp')
            else 'destination_file="%s"' % opts.destination,
          scp_file: scp_file(
            if is_remote_source then
@@ -795,15 +977,13 @@ local file_provisioning(opts) =
          remote_mv:
            if is_remote_destination && std.objectHas(opts, 'destination_owner') then
              ssh_exec(
-               '${destination_instance_username:?}',
-               '${destination_instance_host:?}',
+               opts.destination_host,
                |||
                  bash <<-EOF
                  sudo chown '%(destination_owner)s':'%(destination_owner)s' "${destination_file:?}"
                  sudo --user='%(destination_owner)s' --login --non-interactive mv "${destination_file:?}" '%(destination_file)s'
                  EOF
-               ||| % { destination_owner: opts.destination_owner, destination_file: opts.destination },
-               '-q'
+               ||| % { destination_owner: opts.destination_owner, destination_file: opts.destination }
              )
            else '',
        }
@@ -842,6 +1022,11 @@ local inline_shell_provisioning(opts) =
       'set +e'
     else '';
   local post_command =
+    local wait_script =
+      if std.objectHas(opts, 'restart_wait_mount') then
+        "awk '$2==\"%s\" {n+=1} BEGIN{n=0} END{exit n>0 ? 0 : 1}' /proc/mounts" % opts.restart_wait_mount
+      else
+        'whoami';
     if std.objectHas(opts, 'reboot_on_error') then
       |||
         _exit_code=$? || _exit_code=$?
@@ -866,25 +1051,21 @@ local inline_shell_provisioning(opts) =
             fi
           done
           if ${_instance_check_success:?}; then
-            VBoxManage controlvm "${_instance_name:?}" reboot || echo echo " ${status_warning} Failed reboot for instance '${_instance_name:?}'!"
-            _instance_check_success=false
-            for _retry_counter in $(seq ${_instance_check_etries:?} 1); do
-              _instance_status=$(VBoxManage showvminfo "${_instance_name:?}" --machinereadable 2>&1) && _exit_code=$? || _exit_code=$?
-              if [[ $_exit_code -eq 0 ]] && [[ $_instance_status =~ 'VMState="running"' ]]; then
-                echo " ${status_success} Instance '${_instance_name:?}' ready!"
-                _instance_check_success=true
-                break
-              else
-                echo "${status_waiting} Will retry command in ${_instance_check_sleep_seconds} seconds. Retry left: ${_retry_counter}"
-                sleep ${_instance_check_sleep_seconds}
-              fi
-            done
+            %(instance_shutdown)s
+            %(instance_wait_started)s
           else
             echo " ${status_warning} Instance '${_instance_name:?}' not ready after reboot!"
           fi
         fi
       ||| % {
         destination_host: opts.destination_host,
+        instance_shutdown: instance_shutdown(
+          '${_instance_name:?}',
+        ),
+        instance_wait_started: instance_wait_started(
+          '${_instance_name:?}',
+          wait_script,
+        ),
       }
     else '';
   |||
@@ -898,10 +1079,9 @@ local inline_shell_provisioning(opts) =
     variables: std.stripChars(variables, '\n'),
     pre_command: std.stripChars(pre_command, '\n'),
     remote_script: ssh_exec(
-      '${destination_instance_username:?}',
-      '${destination_instance_host:?}',
+      opts.destination_host,
       script,
-      '-q -o ServerAliveInterval=5 -o ServerAliveCountMax=3'
+      { options: { ServerAliveInterval: 5 } }
     ),
     post_command: std.stripChars(post_command, '\n'),
   };
@@ -1026,14 +1206,20 @@ local provision_instances(setup) =
       %(project_config)s
 
       echo "${status_info} ${info_text}Generating machines_config.json for ansible${reset_text}"
-      cat "${instances_catalog_file:?}" > "${project_root_path}/"%(ansible_inventory_path)s/machines_config.json
+      cat "${instances_catalog_file:?}" > "${project_root_path}/%(ansible_inventory_path)s/machines_config.json"
       echo "${status_info} ${info_text}Instances basic provisioning${reset_text}"
       %(instances_provision)s
+      echo "Check snapshots for instances"
+      %(instances_snapshot)s
     ||| % {
       ansible_inventory_path: setup.ansible_inventory_path,
       project_config: project_config(setup),
       instances_provision: utils.shell_lines([
         provision_instance(instance)
+        for instance in setup.virtual_machines
+      ]),
+      instances_snapshot: utils.shell_lines([
+        snapshot_instance(setup, instance)
         for instance in setup.virtual_machines
       ]),
     },
