@@ -1,6 +1,6 @@
 # To Do
 
-[Project README](../README.md)
+[Back to project README](../README.md)
 
 > Table of content
 
@@ -248,6 +248,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
 ### Project and instances management
 
 - [x] rename `bunch-up` to `project-management`
+- [ ] change `&& _exit_code=$? || _exit_code=$?` to `&& _exit_code=0 || _exit_code=$?`
 - [ ] change `instances-script-generator`
   - [x] move generated scripts default path to project root
   - [x] rename folder to `project-script-generator`
@@ -279,6 +280,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
   - [x] rename `virtualmachines_info` to `instance_info`
   - [ ] change `instance_info` to show static instance info
   - [x] rename `virtualmachines_list` to `instances_status`
+  - [ ] rename `virtualmachine_shell` to `instance_shell`
   - [ ] remove `envsubst` dependency
   - [ ] use `yq` for cloud-init `user-data`
     - [ ] add ssh public key to user in cloud-init using `yq`
@@ -335,10 +337,14 @@ section in [Kubernetes development tips](development/kubernetes.md).
       ```
 
   - [x] change `cloud_config` to `user_data` in `cloud_init.libsonnet`
+  - [ ] move `cidata_network_config_template` from `vbox.libsonnet` to `cloud_init.libsonnet`
   - [x] move generic functions to `utils.libsonnet`
-  - Generic changes to `orchestrators`
+  - [ ] Generic changes to `orchestrators`
     - [ ] add `ansible_user` to `instances_catalog_file` for each instance
-  - `base_provisionings` for `ansible-controller` in `setup.jsonnet`
+    - [ ] move `ssh_exec` to `utils.libsonnet`
+    - [ ] move `scp_file` to `utils.libsonnet`
+    - [ ] move `project_utils` to `utils.libsonnet`
+  - [ ] `base_provisionings` for `ansible-controller` in `setup.jsonnet`
     - [ ] rename `machines_ips` to `instances_config`
     - [ ] add `ansible_controller_user` to `inventory/group_vars/all`
     - [ ] add `ansible_user` to `inventory/instances_config`
@@ -710,7 +716,9 @@ like [Mozilla Firefox][mozilla-firefox].
       (e.g. `ansible-controller`)
 - [ ] Require Firefox to be present on host
 - [ ] Add a [policies.json][mozilla-firefox-policy-templates] file for Firefox
-  - [ ] add root CA certificates ([Certificates | Install][mozilla-firefox-policy-templates-install-certs])
+  - [ ] Install root CA certificates using one of the methods from
+        ([Certificates | Install][mozilla-firefox-policy-templates-install-certs])
+      > You can use the **Firefox certificate store** or a **fully qualified path**
   - [ ] optionally add project bookmarks ([ManagedBookmarks][mozilla-firefox-policy-templates-bookmarks])
 - [ ] Create a [new user profile][mozilla-firefox-cli-profile] for Firefox
   - [ ] create [user.js][mozilla-firefox-user-js] file in user profile

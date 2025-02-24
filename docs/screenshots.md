@@ -1,6 +1,6 @@
 # Screenshots
 
-[Project README](../README.md)
+[Back to project README](../README.md)
 
 ## Ansible controller
 
