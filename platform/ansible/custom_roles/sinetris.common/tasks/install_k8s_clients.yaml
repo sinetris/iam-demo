@@ -1,9 +1,4 @@
 ---
-# Helm installation from
-# https://helm.sh/docs/intro/install/#from-apt-debianubuntu
-# Kustomize from
-# https://kubectl.docs.kubernetes.io/installation/kustomize/binaries/
-
 - name: Install Kubernetes clients CLI
   tags:
     - kubernetes_client
@@ -23,6 +18,8 @@
         url: https://baltocdn.com/helm/signing.asc
         dest: "{{ apt_keyring_path }}/helm.asc"
         mode: u=rx,go=r
+      retries: 10
+      delay: 10
     - name: Install apt-transport-https
       ansible.builtin.apt:
         name: apt-transport-https
@@ -42,6 +39,8 @@
         url: https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/Release.key
         dest: "{{ apt_keyring_path }}/kubernetes.asc"
         mode: u=rx,go=r
+      retries: 5
+      delay: 5
     - name: Add the Kubernetes Repository
       ansible.builtin.apt_repository:
         repo: "deb [signed-by={{ apt_keyring_path }}/kubernetes.asc] https://pkgs.k8s.io/core:/stable:/{{ kubernetes_minor_version }}/deb/ /"
@@ -57,6 +56,8 @@
         url: https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh
         dest: /usr/local/bin/install_kustomize.sh
         mode: u=rwx,g=rx,o=r
+      retries: 5
+      delay: 5
     - name: Install kustomize client
       ansible.builtin.command:
         argv:
