@@ -1,4 +1,11 @@
 ---
+- name: Wait for hosts connection
+  hosts: all
+  gather_facts: false
+  tasks:
+    - name: Wait for system to become reachable
+      ansible.builtin.wait_for_connection:
+        timeout: 90
 - name: Gather facts for all hosts
   hosts: all
   gather_facts: true
