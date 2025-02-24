@@ -8,6 +8,8 @@ local generic_project_config(setup) =
   assert std.objectHas(setup, 'project_domain');
   assert std.objectHas(setup, 'projects_folder');
   assert std.objectHas(setup, 'project_basefolder');
+  assert std.objectHas(setup, 'project_root_path');
+  assert std.objectHas(setup, 'project_generator_path');
   assert std.objectHas(setup, 'os_release_codename');
   assert std.objectHas(setup, 'host_architecture');
   |||
@@ -16,6 +18,8 @@ local generic_project_config(setup) =
     project_domain="${project_name:?}.test"
     projects_folder=%(projects_folder)s
     project_basefolder="%(project_basefolder)s"
+    project_root_path="%(project_root_path)s"
+    project_generator_path="%(project_generator_path)s"
     os_release_codename=%(os_release_codename)s
     host_architecture=%(host_architecture)s
     host_public_key_file=~/.ssh/id_ed25519.pub
@@ -27,6 +31,8 @@ local generic_project_config(setup) =
     project_domain: setup.project_domain,
     projects_folder: setup.projects_folder,
     project_basefolder: setup.project_basefolder,
+    project_root_path: setup.project_root_path,
+    project_generator_path: setup.project_generator_path,
     os_release_codename: setup.os_release_codename,
     host_architecture: setup.host_architecture,
   };
@@ -427,19 +433,20 @@ local virtualmachine_command(setup, command) =
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
       . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
+
       %(project_config)s
 
       echo "Checking instances"
       %(instances_check)s
       echo "Generating machines_config.json for ansible"
-      cat "${instances_catalog_file:?}" > "${generated_files_path}/"%(ansible_inventory_path)s/machines_config.json
-      echo "Instances basic provisioning"
+      cat "${instances_catalog_file:?}" > "${project_root_path}/%(ansible_inventory_path)s/machines_config.json"
+      echo "${status_info} ${info_text}Instances basic provisioning${reset_text}"
       %(instances_provision)s
       echo "Check snapshots for instances"
       %(instances_snapshot)s
     ||| % {
-      project_config: project_config(setup),
       ansible_inventory_path: setup.ansible_inventory_path,
+      project_config: project_config(setup),
       instances_check: utils.shell_lines([
         check_instance(instance)
         for instance in setup.virtual_machines
