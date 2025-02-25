@@ -22,6 +22,8 @@
     self.fake_script(setup, 'provisioning'),
   project_delete(setup)::
     self.fake_script(setup, 'destroy'),
+  project_snapshot_restore(setup)::
+    self.fake_script(setup, 'snapshot restore'),
   instances_status(setup)::
     self.fake_script(setup, 'list'),
   instance_shell(setup)::

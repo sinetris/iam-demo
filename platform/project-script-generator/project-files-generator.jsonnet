@@ -23,6 +23,7 @@ function() {
   'project-bootstrap.sh': orchestrator_implementation.use.project_bootstrap(setup),
   'project-wrap-up.sh': orchestrator_implementation.use.project_wrap_up(setup),
   'project-provisioning.sh': orchestrator_implementation.use.project_provisioning(setup),
+  'project-restore-snapshots.sh': orchestrator_implementation.use.project_snapshot_restore(setup),
   'instance-shell.sh': orchestrator_implementation.use.instance_shell(setup),
   'project-delete.sh': orchestrator_implementation.use.project_delete(setup),
   'instance-info.sh': orchestrator_implementation.use.instance_info(setup),

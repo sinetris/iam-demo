@@ -499,6 +499,33 @@ local virtualmachine_command(setup, command) =
         for instance in setup.virtual_machines
       ]),
     },
+  project_snapshot_restore(setup)::
+    assert std.isObject(setup);
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
+      generated_files_path="${_this_file_path}"
+      %(project_config)s
+
+      echo "${status_info} ${info_text}Restore instances snapshot...${reset_text}"
+      %(restore_instances_snapshot)s
+      echo "${status_success} ${good_result_text}Restoring instances snapshot completed!${reset_text}"
+    ||| % {
+      project_config: project_config(setup),
+      restore_instances_snapshot: utils.shell_lines([
+        |||
+          _instance_snaphot_name=base-snapshot
+          echo "Restoring '%(hostname)s' snapshot '${_instance_snaphot_name:?}'"
+          multipass stop %(hostname)s
+          multipass restore --destructive %(hostname)s.${_instance_snaphot_name:?}
+          multipass start %(hostname)s
+        ||| % instance
+        for instance in setup.virtual_machines
+      ]),
+    },
   instances_status(setup)::
     assert std.isObject(setup);
     assert std.objectHas(setup, 'virtual_machines');
