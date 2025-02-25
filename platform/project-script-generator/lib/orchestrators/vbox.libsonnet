@@ -889,6 +889,7 @@ local snapshot_instance(setup, instance) =
     ),
     instance_wait_started: instance_wait_started(
       '${instance_name:?}',
+      'whoami',
       '${instance_check_timeout_seconds:?}',
       '${instance_check_sleep_time_seconds:?}',
     ),
@@ -1269,6 +1270,31 @@ local provision_instances(setup) =
         for instance in setup.virtual_machines
       ]),
       remove_network: remove_network(setup),
+    },
+  project_snapshot_restore(setup)::
+    assert std.isObject(setup);
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      . "${_this_file_path}/include/utils.sh"
+      generated_files_path="${_this_file_path}"
+      %(project_config)s
+
+      echo "${status_info} ${info_text}Restore instances snapshot...${reset_text}"
+      %(restore_instances_snapshot)s
+      echo "${status_success} ${good_result_text}Restoring instances snapshot completed!${reset_text}"
+    ||| % {
+      project_config: project_config(setup),
+      restore_instances_snapshot: utils.shell_lines([
+        |||
+          _instance_snaphot_name=base-snapshot
+          echo "Restoring '%(hostname)s' snapshot '${_instance_snaphot_name:?}'"
+          VBoxManage snapshot '%(hostname)s' restore ${_instance_snaphot_name:?}
+        ||| % instance
+        for instance in setup.virtual_machines
+      ]),
     },
   instances_status(setup)::
     assert std.isObject(setup);

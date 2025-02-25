@@ -267,7 +267,7 @@ section in [Kubernetes development tips](development/kubernetes.md).
       - [ ] delete files in `${project_basefolder:?}/${instance_name:?}/tmp`
     - [ ] add `--purge` option (destroy project)
       - [ ] all in `delete` + remove `${project_basefolder:?}`
-  - [ ] add `project_snapshot_restore` (create file `project-snapshots-restore.sh`)
+  - [x] add `project_snapshot_restore` (create file `project-restore-snapshots.sh`)
   - [x] rename `virtualmachines_bootstrap` to `project_bootstrap` (create file `project-bootstrap.sh`)
   - [ ] split `project_bootstrap`
     - [ ] `project_prepare_config` (create file `project-prepare-config.sh`)

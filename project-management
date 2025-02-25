@@ -58,6 +58,7 @@ __usage=$(
 		  -b, --bootstrap             ${gray_text}Bootstrap project network and instances using generated scripts${reset_text}
 		  -w, --wrap-up               ${gray_text}Wrap-up project basic setup using generated scripts${reset_text}
 		  -p, --provision             ${gray_text}Provision instances using generated scripts${reset_text}
+		  -r, --restore-snapshots     ${gray_text}Restore instances base snapshot using generated scripts${reset_text}
 		  -d, --delete                ${gray_text}Delete instances and local project data using generated scripts${reset_text}
 		  -h, --help                  ${gray_text}This help${reset_text}
 		Environment variables:
@@ -134,6 +135,11 @@ project_provisioning() {
   ./project-provisioning.sh
 }
 
+project_restore_snapshots() {
+  cd "${generated_project_path}"
+  ./project-restore-snapshots.sh
+}
+
 instances_delete() {
   cd "${generated_project_path}"
   ./project-delete.sh
@@ -144,6 +150,7 @@ generate=false
 provision=false
 wrap_up=false
 delete=false
+restore_snapshots=false
 while [ $# -gt 0 ] && [ "$1" != "" ]; do
   case $1 in
     -a | --all)
@@ -178,6 +185,10 @@ while [ $# -gt 0 ] && [ "$1" != "" ]; do
     -p | --provision)
       shift
       provision=true
+      ;;
+    -r | --restore-snapshots)
+      shift
+      restore_snapshots=true
       ;;
     -d | --delete)
       shift
@@ -231,6 +242,11 @@ if $provision; then
   echo "${status_info}${bold_text}${highlight_text} - Starting project instances provisioning ... - ${reset_text}"
   project_provisioning
   echo "${status_success}${bold_text}${highlight_text} - Project instances provisioning done - ${reset_text}"
+fi
+if $restore_snapshots; then
+  echo "${status_info}${bold_text}${highlight_text} - Starting project instances snapshot restore ... - ${reset_text}"
+  project_restore_snapshots
+  echo "${status_success}${bold_text}${highlight_text} - Project instances snapshot restore done - ${reset_text}"
 fi
 
 echo "${status_success}${bold_text}${highlight_text} - All done - ${reset_text}"
