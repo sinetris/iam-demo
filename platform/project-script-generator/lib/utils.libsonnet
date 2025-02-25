@@ -7,7 +7,7 @@
     assert std.isObject(object);
     assert std.isObject(elseObject);
     (if condition then object else elseObject),
-  indent(string, pre, beginning=pre)::
+  indent(string, pre='\t', beginning=pre)::
     beginning + std.join('\n' + pre, std.split(std.rstripChars(string, '\n'), '\n')),
   shell_lines(lines)::
     std.stripChars(std.join('', lines), '\n'),
