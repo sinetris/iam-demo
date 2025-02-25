@@ -183,7 +183,7 @@ local ssh_exec(instance_name, script, override_args='', default_args=ssh_default
     args_string: args_string,
   };
 
-local ssh_check_retry(instance_name, script='whoami', retries=10, sleep=2) =
+local ssh_check_retry(instance_name, script='whoami', retries=20, sleep=5) =
   |||
     _instance_name_to_check=%(instance_name)s
     _check_retries=%(retries)s
@@ -334,7 +334,7 @@ local vbox_project_config(setup) =
 local instance_shutdown(instance_name, timeout=90, sleep=5) =
   |||
     echo "Stopping '%(instance_name)s'..."
-    VBoxManage controlvm "%(instance_name)s" shutdown
+    VBoxManage controlvm "%(instance_name)s" shutdown || echo "Ignoring"
     echo "Waiting for '%(instance_name)s' shutdown..."
     _start_time=$SECONDS
     _command_success=false
@@ -1297,10 +1297,26 @@ local provision_instances(setup) =
       project_config: project_config(setup),
       restore_instances_snapshot: utils.shell_lines([
         |||
+          %(instance_config)s
           _instance_snaphot_name=base-snapshot
-          echo "Restoring '%(hostname)s' snapshot '${_instance_snaphot_name:?}'"
-          VBoxManage snapshot '%(hostname)s' restore ${_instance_snaphot_name:?}
-        ||| % instance
+          echo "Restoring '${instance_name:?}' snapshot '${_instance_snaphot_name:?}'"
+          %(instance_shutdown)s
+          VBoxManage snapshot ${instance_name:?} restore ${_instance_snaphot_name:?}
+          %(instance_wait_started)s
+        ||| % {
+          instance_config: instance_config(setup, instance),
+          instance_shutdown: instance_shutdown(
+            '${instance_name:?}',
+            '${instance_check_timeout_seconds:?}',
+            '${instance_check_sleep_time_seconds:?}',
+          ),
+          instance_wait_started: instance_wait_started(
+            '${instance_name:?}',
+            'whoami',
+            '${instance_check_timeout_seconds:?}',
+            '${instance_check_sleep_time_seconds:?}',
+          ),
+        }
         for instance in setup.virtual_machines
       ]),
     },
