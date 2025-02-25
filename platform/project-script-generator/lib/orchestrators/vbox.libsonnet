@@ -210,11 +210,15 @@ local ssh_check_retry(instance_name, script='whoami', retries=10, sleep=2) =
     instance_name: instance_name,
     retries: retries,
     sleep: sleep,
-    ssh_exec: std.stripChars(
-      ssh_exec(
-        '${_instance_name_to_check:?}',
-        script,
-      ), '\n'
+    ssh_exec: utils.indent(
+      std.stripChars(
+        ssh_exec(
+          '${_instance_name_to_check:?}',
+          script,
+        ), '\n'
+      ),
+      '\t',
+      ''
     ),
   };
 
@@ -392,18 +396,14 @@ local instance_wait_started(instance_name, script='whoami', timeout=90, sleep=5)
       fi
       (( _seconds_to_timeout = _check_timeout_seconds - (SECONDS - _start_time)))
     done
-     %(ssh_check_retry)s
+    %(ssh_check_retry)s
   ||| % {
     instance_name: instance_name,
     timeout: timeout,
     sleep: sleep,
-    ssh_check_retry: utils.indent(
-      ssh_check_retry(
-        '${_instance_name_to_wait:?}',
-        script,
-      ),
-      '\t\t',
-      ''
+    ssh_check_retry: ssh_check_retry(
+      '${_instance_name_to_wait:?}',
+      script,
     ),
   };
 
@@ -882,16 +882,24 @@ local snapshot_instance(setup, instance) =
   ||| % {
     hostname: instance.hostname,
     instance_config: instance_config(setup, instance),
-    instance_shutdown: instance_shutdown(
-      '${instance_name:?}',
-      '${instance_check_timeout_seconds:?}',
-      '${instance_check_sleep_time_seconds:?}',
+    instance_shutdown: utils.indent(
+      instance_shutdown(
+        '${instance_name:?}',
+        '${instance_check_timeout_seconds:?}',
+        '${instance_check_sleep_time_seconds:?}',
+      ),
+      '\t',
+      ''
     ),
-    instance_wait_started: instance_wait_started(
-      '${instance_name:?}',
-      'whoami',
-      '${instance_check_timeout_seconds:?}',
-      '${instance_check_sleep_time_seconds:?}',
+    instance_wait_started: utils.indent(
+      instance_wait_started(
+        '${instance_name:?}',
+        'whoami',
+        '${instance_check_timeout_seconds:?}',
+        '${instance_check_sleep_time_seconds:?}',
+      ),
+      '\t',
+      ''
     ),
   };
 
