@@ -58,17 +58,6 @@ local multipass_project_config(setup) =
     host_architecture: setup.host_architecture,
   };
 
-local project_config(setup) =
-  |||
-    # - start: config
-    %(generic_project_config)s
-    %(multipass_project_config)s
-    # - end: config
-  ||| % {
-    generic_project_config: generic_project_config(setup),
-    multipass_project_config: multipass_project_config(setup),
-  };
-
 local instance_config(setup, instance) =
   assert std.isObject(setup);
   assert std.isObject(instance);
@@ -118,7 +107,7 @@ local check_instance(instance) =
   |||
     _instance_name=%(hostname)s
     echo "Checking '${_instance_name}'..."
-    _instance_status=$(multipass info --format yaml ${_instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
+    _instance_status=$(multipass info --format yaml ${_instance_name} 2>&1) && _exit_code=0 || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
     	echo "${status_success} Instance '${_instance_name}' found!"
     elif [[ $_exit_code -eq 2 ]] && [[ $_instance_status =~ 'does not exist' ]]; then
@@ -126,7 +115,7 @@ local check_instance(instance) =
     	exit 1
     else
     	echo "${status_error} Instance '${_instance_name}' - exit code '${_exit_code}'" >&2
-    	echo ${_instance_status} >&2
+    	echo "${_instance_status}" >&2
     	exit 2
     fi
   ||| % {
@@ -174,7 +163,7 @@ local inline_shell_provisioning(opts) =
   local post_command =
     if std.objectHas(opts, 'reboot_on_error') then
       |||
-        _exit_code=$? || _exit_code=$?
+        _exit_code=$?
         if [[ $_exit_code -eq 0 ]]; then
         	echo "No need to reboot"
         else
@@ -243,7 +232,7 @@ local create_instance(setup, instance) =
   |||
     %(instance_config)s
     echo "Checking '${instance_name}'..."
-    _instance_status=$(multipass info --format yaml ${instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
+    _instance_status=$(multipass info --format yaml ${instance_name} 2>&1) && _exit_code=0 || _exit_code=$?
     if [[ $_exit_code -eq 0 ]]; then
     	echo "${status_success} Instance '${instance_name}' already exist!"
     elif [[ $_exit_code -eq 2 ]] && [[ $_instance_status =~ 'does not exist' ]]; then
@@ -256,17 +245,17 @@ local create_instance(setup, instance) =
     		--cloud-init "assets/cidata-${instance_name:?}-user-data.yaml" \
     		--timeout ${instance_check_timeout_seconds} \
     		%(mounts)s release:${os_release_codename}
-    	_instance_status=$(multipass info --format json ${instance_name} 2>&1) && _exit_code=$? || _exit_code=$?
+    	_instance_status=$(multipass info --format json ${instance_name} 2>&1) && _exit_code=0 || _exit_code=$?
     	if [[ $_exit_code -ne 0 ]]; then
     		echo "${status_error} Could not get instance '${instance_name}' configuration!'" >&2
     		exit 1
     	fi
       _instance_ipv4=$(echo "${_instance_status:?}" | jq --arg host "${instance_name:?}" '.info.[$host].ipv4[0]' --raw-output)
     	_instance_nic_name=$(multipass exec ${instance_name} \
-    		-- /bin/bash <<-'END'
+    		-- /bin/bash 2>&1 <<-'END'
     			ip route | awk '/^default/ {print $5; exit}'
     		END
-    	2>&1) && _exit_code=$? || _exit_code=$?
+    	) && _exit_code=0 || _exit_code=$?
     	if [[ $_exit_code -ne 0 ]]; then
     		echo "${status_error} Could not get instance '${instance_name}' network interface!'" >&2
     		exit 1
@@ -282,7 +271,7 @@ local create_instance(setup, instance) =
     		> "$PROJECT_TMP_FILE" && mv "$PROJECT_TMP_FILE" "${instances_catalog_file:?}"
     else
     	echo "${status_error} Instance '${instance_name}' - exit code '${_exit_code}'" >&2
-    	echo ${_instance_status} >&2
+    	echo "${_instance_status}" >&2
     	exit 2
     fi
   ||| % {
@@ -311,12 +300,12 @@ local snapshot_instance(instance) =
   |||
     _instance_name=%(hostname)s
     echo "Check '${_instance_name}' snapshot"
-    _instance_status=$(multipass info ${_instance_name} --snapshots 2>&1) && _exit_code=$? || _exit_code=$?
+    _instance_status=$(multipass info ${_instance_name} --snapshots 2>&1) && _exit_code=0 || _exit_code=$?
     if [[ $_exit_code -ne 0 ]]; then
     	echo " ${status_error} Instance snapshots for '${_instance_name}' - exit code '${_exit_code}'" >&2
-    	echo ${_instance_status} >&2
+    	echo "${_instance_status}" >&2
     	exit 2
-    elif [[ $_instance_status =~ 'No snapshots found.' ]]; then
+    elif [[ $_instance_status == *'No snapshots found.'* ]]; then
     	echo "No snapshots found!"
     	echo "Wait for cloud-init..."
     	multipass exec ${_instance_name} -- cloud-init status --wait --long
@@ -352,6 +341,10 @@ local virtualmachine_command(setup, command) =
   |||
     #!/usr/bin/env bash
     set -Eeuo pipefail
+    _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+    generated_files_path="${_this_file_path}"
+    . "${generated_files_path:?}/lib/utils.sh"
+    . "${generated_files_path:?}/lib/project_config.sh"
 
     if [[ $# -lt 1 ]]; then
     	echo "${info_text}Usage:${reset_text} ${bold_text}$0 <name>${reset_text}" >&2
@@ -359,7 +352,7 @@ local virtualmachine_command(setup, command) =
     	exit 1
     fi
 
-    multipass %(command)s $1
+    multipass %(command)s "$1"
   ||| % {
     instances: std.join(' ', instances),
     command: command,
@@ -367,74 +360,56 @@ local virtualmachine_command(setup, command) =
 
 // Exported functions
 {
-  project_utils(setup)::
-    |||
-      #!/usr/bin/env bash
-      #
-      # Common Helpers Functions
-      set -Eeuo pipefail
-
-      : ${NO_COLOR:=0}
-      if [[ -z ${NO_COLOR+notset} ]] || [ "${NO_COLOR}" == "0" ]; then
-        bold_text=$(tput bold)
-        bad_result_text=$(tput setaf 1)
-        good_result_text=$(tput setaf 2)
-        highlight_text=$(tput setaf 3)
-        info_text=$(tput setaf 4)
-        reset_text=$(tput sgr0)
-        status_success=✅
-        status_error=❌
-        status_warning=⚠️
-        status_info=ℹ️
-        status_waiting=💤
-        status_action=⚙️
-      else
-        bold_text=''
-        bad_result_text=''
-        good_result_text=''
-        highlight_text=''
-        info_text=''
-        reset_text=''
-        status_success='[SUCCESS]'
-        status_error='[ERROR]'
-        status_warning='[WARNING]'
-        status_info='[INFO]'
-        status_waiting='[WAITING]'
-        status_action='[ACTION]'
-      fi
-    |||,
-  project_bootstrap(setup)::
+  project_config(setup):
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
-
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      . "${_this_file_path}/include/utils.sh"
+      . "${_this_file_path:?}/utils.sh"
+      # - start: config
+      %(generic_project_config)s
+      %(multipass_project_config)s
+      # - end: config
+    ||| % {
+      generic_project_config: generic_project_config(setup),
+      multipass_project_config: multipass_project_config(setup),
+    },
+  project_bootstrap(setup):
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
       generated_files_path="${_this_file_path}"
-
-      %(project_config)s
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
 
       echo "Creating instances"
       jq --null-input --indent 2 '{list: {}}' > "${instances_catalog_file:?}"
       %(instances_creation)s
     ||| % {
-      project_config: project_config(setup),
       instances_creation: utils.shell_lines([
         create_instance(setup, instance)
         for instance in setup.virtual_machines
       ]),
     },
-  project_wrap_up(setup)::
+  project_show_configuration(setup):
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      generated_files_path="${_this_file_path}"
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
+    |||,
+  project_wrap_up(setup):
     local instances = [instance.hostname for instance in setup.virtual_machines];
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
-
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
-
-      %(project_config)s
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
 
       echo "Checking instances"
       %(instances_check)s
@@ -446,7 +421,6 @@ local virtualmachine_command(setup, command) =
       %(instances_snapshot)s
     ||| % {
       ansible_inventory_path: setup.ansible_inventory_path,
-      project_config: project_config(setup),
       instances_check: utils.shell_lines([
         check_instance(instance)
         for instance in setup.virtual_machines
@@ -460,7 +434,16 @@ local virtualmachine_command(setup, command) =
         for instance in setup.virtual_machines
       ]),
     },
-  project_provisioning(setup)::
+  project_prepare_config(setup):
+    |||
+      #!/usr/bin/env bash
+      set -Eeuo pipefail
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      generated_files_path="${_this_file_path}"
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
+    |||,
+  project_provisioning(setup):
     local provisionings =
       if std.objectHas(setup, 'provisionings') then
         setup.provisionings
@@ -468,53 +451,51 @@ local virtualmachine_command(setup, command) =
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
-
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      . "${_this_file_path}/include/utils.sh"
+      generated_files_path="${_this_file_path}"
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
 
       echo "Provisioning instances"
       %(instances_provision)s
     ||| % {
       instances_provision: provision_instances(setup),
     },
-  project_delete(setup)::
+  project_delete(setup):
     assert std.isObject(setup);
     assert std.objectHas(setup, 'project_basefolder');
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
       echo "Destroying instances"
-      %(project_config)s
       %(instances_destroy)s
       echo "Deleting '${project_basefolder:?}'"
       rm -rfv "${project_basefolder:?}"
       echo "${status_success} Deleting project '${project_name:?}' completed!"
     ||| % {
-      project_config: project_config(setup),
       instances_destroy: utils.shell_lines([
         destroy_instance(setup, instance)
         for instance in setup.virtual_machines
       ]),
     },
-  project_snapshot_restore(setup)::
+  project_snapshot_restore(setup):
     assert std.isObject(setup);
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
-
       _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
-      . "${_this_file_path}/include/utils.sh"
       generated_files_path="${_this_file_path}"
-      %(project_config)s
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
 
       echo "${status_info} ${info_text}Restore instances snapshot...${reset_text}"
       %(restore_instances_snapshot)s
       echo "${status_success} ${good_result_text}Restoring instances snapshot completed!${reset_text}"
     ||| % {
-      project_config: project_config(setup),
       restore_instances_snapshot: utils.shell_lines([
         |||
           _instance_snaphot_name=base-snapshot
@@ -526,7 +507,7 @@ local virtualmachine_command(setup, command) =
         for instance in setup.virtual_machines
       ]),
     },
-  instances_status(setup)::
+  instances_status(setup):
     assert std.isObject(setup);
     assert std.objectHas(setup, 'virtual_machines');
     assert std.isArray(setup.virtual_machines);
@@ -535,19 +516,23 @@ local virtualmachine_command(setup, command) =
     |||
       #!/usr/bin/env bash
       set -Eeuo pipefail
+      _this_file_path=$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+      generated_files_path="${_this_file_path}"
+      . "${generated_files_path:?}/lib/utils.sh"
+      . "${generated_files_path:?}/lib/project_config.sh"
 
       if [[ $# -lt 1 ]]; then
-      	machine_list="%(instances)s"
+      	machine_list=( %(instances)s )
       else
-      	machine_list=$@
+      	machine_list=( "$@" )
       fi
       multipass info \
-      	--format yaml ${machine_list}
+      	--format yaml "${machine_list[@]}"
     ||| % {
       instances: std.join(' ', instances),
     },
-  instance_shell(setup)::
+  instance_shell(setup):
     virtualmachine_command(setup, 'shell'),
-  instance_info(setup)::
+  instance_info(setup):
     virtualmachine_command(setup, 'info --format yaml'),
 }
